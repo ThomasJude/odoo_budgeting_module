@@ -36,6 +36,7 @@ class ProductBudgetFixed(models.Model):
         ],
         default=False)
     
+    bucket_type_id = fields.Many2one('bucket.type','Bucket Type')
     
     @api.onchange('bucket_type_id')
     def _onchange_bucket_type_id(self):
@@ -61,6 +62,8 @@ class ProductBudgetAllocate(models.Model):
                                           ('assignable_at_inv','Assignable At Time of Invoice')
                                           ],"Assignable Status",default= "unassigned")
     
+    bucket_type_id = fields.Many2one('bucket.type','Bucket Type')
+
 
 
     

@@ -12,6 +12,7 @@
 						<tree string="Fixed Budget" editable="bottom">
                                 <field name="product_id" attrs="{'readonly': [('name', '!=', False)],}" options="{'no_edit': True, 'no_create': True}"/>
                                 <field name="name" attrs="{'readonly': [('product_id', '!=', False)],}"/>
+                                <field name="bucket_type_id" options="{'no_edit': True, 'no_create': True}"/>
                                 <field name="prod_priority" />
                                 <field name="amount" />
                                 <field name="assignable_status" />
@@ -23,6 +24,7 @@
 						<tree string="Allocate Budget" editable="bottom">
                                 <field name="product_id" attrs="{'readonly': [('name', '!=', False)],}" options="{'no_edit': True, 'no_create': True}"/>
                                 <field name="name" attrs="{'readonly': [('product_id', '!=', False)],}"/>
+                                <field name="bucket_type_id" options="{'no_edit': True, 'no_create': True}"/>
                                 <field name="allocate_percent" />
                                 <field name="assignable_status"/>
 

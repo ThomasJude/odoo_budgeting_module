@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_bucket_type_tree" model="ir.ui.view">
+            <field name="name">bucket.type.tree</field>
+            <field name="model">bucket.type</field>
+            <field name="arch" type="xml">
+                <tree string="Bucket Type">
+                    <field name="name"/>
+                    <field name="bucket_amount"/>
+                    <field name="user_type"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_bucket_type_form" model="ir.ui.view">
+            <field name="name">bucket.type.form</field>
+            <field name="model">bucket.type</field>
+            <field name="arch" type="xml">
+                <form string="Bucket Type">
+					<header>
+                    </header>
+                    <sheet>
+	                    <group>
+	                        <group>
+	                            <field name="name"/>
+	                            <field name="user_type"/>
+	                            
+	                        </group>
+	                        <group>
+	                            <field name="bucket_amount"/>
+							</group>
+	                    </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_bucket_type_form" model="ir.actions.act_window">
+            <field name="name"> Bucket Type</field>
+            <field name="res_model">bucket.type</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+		<menuitem name="Bucket Type" id="bucket_type_menu" parent="sale.sale_menu_root"
+     		action="action_bucket_type_form"/>
+     
+    </data>
+</odoo>
