@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+
+access_product_budget_fixed,product.budget.fixed,model_product_budget_fixed,base.group_user,1,1,1,1
+access_product_budget_allocate,product.budget.allocate,model_product_budget_allocate,base.group_user,1,1,1,1

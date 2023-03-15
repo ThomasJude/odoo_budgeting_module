@@ -1,0 +1,36 @@
+<odoo>
+	<data>
+		<record id="view_product_temolate_inherit_odoo" model="ir.ui.view">
+			<field name="name">product.template.product.form</field>
+        	<field name="model">product.template</field>
+			<field name="inherit_id" ref="product.product_template_only_form_view" />
+			<field name="arch" type="xml">
+            	<xpath expr="//notebook" position="inside">
+	                <page string="Budgeting Tab" name="budget_info">
+						<separator string="Fixed Reduction "/>
+						<field name="product_fixed_budget_line" widget="section_and_note_one2many" mode="tree">
+						<tree string="Fixed Budget" editable="bottom">
+                                <field name="product_id" attrs="{'readonly': [('name', '!=', False)],}" options="{'no_edit': True, 'no_create': True}"/>
+                                <field name="name" attrs="{'readonly': [('product_id', '!=', False)],}"/>
+                                <field name="prod_priority" />
+                                <field name="amount" />
+                                <field name="assignable_status" />
+                                    
+                            </tree>
+                        </field>
+                        <separator string="Remaining % Allocation"/>
+                        <field name="product_allocate_budget_line" widget="section_and_note_one2many" mode="tree">
+						<tree string="Allocate Budget" editable="bottom">
+                                <field name="product_id" attrs="{'readonly': [('name', '!=', False)],}" options="{'no_edit': True, 'no_create': True}"/>
+                                <field name="name" attrs="{'readonly': [('product_id', '!=', False)],}"/>
+                                <field name="allocate_percent" />
+                                <field name="assignable_status"/>
+
+                            </tree>
+                        </field>
+	                </page>
+            </xpath>
+			</field>
+		</record>
+	</data>
+</odoo>
