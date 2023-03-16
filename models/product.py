@@ -37,6 +37,12 @@ class ProductBudgetFixed(models.Model):
         default=False)
     
     bucket_type_id = fields.Many2one('bucket.type','Bucket Type')
+    bucket_user= fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
+    # vendor_ids= fields.Many2many('res.partner',string="Bucket Item")
+    prod_fix_vendor_ids = fields.Many2many(
+        'res.partner', 'prod_fix_budget_vendor', 'prod_fix_budget_id', 'vendor_id',
+        string='Bucket Item(vendor)', copy=False)
+    prod_fix_assigned_user_ids= fields.Many2many('res.users', 'prod_fix_budget_user', 'prod_fix_budget_usr_id', 'usr_id',string="Bucket Item(Users)",copy=False)
     
     @api.onchange('bucket_type_id')
     def _onchange_bucket_type_id(self):
