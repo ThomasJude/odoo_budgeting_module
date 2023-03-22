@@ -34,6 +34,7 @@
                                 <field name="prod_remaining_budget_vendor_ids"  attrs="{'readonly': ['|',('bucket_user', '!=', 'vendor'),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>
                                 <field name="prod_remaining_budget_assigned_user_ids" attrs="{'readonly': ['|',('bucket_user', '=', 'vendor'),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>
                                 <field name="allocate_percent" />
+                                <field name="amount" readonly="1" />
                                 
 
                             </tree>

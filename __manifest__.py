@@ -9,18 +9,16 @@
 Budget Module
     """,
     'website': 'https://www.oodlestechnologies.com',
-    'depends' : ['base', 'product', 'sale','sale_management','purchase'],
+    'depends' : ['base', 'product', 'sale','sale_management','purchase','stock'],
     'data': [
         'security/ir.model.access.csv',
         'views/bucket_type_view.xml',
-        # 'security/salesforce_connector_security.xml',
-        # 'data/data_crm_stage.xml',
-        # 'data/email_template.xml',
-        # 'wizard/message_wizard.xml',
+        'views/bucket_view.xml',
+        'views/bucket_dashboard_view.xml',
         'views/product_view.xml',
-        # 'views/sale_contract_view.xml',
-        # 'views/lead_view.xml',
+        'views/invoicing.xml',
     ],
+    
     'installable': True,
     'application': True,
     'auto_install': False,
