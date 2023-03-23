@@ -11,6 +11,7 @@ class Bucket(models.Model):
     # user_type = fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
     bucket_status = fields.Selection([('invoiced','Invoiced'),('released','Released')], "Bucket Status")
     bucket_type_id = fields.Many2one('bucket.type','Bucket Type')
+    vendor_line = fields.One2many('vendor.line', 'vendor_line_bucket_id', 'Vendor Details')
     
     @api.constrains('user_type','bucket_status','bucket_type_id')
     def bucket_user_type_status(self):
@@ -19,3 +20,11 @@ class Bucket(models.Model):
             obj = self.env['bucket'].search([('bucket_status','=',record.bucket_status),('id','!=',record.id),('bucket_type_id','=',record.bucket_type_id.id)])
             if obj:
                 raise UserError(_('There is already a bucket exist with same bucket status and bucket type'))
+            
+            
+            
+class VendorLine(models.Model):
+    _name = "vendor.line"
+    
+    vendor_id = fields.Many2one('res.partner','Vendors')
+    vendor_line_bucket_id = fields.Many2one('bucket','bucket')

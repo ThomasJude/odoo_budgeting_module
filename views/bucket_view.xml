@@ -37,6 +37,16 @@
 	                            <field name="bucket_status" required="1"/>
 							</group>
 	                    </group>
+	                    
+	                    <notebook>
+							<page string="Vendor Details" name="vendor_info">
+								<field name="vendor_line" >
+									<tree string="Vendor Line" editable="bottom">
+		                                <field name="vendor_id" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
+		                            </tree>
+		                        </field>
+							</page>
+						</notebook>
                     </sheet>
                 </form>
             </field>
