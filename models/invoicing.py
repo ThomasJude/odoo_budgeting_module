@@ -6,6 +6,7 @@ class AccountMove(models.Model):
 
     inv_budget_line = fields.One2many('invoice.budget.line', 'prod_inv_id', 'Budget Info')
     product_remaining_budget_line = fields.One2many('product.budget.remaining', 'prod_remaining_id', 'Product Remaining Budget')
+    previous_released_amount = fields.Float('Previous Released')
     
     @api.constrains("invoice_line_ids","invoice_line_ids.product_id")
     def fetch_fixed_budget_product_data(self):
@@ -150,11 +151,45 @@ class ProductBudgetRemaining(models.Model):
     
 class AccountPaymentRegister(models.TransientModel):
     _inherit = 'account.payment.register'
-
+    
+    
     def action_create_payments(self):
         res = super(AccountPaymentRegister,self).action_create_payments()
         invoice_amount = self.env['account.move'].sudo().search([('id', '=', self.line_ids.move_id.id)])
-        if invoice_amount.amount_total == self.amount:
+        total_released_amount = self.amount
+        self.line_ids.move_id.previous_released_amount += self.amount
+        if invoice_amount.amount_total == self.amount and invoice_amount.payment_state == "paid" :
+            if self.line_ids.move_id.inv_budget_line:
+
+                priority_list = []
+                for inv_fix_budget in self.line_ids.move_id.inv_budget_line:
+                    priority_list.append(inv_fix_budget.prod_priority)
+                priority_list.sort()
+                for priority in priority_list:
+                    for buget_inv_line in self.line_ids.move_id.inv_budget_line:
+                        if priority == buget_inv_line.prod_priority and not buget_inv_line.released:
+                            invoices_bucket = self.env['bucket'].sudo().search(
+                                [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id), ('bucket_status', '=', 'invoiced')])
+                            invoices_bucket.bucket_amount = invoices_bucket.bucket_amount - buget_inv_line.amount
+                            released_bucket = self.env['bucket'].sudo().search(
+                                [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+                                 ('bucket_status', '=', 'released')])
+                            released_bucket.bucket_amount = released_bucket.bucket_amount+buget_inv_line.amount
+                            buget_inv_line.released = True
+
+            if self.line_ids.move_id.product_remaining_budget_line:
+
+                for budget_remaining_line in self.line_ids.move_id.product_remaining_budget_line:
+                    if not budget_remaining_line.released:
+                        invoiced_bucket = self.env['bucket'].sudo().search(
+                            [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id), ('bucket_status', '=', 'invoiced')])
+                        invoiced_bucket.bucket_amount -= budget_remaining_line.amount
+                        released_bucket = self.env['bucket'].sudo().search(
+                            [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
+                             ('bucket_status', '=', 'released')])
+                        released_bucket.bucket_amount += budget_remaining_line.amount
+                        budget_remaining_line.released = True
+        elif invoice_amount.amount_total > self.amount and invoice_amount.payment_state == "partial":
             if self.line_ids.move_id.inv_budget_line:
                 priority_list = []
                 for inv_fix_budget in self.line_ids.move_id.inv_budget_line:
@@ -162,29 +197,288 @@ class AccountPaymentRegister(models.TransientModel):
                 priority_list.sort()
                 for priority in priority_list:
                     for buget_inv_line in self.line_ids.move_id.inv_budget_line:
-                        if priority == buget_inv_line.prod_priority:
-                            invoices_bucket = self.env['bucket'].sudo().search(
-                                [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id), ('bucket_status', '=', 'invoiced')])
-                            invoices_bucket.bucket_amount -= buget_inv_line.amount
-                            released_bucket = self.env['bucket'].sudo().search(
-                                [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
-                                 ('bucket_status', '=', 'released')])
-                            released_bucket.bucket_amount += buget_inv_line.amount
-                            buget_inv_line.released = True
+                        if priority == buget_inv_line.prod_priority and total_released_amount != 0 and not buget_inv_line.released:
+                            if buget_inv_line.amount_residual == 0.0:
+                                
+                                if total_released_amount >= buget_inv_line.amount:
+                                    total_released_amount = total_released_amount - buget_inv_line.amount
+                                    buget_inv_line.released = True
+                                    invoices_bucket = self.env['bucket'].sudo().search(
+                                        [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+                                         ('bucket_status', '=', 'invoiced')])
+                                    invoices_bucket.bucket_amount -= buget_inv_line.amount
 
-            if self.line_ids.move_id.product_remaining_budget_line:
+                                    released_bucket = self.env['bucket'].sudo().search(
+                                        [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+                                         ('bucket_status', '=', 'released')])
+                                    released_bucket.bucket_amount += buget_inv_line.amount
+                                else:
+
+                                    buget_inv_line.amount_residual = buget_inv_line.amount - total_released_amount
+                                    invoices_bucket = self.env['bucket'].sudo().search(
+                                        [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+                                         ('bucket_status', '=', 'invoiced')])
+                                    invoices_bucket.bucket_amount -= total_released_amount
+
+                                    released_bucket = self.env['bucket'].sudo().search(
+                                        [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+                                         ('bucket_status', '=', 'released')])
+                                    released_bucket.bucket_amount += total_released_amount
+                                    total_released_amount = buget_inv_line.amount - total_released_amount
+                                    if buget_inv_line.amount_residual != 0.0 :
+                                        total_released_amount = 0
+                            else:
+                                if total_released_amount > buget_inv_line.amount_residual:
+                                    total_released_amount = total_released_amount - buget_inv_line.amount_residual
+                                    buget_inv_line.released = True
+                                    invoices_bucket = self.env['bucket'].sudo().search(
+                                        [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+                                         ('bucket_status', '=', 'invoiced')])
+                                    invoices_bucket.bucket_amount -= buget_inv_line.amount_residual
+
+                                    released_bucket = self.env['bucket'].sudo().search(
+                                        [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+                                         ('bucket_status', '=', 'released')])
+                                    released_bucket.bucket_amount += buget_inv_line.amount_residual
+                                    buget_inv_line.amount_residual = 0.0
+                                else:
+                                    buget_inv_line.amount_residual = buget_inv_line.amount - total_released_amount
+                                    invoices_bucket = self.env['bucket'].sudo().search(
+                                        [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+                                         ('bucket_status', '=', 'invoiced')])
+                                    invoices_bucket.bucket_amount -= total_released_amount
+
+                                    released_bucket = self.env['bucket'].sudo().search(
+                                        [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+                                         ('bucket_status', '=', 'released')])
+                                    released_bucket.bucket_amount += total_released_amount
+                                    if buget_inv_line.amount_residual != 0.0:
+                                        total_released_amount = 0
+
+
+                        elif priority == buget_inv_line.prod_priority and total_released_amount == 0 and not buget_inv_line.released:
+                            buget_inv_line.amount_residual = buget_inv_line.amount
+            line_amount_released = []
+            for buget_inv_line in self.line_ids.move_id.inv_budget_line:
+                if buget_inv_line.released:
+                    line_amount_released.append(buget_inv_line.released)
+            if self.line_ids.move_id.product_remaining_budget_line and buget_inv_line.released and len(self.line_ids.move_id.inv_budget_line) == len(line_amount_released):
                 for budget_remaining_line in self.line_ids.move_id.product_remaining_budget_line:
-                    invoiced_bucket = self.env['bucket'].sudo().search(
-                        [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id), ('bucket_status', '=', 'invoiced')])
-                    invoiced_bucket.bucket_amount -= budget_remaining_line.amount
-                    released_bucket = self.env['bucket'].sudo().search(
-                        [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
-                         ('bucket_status', '=', 'released')])
-                    released_bucket.bucket_amount += budget_remaining_line.amount
-                    budget_remaining_line.released = True
-        elif invoice_amount.amount_total > self.amount:
-            pass
+                    if total_released_amount != 0 and not budget_remaining_line.released:
+                        if budget_remaining_line.amount_residual == 0.0:
+                            if total_released_amount >= budget_remaining_line.amount:
+                                total_released_amount = total_released_amount - budget_remaining_line.amount
+                                budget_remaining_line.released = True
+                                invoiced_bucket = self.env['bucket'].sudo().search(
+                                    [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id), ('bucket_status', '=', 'invoiced')])
+                                invoiced_bucket.bucket_amount -= budget_remaining_line.amount
+                                released_bucket = self.env['bucket'].sudo().search(
+                                    [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
+                                     ('bucket_status', '=', 'released')])
+                                released_bucket.bucket_amount += budget_remaining_line.amount
+                            else:
+                                budget_remaining_line.amount_residual = budget_remaining_line.amount - total_released_amount
+                                invoiced_bucket = self.env['bucket'].sudo().search(
+                                    [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id), ('bucket_status', '=', 'invoiced')])
+                                invoiced_bucket.bucket_amount -= total_released_amount
+                                released_bucket = self.env['bucket'].sudo().search(
+                                    [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
+                                     ('bucket_status', '=', 'released')])
+                                released_bucket.bucket_amount += total_released_amount
+                                if budget_remaining_line.amount_residual != 0.0:
+                                    total_released_amount = 0
+
+
+                        else:
+                            if total_released_amount >= budget_remaining_line.amount_residual:
+                                total_released_amount = total_released_amount - budget_remaining_line.amount_residual
+                                invoiced_bucket = self.env['bucket'].sudo().search(
+                                    [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
+                                     ('bucket_status', '=', 'invoiced')])
+                                invoiced_bucket.bucket_amount -= budget_remaining_line.amount_residual
+                                released_bucket = self.env['bucket'].sudo().search(
+                                    [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
+                                     ('bucket_status', '=', 'released')])
+                                released_bucket.bucket_amount += budget_remaining_line.amount_residual
+                                budget_remaining_line.amount_residual = 0.0
+                                # buget_inv_line.amount_residual = 0
+                                budget_remaining_line.released = True
+                            else:
+                                budget_remaining_line.amount_residual = budget_remaining_line.amount_residual - total_released_amount
+                                invoiced_bucket = self.env['bucket'].sudo().search(
+                                    [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
+                                     ('bucket_status', '=', 'invoiced')])
+                                invoiced_bucket.bucket_amount -= total_released_amount
+                                released_bucket = self.env['bucket'].sudo().search(
+                                    [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
+                                     ('bucket_status', '=', 'released')])
+                                released_bucket.bucket_amount += total_released_amount
+                                if budget_remaining_line.amount_residual != 0.0:
+                                    total_released_amount = 0
+                    elif total_released_amount == 0.0 and not budget_remaining_line.released:
+                        budget_remaining_line.amount_residual = budget_remaining_line.amount
+        else:
+            if self.line_ids.move_id.product_remaining_budget_line:
+
+                for budget_remaining_line in self.line_ids.move_id.product_remaining_budget_line:
+                    if not budget_remaining_line.released:
+                        invoiced_bucket = self.env['bucket'].sudo().search(
+                            [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id), ('bucket_status', '=', 'invoiced')])
+                        invoiced_bucket.bucket_amount -= budget_remaining_line.amount_residual
+                        released_bucket = self.env['bucket'].sudo().search(
+                            [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
+                             ('bucket_status', '=', 'released')])
+                        released_bucket.bucket_amount += budget_remaining_line.amount_residual
+                        budget_remaining_line.released = True
+                        budget_remaining_line.amount_residual = 0.0
         return res
+    
+    
+    # def action_create_payments(self):
+    #     res = super(AccountPaymentRegister,self).action_create_payments()
+    #     invoice_amount = self.env['account.move'].sudo().search([('id', '=', self.line_ids.move_id.id)])
+    #     print("@@@@@@@@@@@@@@@@@@@@@22", invoice_amount.amount_total,"@@@@@@@@@@@@@@@@@@@@@11", invoice_amount.amount_residual,"@@@@@@@@@@@@@@@@@@@@@", self.payment_difference)
+    #     if invoice_amount.amount_total == self.amount and invoice_amount.payment_state == "paid" :
+    #         if self.line_ids.move_id.inv_budget_line and not self.line_ids.move_id.inv_budget_line.released:
+    #             priority_list = []
+    #             for inv_fix_budget in self.line_ids.move_id.inv_budget_line:
+    #                 priority_list.append(inv_fix_budget.prod_priority)
+    #             priority_list.sort()
+    #             for priority in priority_list:
+    #                 for buget_inv_line in self.line_ids.move_id.inv_budget_line:
+    #                     if priority == buget_inv_line.prod_priority:
+    #                         invoices_bucket = self.env['bucket'].sudo().search(
+    #                             [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id), ('bucket_status', '=', 'invoiced')])
+    #                         invoices_bucket.bucket_amount -= buget_inv_line.amount
+    #                         released_bucket = self.env['bucket'].sudo().search(
+    #                             [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+    #                              ('bucket_status', '=', 'released')])
+    #                         released_bucket.bucket_amount += buget_inv_line.amount
+    #                         buget_inv_line.released = True
+    #
+    #         if self.line_ids.move_id.product_remaining_budget_line and not self.line_ids.move_id.product_remaining_budget_line.released:
+    #             for budget_remaining_line in self.line_ids.move_id.product_remaining_budget_line:
+    #                 invoiced_bucket = self.env['bucket'].sudo().search(
+    #                     [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id), ('bucket_status', '=', 'invoiced')])
+    #                 invoiced_bucket.bucket_amount -= budget_remaining_line.amount
+    #                 released_bucket = self.env['bucket'].sudo().search(
+    #                     [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
+    #                      ('bucket_status', '=', 'released')])
+    #                 released_bucket.bucket_amount += budget_remaining_line.amount
+    #                 budget_remaining_line.released = True
+    #     elif invoice_amount.amount_total > self.amount and invoice_amount.payment_state == "partial":
+    #         print("inside Elif")
+    #
+    #         total_released_amount = self.amount
+    #         self.line_ids.move_id.previous_released_amount += self.amount
+    #         if self.line_ids.move_id.inv_budget_line:
+    #                 print("LENGTH ",len(self.line_ids.move_id.inv_budget_line))
+    #                 priority_list = []
+    #                 for inv_fix_budget in self.line_ids.move_id.inv_budget_line:
+    #                     priority_list.append(inv_fix_budget.prod_priority)
+    #                 priority_list.sort()
+    #                 for priority in priority_list:
+    #                     for buget_inv_line in self.line_ids.move_id.inv_budget_line:
+    #
+    #                         # print("@@@@@@@@@@@@@1111111", total_released_amount)
+    #                         if priority == buget_inv_line.prod_priority and total_released_amount != 0 and not buget_inv_line.released:
+    #                             # print("inside if")
+    #                             if buget_inv_line.amount_residual == 0:
+    #                                 invoices_bucket = self.env['bucket'].sudo().search(
+    #                                     [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+    #                                      ('bucket_status', '=', 'invoiced')])
+    #                                 invoices_bucket.bucket_amount -= buget_inv_line.amount
+    #
+    #                                 released_bucket = self.env['bucket'].sudo().search(
+    #                                     [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+    #                                      ('bucket_status', '=', 'released')])
+    #                                 released_bucket.bucket_amount += buget_inv_line.amount
+    #                                 # print("@@@@@@@@@@@@@11111112222222222222222222", total_released_amount,buget_inv_line.amount)
+    #                                 if total_released_amount > buget_inv_line.amount:
+    #                                     # print("@@@@@@@@@@@@@2222222222", total_released_amount)
+    #                                     total_released_amount = total_released_amount - buget_inv_line.amount
+    #                                     # buget_inv_line.amount_residual = 0
+    #                                     buget_inv_line.released = True
+    #
+    #                                     # print("33333333333",buget_inv_line.amount_residual)
+    #                                 else:
+    #                                     # print("@@@@@@@@@@@@@",total_released_amount)
+    #                                     buget_inv_line.amount_residual = buget_inv_line.amount - total_released_amount
+    #                                     # total_released_amount = buget_inv_line.amount - total_released_amount
+    #                                     # print("111111111111111111111111111111",buget_inv_line.amount_residual)
+    #                                     if buget_inv_line.amount_residual != 0.0 :
+    #                                         total_released_amount = 0
+    #                             else:
+    #                                 invoices_bucket = self.env['bucket'].sudo().search(
+    #                                     [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+    #                                      ('bucket_status', '=', 'invoiced')])
+    #                                 invoices_bucket.bucket_amount -= buget_inv_line.amount_residual
+    #
+    #                                 released_bucket = self.env['bucket'].sudo().search(
+    #                                     [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+    #                                      ('bucket_status', '=', 'released')])
+    #                                 released_bucket.bucket_amount += buget_inv_line.amount_residual
+    #                                 # print("@@@@@@@@@@@@@11111112222222222222222222 Total Released Amount", total_released_amount,
+    #                                 #       buget_inv_line.amount)
+    #                                 if total_released_amount > buget_inv_line.amount_residual:
+    #                                     # print("@@@@@@@@@@@@@2222222222", total_released_amount)
+    #                                     total_released_amount = total_released_amount - buget_inv_line.amount_residual
+    #                                     buget_inv_line.amount_residual = 0.0
+    #                                     # buget_inv_line.amount_residual = 0
+    #                                     buget_inv_line.released = True
+    #                                     # print("33333333333", buget_inv_line.amount_residual,self.line_ids.move_id.previous_released_amount)
+    #                                 else:
+    #                                     buget_inv_line.amount_residual = buget_inv_line.amount - total_released_amount
+    #                                     if buget_inv_line.amount_residual != 0.0:
+    #                                         total_released_amount = 0
+    #
+    #                         elif priority == buget_inv_line.prod_priority and total_released_amount == 0 and not buget_inv_line.released:
+    #                             buget_inv_line.amount_residual = buget_inv_line.amount
+    #
+    #                 print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11",total_released_amount)
+    #
+    #         fixed_amount_lst=[]
+    #         for fixed_amt in self.line_ids.move_id.inv_budget_line:
+    #             fixed_amount_lst.append(fixed_amt.amount_residual)
+    #
+    #         all_done_count=1
+    #         for fix_lst in fixed_amount_lst:
+    #             if fix_lst != 0.0:
+    #                 all_done_count=all_done_count+1
+    #
+    #         if all_done_count == 1:
+    #             for buget_inv_line in self.line_ids.move_id.inv_budget_line:
+    #                 if self.line_ids.move_id.product_remaining_budget_line and buget_inv_line.released:
+    #                     print("inside percentage allocation")
+    #                     for budget_remaining_line in self.line_ids.move_id.product_remaining_budget_line:
+    #                         if total_released_amount != 0 and not buget_inv_line.released:
+    #                             if budget_remaining_line.amount_residual == 0:
+    #                                 invoiced_bucket = self.env['bucket'].sudo().search(
+    #                                     [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id), ('bucket_status', '=', 'invoiced')])
+    #                                 invoiced_bucket.bucket_amount -= budget_remaining_line.amount
+    #                                 released_bucket = self.env['bucket'].sudo().search(
+    #                                     [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
+    #                                      ('bucket_status', '=', 'released')])
+    #                                 released_bucket.bucket_amount += budget_remaining_line.amount
+    #                                 if total_released_amount > budget_remaining_line.amount_residual:
+    #                                     print("@@@@@@@@@@@@@2222222222", total_released_amount)
+    #                                     total_released_amount = total_released_amount - budget_remaining_line.amount_residual
+    #                                     budget_remaining_line.amount_residual = 0.0
+    #                                     # buget_inv_line.amount_residual = 0
+    #                                     budget_remaining_line.released = True
+    #                                     print("33333333333", budget_remaining_line.amount_residual,
+    #                                           self.line_ids.move_id.previous_released_amount)
+    #                                 else:
+    #                                     budget_remaining_line.amount_residual = budget_remaining_line.amount - total_released_amount
+    #                                     if budget_remaining_line.amount_residual != 0.0:
+    #                                         total_released_amount = 0
+    #                         elif total_released_amount == 0 and not budget_remaining_line.released:
+    #                                     # print("inside else")
+    #                                     budget_remaining_line.amount_residual = buget_inv_line.amount
+    #             print("###########################333",total_released_amount,self.line_ids.move_id.amount_residual,self.line_ids.move_id.amount_total)
+    #
+    #     return res
+
 
 
 

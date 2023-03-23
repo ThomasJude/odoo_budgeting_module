@@ -5,6 +5,9 @@
         <field name="model">account.move</field>
 		<field name="inherit_id" ref="account.view_move_form"/>
 		<field name="arch" type="xml">
+			<field name ="payment_reference" position="after">
+				<field name="previous_released_amount" readonly="1"/>
+			</field>
 			<xpath expr="//notebook" position="inside">
 					<page string="Budgeting Tab" name="budget_info">
 						<separator string="Assigned Vendor/User"/>
@@ -19,6 +22,8 @@
                                 <field name="budget_user_ids" attrs="{'readonly': ['|','|',('bucket_user', '=', 'vendor'),('assignable_status', 'in', ('unassigned','assigned')),('assignable_status', 'not in', ('unassigned','assigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>
                                 <field name="prod_priority" readonly="1"/>
                                 <field name="amount" readonly="1"/>
+                                <field name="released" readonly="1"/>
+                                <field name="amount_residual" readonly="1"/>
                                 
                                     
                             </tree>
@@ -37,6 +42,8 @@
                                 <field name="budget_remaining_user_ids" attrs="{'readonly': ['|',('bucket_user', '=', 'vendor'),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>
 								<field name="allocate_percent" readonly="1"/>
 								<field name="amount" readonly="1"/>
+								<field name="released" readonly="1"/>
+								<field name="amount_residual" readonly="1"/>
 							</tree>
 						</field>
 					</page>
