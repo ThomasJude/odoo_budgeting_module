@@ -41,7 +41,7 @@ class AccountMove(models.Model):
                                                                                         'budget_inv_remaining_vendor_ids': [(6,0, allocate_budget_line.prod_remaining_budget_vendor_ids.ids)] or [],
                                                                                         'budget_remaining_user_ids':[(6,0, allocate_budget_line.prod_remaining_budget_assigned_user_ids.ids)] or [],
                                                                                         'allocate_percent':allocate_budget_line.allocate_percent,
-                                                                                        'amount':allocate_budget_line.allocate_percent
+                                                                                        'amount':allocate_budget_line.amount
                                                                                         })
          
          
@@ -49,7 +49,7 @@ class AccountMove(models.Model):
         res = super(AccountMove, self).action_post()
         priority_list = []
         bucket_type_list = set()
-
+        assigned_vendor_lst=[]
         if self.inv_budget_line:
             for inv_budget in self.inv_budget_line: 
                 if inv_budget.assignable_status == 'assignable_at_inv' and inv_budget.bucket_user=='vendor' and not inv_budget.budget_inv_vendor_ids:
@@ -66,6 +66,14 @@ class AccountMove(models.Model):
                     if priority == buget_inv_line.prod_priority:
                         fixed_bucket = self.env['bucket'].sudo().search([('bucket_type_id','=',buget_inv_line.bucket_type_id.id),('bucket_status','=','invoiced')])
                         fixed_bucket.bucket_amount += buget_inv_line.amount
+                        fixed_bucket_vendor_lst=[]
+                        if fixed_bucket.vendor_line:
+                            for fixed_vendr in fixed_bucket.vendor_line:
+                                fixed_bucket_vendor_lst.append(fixed_vendr.vendor_id.id)
+                        if buget_inv_line.budget_inv_vendor_ids:
+                            for vendr_id in buget_inv_line.budget_inv_vendor_ids:
+                                if vendr_id.id not in fixed_bucket_vendor_lst:
+                                    assigned_vendor_lst.append(vendr_id.id)
 
         if self.product_remaining_budget_line:
             for budget_remaining_line in self.product_remaining_budget_line:
@@ -73,6 +81,16 @@ class AccountMove(models.Model):
                 remaining_bucket = self.env['bucket'].sudo().search(
                     [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id), ('bucket_status', '=', 'invoiced')])
                 remaining_bucket.bucket_amount += budget_remaining_line.amount
+                
+                remaining_bucket_vendor_lst=[]
+                if remaining_bucket.vendor_line:
+                    for remaining_vendr in remaining_bucket.vendor_line:
+                        remaining_bucket_vendor_lst.append(remaining_vendr.id)
+                
+                if budget_remaining_line.budget_inv_remaining_vendor_ids:
+                    for rem_vendr_id in budget_remaining_line.budget_inv_remaining_vendor_ids:
+                        if rem_vendr_id.id not in remaining_bucket_vendor_lst:
+                            assigned_vendor_lst.append(rem_vendr_id.id)
 
             for bucket_type_id in bucket_type_list:
                 existing_bucket_dashboard = self.env['bucket.dashboard'].sudo().search([('bucket_type_id','=',bucket_type_id.id)])
@@ -83,6 +101,14 @@ class AccountMove(models.Model):
                     })
                 else:
                     existing_bucket_dashboard.bucket_inv_ids= [(4, self.id, 0)]
+                    
+        assigned_vendr_set= set(assigned_vendor_lst)
+        final_vendor_lst= list(assigned_vendr_set)
+        vendor_bucket_type_id=self.env['bucket.type'].sudo().search([('user_type','=','vendor')],limit=1)
+        vendor_inv_bucket = self.env['bucket'].sudo().search([('bucket_type_id', '=', vendor_bucket_type_id.id), ('bucket_status', '=', 'invoiced')])
+        for final_vendor in final_vendor_lst:
+            final_vendor_id= self.env['res.partner'].browse(final_vendor)
+            vendor_bucket_line= self.env['vendor.line'].sudo().create({'vendor_line_bucket_id':vendor_inv_bucket.id,'vendor_id':final_vendor_id.id})           
         return res
     
     
