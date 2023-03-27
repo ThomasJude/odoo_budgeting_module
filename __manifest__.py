@@ -12,6 +12,7 @@ Budget Module
     'depends' : ['base', 'product', 'sale','sale_management','purchase','stock'],
     'data': [
         'security/ir.model.access.csv',
+        'wizard/vendor_invoice_detail.xml',
         'views/bucket_type_view.xml',
         'views/bucket_view.xml',
         'views/bucket_dashboard_view.xml',

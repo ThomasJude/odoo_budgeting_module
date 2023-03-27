@@ -23,8 +23,10 @@ class AccountMove(models.Model):
                                                                                         'assignable_status':fix_budget_line.assignable_status,
                                                                                         'amount':fix_budget_line.amount,
                                                                                         'bucket_user':fix_budget_line.bucket_user,
-                                                                                        'budget_inv_vendor_ids': [(6,0, fix_budget_line.prod_fix_vendor_ids.ids)] or [],
-                                                                                        'budget_user_ids':[(6,0, fix_budget_line.prod_fix_assigned_user_ids.ids)] or [],
+                                                                                        # 'budget_inv_vendor_ids': [(6,0, fix_budget_line.prod_fix_vendor_ids.ids)] or [],
+                                                                                        'budget_inv_vendor_id': fix_budget_line.prod_fix_vendor_id.id,
+                                                                                        # 'budget_user_ids':[(6,0, fix_budget_line.prod_fix_assigned_user_ids.ids)] or [],
+                                                                                        'budget_user_id': fix_budget_line.prod_fix_assigned_user_id.id,
                                                                                         'prod_priority':fix_budget_line.prod_priority
                                                                                         })
                             
@@ -38,8 +40,10 @@ class AccountMove(models.Model):
                                                                                         'bucket_type_id':allocate_budget_line.bucket_type_id.id,
                                                                                         'assignable_status':allocate_budget_line.assignable_status,
                                                                                         'bucket_user':allocate_budget_line.bucket_user,
-                                                                                        'budget_inv_remaining_vendor_ids': [(6,0, allocate_budget_line.prod_remaining_budget_vendor_ids.ids)] or [],
-                                                                                        'budget_remaining_user_ids':[(6,0, allocate_budget_line.prod_remaining_budget_assigned_user_ids.ids)] or [],
+                                                                                        # 'budget_inv_remaining_vendor_ids': [(6,0, allocate_budget_line.prod_remaining_budget_vendor_ids.ids)] or [],
+                                                                                        'budget_inv_remaining_vendor_id': allocate_budget_line.prod_remaining_budget_vendor_id.id,
+                                                                                        # 'budget_remaining_user_ids':[(6,0, allocate_budget_line.prod_remaining_budget_assigned_user_ids.ids)] or [],
+                                                                                        'budget_remaining_user_id': allocate_budget_line.prod_remaining_budget_assigned_user_id.id,
                                                                                         'allocate_percent':allocate_budget_line.allocate_percent,
                                                                                         'amount':allocate_budget_line.amount
                                                                                         })
@@ -52,9 +56,11 @@ class AccountMove(models.Model):
         assigned_vendor_lst=[]
         if self.inv_budget_line:
             for inv_budget in self.inv_budget_line: 
-                if inv_budget.assignable_status == 'assignable_at_inv' and inv_budget.bucket_user=='vendor' and not inv_budget.budget_inv_vendor_ids:
+                # if inv_budget.assignable_status == 'assignable_at_inv' and inv_budget.bucket_user=='vendor' and not inv_budget.budget_inv_vendor_ids:
+                if inv_budget.assignable_status == 'assignable_at_inv' and inv_budget.bucket_user=='vendor' and not inv_budget.budget_inv_vendor_id:
                     raise UserError(_("Please assign vendors in budgeting tab"))
-                if inv_budget.assignable_status == 'assignable_at_inv' and inv_budget.bucket_user!='vendor' and not inv_budget.budget_user_ids:
+                # if inv_budget.assignable_status == 'assignable_at_inv' and inv_budget.bucket_user!='vendor' and not inv_budget.budget_user_ids:
+                if inv_budget.assignable_status == 'assignable_at_inv' and inv_budget.bucket_user!='vendor' and not inv_budget.budget_user_id:
                     raise UserError(_("Please assign Users in budgeting tab"))
 
             for inv_fix_budget in self.inv_budget_line:
@@ -70,8 +76,12 @@ class AccountMove(models.Model):
                         if fixed_bucket.vendor_line:
                             for fixed_vendr in fixed_bucket.vendor_line:
                                 fixed_bucket_vendor_lst.append(fixed_vendr.vendor_id.id)
-                        if buget_inv_line.budget_inv_vendor_ids:
-                            for vendr_id in buget_inv_line.budget_inv_vendor_ids:
+                        # if buget_inv_line.budget_inv_vendor_ids:
+                        #     for vendr_id in buget_inv_line.budget_inv_vendor_ids:
+                        #         if vendr_id.id not in fixed_bucket_vendor_lst:
+                        #             assigned_vendor_lst.append(vendr_id.id)
+                        if buget_inv_line.budget_inv_vendor_id:
+                            for vendr_id in buget_inv_line.budget_inv_vendor_id:
                                 if vendr_id.id not in fixed_bucket_vendor_lst:
                                     assigned_vendor_lst.append(vendr_id.id)
 
@@ -87,8 +97,12 @@ class AccountMove(models.Model):
                     for remaining_vendr in remaining_bucket.vendor_line:
                         remaining_bucket_vendor_lst.append(remaining_vendr.id)
                 
-                if budget_remaining_line.budget_inv_remaining_vendor_ids:
-                    for rem_vendr_id in budget_remaining_line.budget_inv_remaining_vendor_ids:
+                # if budget_remaining_line.budget_inv_remaining_vendor_ids:
+                #     for rem_vendr_id in budget_remaining_line.budget_inv_remaining_vendor_ids:
+                #         if rem_vendr_id.id not in remaining_bucket_vendor_lst:
+                #             assigned_vendor_lst.append(rem_vendr_id.id)
+                if budget_remaining_line.budget_inv_remaining_vendor_id:
+                    for rem_vendr_id in budget_remaining_line.budget_inv_remaining_vendor_id:
                         if rem_vendr_id.id not in remaining_bucket_vendor_lst:
                             assigned_vendor_lst.append(rem_vendr_id.id)
 
@@ -133,10 +147,12 @@ class InvoiceBudgetLine(models.Model):
     product_id_budget = fields.Many2one('product.template', 'Product')
     prod_inv_id = fields.Many2one('account.move', 'Prod Invoice Id')
     bucket_type_id = fields.Many2one('bucket.type', 'Bucket Type')
-    budget_inv_vendor_ids = fields.Many2many(
-        'res.partner', 'prod_inv_budget_vendor', 'prod_inv_budget_id', 'vendor_id',
-        string='Vendors Name', copy=False)
-    budget_user_ids = fields.Many2many('res.users', 'prod_inv_budget_user', 'prod_inv_budget_usr_id', 'usr_id',string="Users Name",copy=False)
+    # budget_inv_vendor_ids = fields.Many2many(
+    #     'res.partner', 'prod_inv_budget_vendor', 'prod_inv_budget_id', 'vendor_id',
+    #     string='Vendors Name', copy=False)
+    budget_inv_vendor_id = fields.Many2one('res.partner', string="Vendors Name", copy=False)
+    # budget_user_ids = fields.Many2many('res.users', 'prod_inv_budget_user', 'prod_inv_budget_usr_id', 'usr_id',string="Users Name",copy=False)
+    budget_user_id = fields.Many2one('res.users', string="Users Name")
     amount = fields.Float("Amount")
     assignable_status = fields.Selection([('assigned', 'Assigned'),
                                           ('unassigned', 'Unassigned'),
@@ -162,11 +178,13 @@ class ProductBudgetRemaining(models.Model):
                                           ('assignable_at_inv', 'Assignable At Time of Invoice')
                                           ], "Assignable Status")
     bucket_user= fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
-    budget_inv_remaining_vendor_ids = fields.Many2many(
-        'res.partner', 'prod_inv_remaining_budget_vendor', 'prod_inv_remaining_budget_id', 'vendor_id',
-        string='Vendors Name', copy=False)
-    budget_remaining_user_ids = fields.Many2many('res.users', 'prod_inv_remaining_budget_user', 'prod_inv_remaining_budget_usr_id', 'usr_id',string="Users Name",copy=False)
-    
+    # budget_inv_remaining_vendor_ids = fields.Many2many(
+    #     'res.partner', 'prod_inv_remaining_budget_vendor', 'prod_inv_remaining_budget_id', 'vendor_id',
+    #     string='Vendors Name', copy=False)
+    budget_inv_remaining_vendor_id = fields.Many2one('res.partner', string="Vendors Name", copy=False)
+    # budget_remaining_user_ids = fields.Many2many('res.users', 'prod_inv_remaining_budget_user', 'prod_inv_remaining_budget_usr_id', 'usr_id',string="Users Name",copy=False)
+    budget_remaining_user_id = fields.Many2one('res.users', string="Users Name", copy=False)
+
     
     bucket_type_id = fields.Many2one('bucket.type', 'Bucket Type')
     amount = fields.Float("amount")
@@ -504,7 +522,6 @@ class AccountPaymentRegister(models.TransientModel):
     #             print("###########################333",total_released_amount,self.line_ids.move_id.amount_residual,self.line_ids.move_id.amount_total)
     #
     #     return res
-
 
 
 

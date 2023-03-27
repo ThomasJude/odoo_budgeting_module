@@ -18,8 +18,10 @@
                                 <field name="bucket_type_id" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
                                 <field name="bucket_user" invisible="1"/>
                                 <field name="assignable_status" readonly="1"/>
-                                <field name="budget_inv_vendor_ids" attrs="{'readonly': ['|',('bucket_user', '!=', 'vendor'),('assignable_status', 'in', ('unassigned','assigned'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>
-                                <field name="budget_user_ids" attrs="{'readonly': ['|','|',('bucket_user', '=', 'vendor'),('assignable_status', 'in', ('unassigned','assigned')),('assignable_status', 'not in', ('unassigned','assigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>
+<!--                                <field name="budget_inv_vendor_ids" attrs="{'readonly': ['|',('bucket_user', '!=', 'vendor'),('assignable_status', 'in', ('unassigned','assigned'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>-->
+                                <field name="budget_inv_vendor_id" attrs="{'readonly': ['|',('bucket_user', '!=', 'vendor'),('assignable_status', 'in', ('unassigned','assigned'))],}" options="{'no_edit': True, 'no_create': True}"/>
+<!--                                <field name="budget_user_ids" attrs="{'readonly': ['|','|',('bucket_user', '=', 'vendor'),('assignable_status', 'in', ('unassigned','assigned')),('assignable_status', 'not in', ('unassigned','assigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>-->
+                                <field name="budget_user_id" attrs="{'readonly': ['|','|',('bucket_user', '=', 'vendor'),('assignable_status', 'in', ('unassigned','assigned')),('assignable_status', 'not in', ('unassigned','assigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}"/>
                                 <field name="prod_priority" readonly="1"/>
                                 <field name="amount" readonly="1"/>
                                 <field name="released" readonly="1"/>
@@ -38,8 +40,10 @@
 								<field name="bucket_type_id" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
 								<field name="bucket_user" invisible="1"/>
 								<field name="assignable_status" readonly="1"/>
-								<field name="budget_inv_remaining_vendor_ids" attrs="{'readonly': ['|',('bucket_user', '!=', 'vendor'),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>
-                                <field name="budget_remaining_user_ids" attrs="{'readonly': ['|',('bucket_user', '=', 'vendor'),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>
+<!--								<field name="budget_inv_remaining_vendor_ids" attrs="{'readonly': ['|',('bucket_user', '!=', 'vendor'),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>-->
+								<field name="budget_inv_remaining_vendor_id" attrs="{'readonly': ['|',('bucket_user', '!=', 'vendor'),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}"/>
+<!--                                <field name="budget_remaining_user_ids" attrs="{'readonly': ['|',('bucket_user', '=', 'vendor'),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>-->
+                                <field name="budget_remaining_user_id" attrs="{'readonly': ['|',('bucket_user', '=', 'vendor'),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}"/>
 								<field name="allocate_percent" readonly="1"/>
 								<field name="amount" readonly="1"/>
 								<field name="released" readonly="1"/>

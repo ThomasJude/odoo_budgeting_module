@@ -9,3 +9,4 @@ access_product_budget_remaining,product.budget.remaining,model_product_budget_re
 access_bucket_dashboard,bucket.dashboard,model_bucket_dashboard,base.group_user,1,1,1,1
 
 access_vendor_line,vendor.line,model_vendor_line,base.group_user,1,1,1,1
+access_vendor_invoice_detail,vendor.invoice.detail,model_vendor_invoice_detail,base.group_user,1,1,1,1

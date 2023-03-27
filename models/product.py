@@ -56,11 +56,12 @@ class ProductBudgetFixed(models.Model):
     bucket_type_id = fields.Many2one('bucket.type','Bucket Type')
     bucket_user= fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
     # vendor_ids= fields.Many2many('res.partner',string="Bucket Item")
-    prod_fix_vendor_ids = fields.Many2many(
-        'res.partner', 'prod_fix_budget_vendor', 'prod_fix_budget_id', 'vendor_id',
-        string='Vendors Name', copy=False)
-    prod_fix_assigned_user_ids= fields.Many2many('res.users', 'prod_fix_budget_user', 'prod_fix_budget_usr_id', 'usr_id',string="Users Name",copy=False)
-    
+    # prod_fix_vendor_ids = fields.Many2many(
+    #     'res.partner', 'prod_fix_budget_vendor', 'prod_fix_budget_id', 'vendor_id',
+    #     string='Vendors Name', copy=False)
+    prod_fix_vendor_id = fields.Many2one('res.partner', string='Vendor Name', copy=False)
+    # prod_fix_assigned_user_ids = fields.Many2many('res.users', 'prod_fix_budget_user', 'prod_fix_budget_usr_id', 'usr_id',string="Users Name",copy=False)
+    prod_fix_assigned_user_id = fields.Many2one('res.users', string="User Name", copy=False)
     
     @api.constrains('prod_priority')
     def prod_priority_val(self):
@@ -79,17 +80,46 @@ class ProductBudgetFixed(models.Model):
                 self.bucket_user = 'etc'
         else:
             self.bucket_user = 'etc'
+
+    @api.onchange('product_id')
+    def _onchange_product_amount(self):
+        if self.product_id.standard_price:
+            self.amount = self.product_id.standard_price
+
+    @api.onchange('assignable_status')
+    def _onchange_vendor_name(self):
+        if self.assignable_status or self.assignable_status == False:
+            self.prod_fix_vendor_id = False or None
+            self.prod_fix_assigned_user_id = False or None
+
+    @api.onchange('bucket_type_id')
+    def _onchange_bucket_type(self):
+        if self.bucket_type_id:
+            self.prod_fix_vendor_id = False or None
+            self.prod_fix_assigned_user_id = False or None
+            self.assignable_status = False
             
-            
-    @api.onchange('prod_fix_vendor_ids')
-    def _onchange_prod_fix_vendor_ids(self):
-        if self.prod_fix_vendor_ids:
+    # @api.onchange('prod_fix_vendor_ids')
+    # def _onchange_prod_fix_vendor_ids(self):
+    #     if self.prod_fix_vendor_ids:
+    #         if not self.assignable_status:
+    #             raise UserError(_('1st select the Assignable status'))
+
+    @api.onchange('prod_fix_vendor_id')
+    def _onchange_prod_fix_vendor_id(self):
+        if self.prod_fix_vendor_id:
             if not self.assignable_status:
                 raise UserError(_('1st select the Assignable status'))
             
-    @api.onchange('prod_fix_assigned_user_ids')
-    def _onchange_prod_fix_assigned_user_ids(self):
-        if self.prod_fix_assigned_user_ids:
+    # @api.onchange('prod_fix_assigned_user_ids')
+    # def _onchange_prod_fix_assigned_user_ids(self):
+    #     if self.prod_fix_assigned_user_ids:
+    #         if not self.assignable_status:
+    #             raise UserError(_('1st select the Assignable status'))
+
+    @api.onchange('prod_fix_assigned_user_id')
+    def _onchange_prod_fix_assigned_user_id(self):
+        if self.prod_fix_assigned_user_id:
             if not self.assignable_status:
                 raise UserError(_('1st select the Assignable status'))
     
@@ -109,10 +139,12 @@ class ProductBudgetAllocate(models.Model):
     bucket_type_id = fields.Many2one('bucket.type','Bucket Type')
     bucket_user= fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
     # vendor_ids= fields.Many2many('res.partner',string="Bucket Item")
-    prod_remaining_budget_vendor_ids = fields.Many2many(
-        'res.partner', 'prod_remaining_budget_budget_vendor', 'prod_remaining_budget_budget_id', 'vendor_id',
-        string='Vendors Name', copy=False)
-    prod_remaining_budget_assigned_user_ids= fields.Many2many('res.users', 'prod_remaining_budget_budget_user', 'prod_remaining_budget_budget_usr_id', 'usr_id',string="Users Name",copy=False)
+    # prod_remaining_budget_vendor_ids = fields.Many2many(
+    #     'res.partner', 'prod_remaining_budget_budget_vendor', 'prod_remaining_budget_budget_id', 'vendor_id',
+    #     string='Vendors Name', copy=False)
+    prod_remaining_budget_vendor_id = fields.Many2one('res.partner', string="Vendors Name", copy=False)
+    # prod_remaining_budget_assigned_user_ids= fields.Many2many('res.users', 'prod_remaining_budget_budget_user', 'prod_remaining_budget_budget_usr_id', 'usr_id',string="Users Name",copy=False)
+    prod_remaining_budget_assigned_user_id = fields.Many2one('res.users', string="Users Name", copy=False)
     amount = fields.Float("amount")
 
 
@@ -143,15 +175,27 @@ class ProductBudgetAllocate(models.Model):
             self.bucket_user = 'etc'
             
             
-    @api.onchange('prod_remaining_budget_vendor_ids')
-    def _onchange_prod_remaining_budget_vendor_ids(self):
-        if self.prod_remaining_budget_vendor_ids:
+    # @api.onchange('prod_remaining_budget_vendor_ids')
+    # def _onchange_prod_remaining_budget_vendor_ids(self):
+    #     if self.prod_remaining_budget_vendor_ids:
+    #         if not self.assignable_status:
+    #             raise UserError(_('1st select the Assignable status'))
+            
+    @api.onchange('prod_remaining_budget_vendor_id')
+    def _onchange_prod_remaining_budget_vendor_id(self):
+        if self.prod_remaining_budget_vendor_id:
             if not self.assignable_status:
                 raise UserError(_('1st select the Assignable status'))
             
-    @api.onchange('prod_remaining_budget_assigned_user_ids')
-    def _onchange_prod_remaining_budget_assigned_user_ids(self):
-        if self.prod_remaining_budget_assigned_user_ids:
+    # @api.onchange('prod_remaining_budget_assigned_user_ids')
+    # def _onchange_prod_remaining_budget_assigned_user_ids(self):
+    #     if self.prod_remaining_budget_assigned_user_ids:
+    #         if not self.assignable_status:
+    #             raise UserError(_('1st select the Assignable status'))
+            
+    @api.onchange('prod_remaining_budget_assigned_user_id')
+    def _onchange_prod_remaining_budget_assigned_user_id(self):
+        if self.prod_remaining_budget_assigned_user_id:
             if not self.assignable_status:
                 raise UserError(_('1st select the Assignable status'))
 
