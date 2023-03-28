@@ -13,6 +13,7 @@ Budget Module
     'data': [
         'security/ir.model.access.csv',
         'wizard/vendor_invoice_detail.xml',
+        'wizard/user_invoice_detail.xml',
         'views/bucket_type_view.xml',
         'views/bucket_view.xml',
         'views/bucket_dashboard_view.xml',

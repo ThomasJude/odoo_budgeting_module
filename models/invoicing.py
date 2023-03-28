@@ -54,6 +54,7 @@ class AccountMove(models.Model):
         priority_list = []
         bucket_type_list = set()
         assigned_vendor_lst=[]
+        assigned_user_lst = []
         if self.inv_budget_line:
             for inv_budget in self.inv_budget_line: 
                 # if inv_budget.assignable_status == 'assignable_at_inv' and inv_budget.bucket_user=='vendor' and not inv_budget.budget_inv_vendor_ids:
@@ -73,9 +74,15 @@ class AccountMove(models.Model):
                         fixed_bucket = self.env['bucket'].sudo().search([('bucket_type_id','=',buget_inv_line.bucket_type_id.id),('bucket_status','=','invoiced')])
                         fixed_bucket.bucket_amount += buget_inv_line.amount
                         fixed_bucket_vendor_lst=[]
+                        fixed_bucket_user_lst=[]
+
                         if fixed_bucket.vendor_line:
                             for fixed_vendr in fixed_bucket.vendor_line:
                                 fixed_bucket_vendor_lst.append(fixed_vendr.vendor_id.id)
+
+                        if fixed_bucket.user_line:
+                            for fixed_user in fixed_bucket.user_line:
+                                fixed_bucket_user_lst.append(fixed_user.user_id.id)
                         # if buget_inv_line.budget_inv_vendor_ids:
                         #     for vendr_id in buget_inv_line.budget_inv_vendor_ids:
                         #         if vendr_id.id not in fixed_bucket_vendor_lst:
@@ -84,6 +91,18 @@ class AccountMove(models.Model):
                             for vendr_id in buget_inv_line.budget_inv_vendor_id:
                                 if vendr_id.id not in fixed_bucket_vendor_lst:
                                     assigned_vendor_lst.append(vendr_id.id)
+                        if buget_inv_line.budget_user_id:
+                            for user_id in buget_inv_line.budget_user_id:
+                                if user_id.id not in fixed_bucket_user_lst:
+                                    user_inv_bucket = self.env['bucket'].sudo().search([('bucket_type_id','=',buget_inv_line.bucket_type_id.id), ('bucket_status', '=', 'invoiced')])
+                                    existing_rec = self.env['user.line'].sudo().search([('user_line_bucket_id','=',user_inv_bucket.id),('user_id','=', user_id.id)])
+                                    if not existing_rec:
+                                        user_bucket_line = self.env['user.line'].sudo().create(
+                                            {'user_line_bucket_id': user_inv_bucket.id,
+                                             'user_id': user_id.id})
+                                    # assigned_user_lst.append(user_id.id)
+
+
 
         if self.product_remaining_budget_line:
             for budget_remaining_line in self.product_remaining_budget_line:
@@ -93,9 +112,14 @@ class AccountMove(models.Model):
                 remaining_bucket.bucket_amount += budget_remaining_line.amount
                 
                 remaining_bucket_vendor_lst=[]
+                remaining_bucket_user_lst=[]
                 if remaining_bucket.vendor_line:
                     for remaining_vendr in remaining_bucket.vendor_line:
                         remaining_bucket_vendor_lst.append(remaining_vendr.id)
+
+                if remaining_bucket.user_line:
+                    for remaining_user in remaining_bucket.user_line:
+                        remaining_bucket_user_lst.append(remaining_user.id)
                 
                 # if budget_remaining_line.budget_inv_remaining_vendor_ids:
                 #     for rem_vendr_id in budget_remaining_line.budget_inv_remaining_vendor_ids:
@@ -105,6 +129,20 @@ class AccountMove(models.Model):
                     for rem_vendr_id in budget_remaining_line.budget_inv_remaining_vendor_id:
                         if rem_vendr_id.id not in remaining_bucket_vendor_lst:
                             assigned_vendor_lst.append(rem_vendr_id.id)
+
+                if budget_remaining_line.budget_remaining_user_id:
+                    for rem_user_id in budget_remaining_line.budget_remaining_user_id:
+                        if rem_user_id.id not in remaining_bucket_user_lst:
+                            user_inv_bucket = self.env['bucket'].sudo().search(
+                                [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
+                                 ('bucket_status', '=', 'invoiced')])
+                            existing_rec = self.env['user.line'].sudo().search(
+                                [('user_line_bucket_id', '=', user_inv_bucket.id), ('user_id', '=', rem_user_id.id)])
+                            if not existing_rec:
+                                user_bucket_line = self.env['user.line'].sudo().create(
+                                    {'user_line_bucket_id': user_inv_bucket.id,
+                                     'user_id': rem_user_id.id})
+                            # assigned_user_lst.append(rem_user_id.id)
 
             for bucket_type_id in bucket_type_list:
                 existing_bucket_dashboard = self.env['bucket.dashboard'].sudo().search([('bucket_type_id','=',bucket_type_id.id)])
@@ -118,25 +156,25 @@ class AccountMove(models.Model):
                     
         assigned_vendr_set= set(assigned_vendor_lst)
         final_vendor_lst= list(assigned_vendr_set)
+
+        assigned_user_set = set(assigned_user_lst)
+        final_user_lst = list(assigned_user_set)
+
         vendor_bucket_type_id=self.env['bucket.type'].sudo().search([('user_type','=','vendor')],limit=1)
         vendor_inv_bucket = self.env['bucket'].sudo().search([('bucket_type_id', '=', vendor_bucket_type_id.id), ('bucket_status', '=', 'invoiced')])
         for final_vendor in final_vendor_lst:
             final_vendor_id= self.env['res.partner'].browse(final_vendor)
-            vendor_bucket_line= self.env['vendor.line'].sudo().create({'vendor_line_bucket_id':vendor_inv_bucket.id,'vendor_id':final_vendor_id.id})           
+            # vendor_bucket_line= self.env['vendor.line'].sudo().create({'vendor_line_bucket_id':vendor_inv_bucket.id,'vendor_id':final_vendor_id.id})
+            existing_vendor = self.env['vendor.line'].sudo().search([("vendor_id", '=', final_vendor_id.id)])
+            if not existing_vendor:
+                vendor_bucket_line = self.env['vendor.line'].sudo().create(
+                    {'vendor_line_bucket_id': vendor_inv_bucket.id, 'vendor_id': final_vendor_id.id})
+
+
+
         return res
     
-    
-         
-    
-    # def action_post(self):
-    #     res = super(AccountMove, self).action_post()
-    #     if self.inv_budget_line:
-    #         for inv_budget in self.inv_budget_line: 
-    #             if inv_budget.assignable_status == 'assignable_at_inv' and inv_budget.bucket_user=='vendor' and not inv_budget.budget_inv_vendor_ids:
-    #                 raise UserError(_("Please assign vendors in budgeting tab"))
-    #             if inv_budget.assignable_status == 'assignable_at_inv' and inv_budget.bucket_user!='vendor' and not inv_budget.budget_user_ids:
-    #                 raise UserError(_("Please assign Users in budgeting tab"))
-    #     return res
+
 
 
 
@@ -204,7 +242,6 @@ class AccountPaymentRegister(models.TransientModel):
         self.line_ids.move_id.previous_released_amount += self.amount
         if invoice_amount.amount_total == self.amount and invoice_amount.payment_state == "paid" :
             if self.line_ids.move_id.inv_budget_line:
-
                 priority_list = []
                 for inv_fix_budget in self.line_ids.move_id.inv_budget_line:
                     priority_list.append(inv_fix_budget.prod_priority)
@@ -220,6 +257,14 @@ class AccountPaymentRegister(models.TransientModel):
                                  ('bucket_status', '=', 'released')])
                             released_bucket.bucket_amount = released_bucket.bucket_amount+buget_inv_line.amount
                             buget_inv_line.released = True
+                            # ////////////////////////////////
+                            # vendor_bill = self.env['vendor.invoice.detail'].sudo().search([('invoice_name','=',buget_inv_line.prod_inv_id.name),('vendor_id','=',buget_inv_line.budget_inv_vendor_id.id)])
+                            # vendor_bill.released = True
+                            # user_bill = self.env['user.invoice.detail'].sudo().search(
+                            #     [('invoice_name', '=', buget_inv_line.prod_inv_id.name),
+                            #      ('vendor_id', '=', buget_inv_line.budget_inv_vendor_id.id)])
+                            # vendor_bill.released = True
+                            # print("wWWWWWWWDddddddddddddd",vendor_bill.released)
 
             if self.line_ids.move_id.product_remaining_budget_line:
 
@@ -233,6 +278,10 @@ class AccountPaymentRegister(models.TransientModel):
                              ('bucket_status', '=', 'released')])
                         released_bucket.bucket_amount += budget_remaining_line.amount
                         budget_remaining_line.released = True
+                        # user_bill = self.env['user.invoice.detail'].sudo().search(
+                        #     [('invoice_name', '=', budget_remaining_line.prod_remaining_id.name),
+                        #      ('user_id', '=', budget_remaining_line.budget_remaining_user_id.id)])
+                        # vendor_bill.released = True
         elif invoice_amount.amount_total > self.amount and invoice_amount.payment_state == "partial":
             if self.line_ids.move_id.inv_budget_line:
                 priority_list = []
@@ -522,7 +571,6 @@ class AccountPaymentRegister(models.TransientModel):
     #             print("###########################333",total_released_amount,self.line_ids.move_id.amount_residual,self.line_ids.move_id.amount_total)
     #
     #     return res
-
 
 
 

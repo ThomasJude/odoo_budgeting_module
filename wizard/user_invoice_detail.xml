@@ -3,16 +3,16 @@
     <data>
         <!-- Wizard  Form View  -->
 
-        <record id="vendor_invoice_detail_tree" model="ir.ui.view">
-		<field name="name">vendor.invoice.detail.tree</field>
-		<field name="model">vendor.invoice.detail</field>
+        <record id="user_invoice_detail_tree" model="ir.ui.view">
+		<field name="name">user.invoice.detail.tree</field>
+		<field name="model">user.invoice.detail</field>
 		<field name="type">tree</field>
 		<field name="arch" type="xml">
-			<tree string="Vendor Invoice Detail" create="false" edit="false" duplicate="false">
+			<tree string="User Invoice Detail" create="false" >
 <!--                <field name="vendor_id"/>-->
                 <field name="invoice_name"/>
                 <field name="released" invisible="1"/>
-                <field name="vendor_amount" sum="Total"/>
+                <field name="user_amount" sum="Total"/>
 
             </tree>
         </field>
