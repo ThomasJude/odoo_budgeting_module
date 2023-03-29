@@ -321,7 +321,7 @@ class AccountPaymentRegister(models.TransientModel):
                                     if buget_inv_line.amount_residual != 0.0 :
                                         total_released_amount = 0
                             else:
-                                if total_released_amount > buget_inv_line.amount_residual:
+                                if total_released_amount >= buget_inv_line.amount_residual:
                                     total_released_amount = total_released_amount - buget_inv_line.amount_residual
                                     buget_inv_line.released = True
                                     invoices_bucket = self.env['bucket'].sudo().search(
