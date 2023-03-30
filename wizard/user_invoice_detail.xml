@@ -12,7 +12,17 @@
 <!--                <field name="vendor_id"/>-->
                 <field name="invoice_name"/>
                 <field name="released" invisible="1"/>
-                <field name="user_amount" sum="Total"/>
+
+                <field name="user_released" invisible="1"/>
+                <field name="vendor_released" invisible="1"/>
+                <field name="user_invoiced" invisible="1"/>
+                <field name="vendor_invoiced" invisible="1"/>
+
+                <field name="user_amount_released" sum="Total"/>
+                <field name="user_amount_invoiced" sum="Total"/>
+                <field name="bucket_type_id" />
+                <field name="partial_due_amount" invisible="1"/>
+                <field name="partial_paid_amount" invisible="1"/>
 
             </tree>
         </field>
