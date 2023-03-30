@@ -279,6 +279,7 @@ class AccountPaymentRegister(models.TransientModel):
     
     
     def action_create_payments(self):
+        print("AAAAAAAAAAAAAAA")
         res = super(AccountPaymentRegister,self).action_create_payments()
         # assigned_vendor_lst = []
         invoice_amount = self.env['account.move'].sudo().search([('id', '=', self.line_ids.move_id.id)])
@@ -321,9 +322,9 @@ class AccountPaymentRegister(models.TransientModel):
                             #      ('vendor_id', '=', buget_inv_line.budget_inv_vendor_id.id)])
                             # vendor_bill.released = True
                             # print("wWWWWWWWDddddddddddddd",vendor_bill.released)
-
+    
             if self.line_ids.move_id.product_remaining_budget_line:
-
+    
                 for budget_remaining_line in self.line_ids.move_id.product_remaining_budget_line:
                     if not budget_remaining_line.released:
                         invoiced_bucket = self.env['bucket'].sudo().search(
@@ -334,9 +335,9 @@ class AccountPaymentRegister(models.TransientModel):
                              ('bucket_status', '=', 'released')])
                         released_bucket.bucket_amount += budget_remaining_line.amount
                         budget_remaining_line.released = True
-
+    
                         # //////////////////////////
-
+    
                         vendor_released_bucket = self.env['bucket'].sudo().search(
                             [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
                              ('bucket_status', '=', 'released')])
@@ -354,7 +355,7 @@ class AccountPaymentRegister(models.TransientModel):
                                 self.env['user.line.released'].sudo().create(
                                     {'user_id': budget_remaining_line.budget_remaining_user_id.id,
                                      'user_line_released_bucket_id': vendor_released_bucket.id})
-
+    
                         # user_bill = self.env['user.invoice.detail'].sudo().search(
                         #     [('invoice_name', '=', budget_remaining_line.prod_remaining_id.name),
                         #      ('user_id', '=', budget_remaining_line.budget_remaining_user_id.id)])
@@ -374,18 +375,18 @@ class AccountPaymentRegister(models.TransientModel):
                                     print("WQQQQQQQQQQQQQQQQQQQQQ")
                                     total_released_amount = total_released_amount - buget_inv_line.amount
                                     buget_inv_line.released = True
-
+    
                                     invoices_bucket = self.env['bucket'].sudo().search(
                                         [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
                                          ('bucket_status', '=', 'invoiced')])
                                     invoices_bucket.bucket_amount -= buget_inv_line.amount
-
+    
                                     released_bucket = self.env['bucket'].sudo().search(
                                         [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
                                          ('bucket_status', '=', 'released')])
                                     released_bucket.bucket_amount += buget_inv_line.amount
                                     ############################################################
-
+    
                                     vendor_released_bucket = self.env['bucket'].sudo().search(
                                         [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
                                          ('bucket_status', '=', 'released')])
@@ -404,7 +405,7 @@ class AccountPaymentRegister(models.TransientModel):
                                             self.env['user.line.released'].sudo().create(
                                                 {'user_id': buget_inv_line.budget_user_id.id,
                                                  'user_line_released_bucket_id': vendor_released_bucket.id})
-
+    
                                     ##############################################################3
                                 else:
                                     print("WQQQQQQQQQQQQQQQQQQQQQ 1111")
@@ -413,15 +414,15 @@ class AccountPaymentRegister(models.TransientModel):
                                         [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
                                          ('bucket_status', '=', 'invoiced')])
                                     invoices_bucket.bucket_amount -= total_released_amount
-
+    
                                     released_bucket = self.env['bucket'].sudo().search(
                                         [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
                                          ('bucket_status', '=', 'released')])
                                     released_bucket.bucket_amount += total_released_amount
                                     total_released_amount = buget_inv_line.amount - total_released_amount
-
+    
                                     ############################################################
-
+    
                                     vendor_released_bucket = self.env['bucket'].sudo().search(
                                         [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
                                          ('bucket_status', '=', 'released')])
@@ -440,28 +441,29 @@ class AccountPaymentRegister(models.TransientModel):
                                             self.env['user.line.released'].sudo().create(
                                                 {'user_id': buget_inv_line.budget_user_id.id,
                                                  'user_line_released_bucket_id': vendor_released_bucket.id})
-
+    
                                     ##############################################################3
                                     if buget_inv_line.amount_residual != 0.0 :
                                         total_released_amount = 0
                             else:
                                 if total_released_amount >= buget_inv_line.amount_residual:
-
+                                    print("WQQQQQQQQQQQQQQQQQQQQQ 222222222")
+    
                                     total_released_amount = total_released_amount - buget_inv_line.amount_residual
                                     buget_inv_line.released = True
                                     invoices_bucket = self.env['bucket'].sudo().search(
                                         [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
                                          ('bucket_status', '=', 'invoiced')])
                                     invoices_bucket.bucket_amount -= buget_inv_line.amount_residual
-
+    
                                     released_bucket = self.env['bucket'].sudo().search(
                                         [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
                                          ('bucket_status', '=', 'released')])
                                     released_bucket.bucket_amount += buget_inv_line.amount_residual
                                     buget_inv_line.amount_residual = 0.0
-
+    
                                     ############################################################
-
+    
                                     vendor_released_bucket = self.env['bucket'].sudo().search(
                                         [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
                                          ('bucket_status', '=', 'released')])
@@ -480,25 +482,26 @@ class AccountPaymentRegister(models.TransientModel):
                                             self.env['user.line.released'].sudo().create(
                                                 {'user_id': buget_inv_line.budget_user_id.id,
                                                  'user_line_released_bucket_id': vendor_released_bucket.id})
-
+    
                                     ##############################################################3
-
-
-
+    
+    
+    
                                 else:
-                                    buget_inv_line.amount_residual = buget_inv_line.amount - total_released_amount
+                                    print("########EEEE",total_released_amount)
+                                    buget_inv_line.amount_residual = buget_inv_line.amount_residual - total_released_amount
                                     invoices_bucket = self.env['bucket'].sudo().search(
                                         [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
                                          ('bucket_status', '=', 'invoiced')])
                                     invoices_bucket.bucket_amount -= total_released_amount
-
+    
                                     released_bucket = self.env['bucket'].sudo().search(
                                         [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
                                          ('bucket_status', '=', 'released')])
                                     released_bucket.bucket_amount += total_released_amount
-
+    
                                     ############################################################
-
+    
                                     vendor_released_bucket = self.env['bucket'].sudo().search(
                                         [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
                                          ('bucket_status', '=', 'released')])
@@ -517,13 +520,13 @@ class AccountPaymentRegister(models.TransientModel):
                                             self.env['user.line.released'].sudo().create(
                                                 {'user_id': buget_inv_line.budget_user_id.id,
                                                  'user_line_released_bucket_id': vendor_released_bucket.id})
-
+    
                                     ##############################################################3
-
+    
                                     if buget_inv_line.amount_residual != 0.0:
                                         total_released_amount = 0
-
-
+    
+    
                         elif priority == buget_inv_line.prod_priority and total_released_amount == 0 and not buget_inv_line.released:
                             buget_inv_line.amount_residual = buget_inv_line.amount
             line_amount_released = []
@@ -544,9 +547,9 @@ class AccountPaymentRegister(models.TransientModel):
                                     [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
                                      ('bucket_status', '=', 'released')])
                                 released_bucket.bucket_amount += budget_remaining_line.amount
-
+    
                                 ############################################################3
-
+    
                                 vendor_released_bucket = self.env['bucket'].sudo().search(
                                     [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
                                      ('bucket_status', '=', 'released')])
@@ -565,7 +568,7 @@ class AccountPaymentRegister(models.TransientModel):
                                         self.env['user.line.released'].sudo().create(
                                             {'user_id': budget_remaining_line.budget_remaining_user_id.id,
                                              'user_line_released_bucket_id': vendor_released_bucket.id})
-
+    
                                 #############################################################3
                             else:
                                 budget_remaining_line.amount_residual = budget_remaining_line.amount - total_released_amount
@@ -576,9 +579,9 @@ class AccountPaymentRegister(models.TransientModel):
                                     [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
                                      ('bucket_status', '=', 'released')])
                                 released_bucket.bucket_amount += total_released_amount
-
+    
                                 ############################################################3
-
+    
                                 vendor_released_bucket = self.env['bucket'].sudo().search(
                                     [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
                                      ('bucket_status', '=', 'released')])
@@ -597,15 +600,15 @@ class AccountPaymentRegister(models.TransientModel):
                                         self.env['user.line.released'].sudo().create(
                                             {'user_id': budget_remaining_line.budget_remaining_user_id.id,
                                              'user_line_released_bucket_id': vendor_released_bucket.id})
-
+    
                                 #############################################################3
-
-
-
+    
+    
+    
                                 if budget_remaining_line.amount_residual != 0.0:
                                     total_released_amount = 0
-
-
+    
+    
                         else:
                             if total_released_amount >= budget_remaining_line.amount_residual:
                                 total_released_amount = total_released_amount - budget_remaining_line.amount_residual
@@ -620,9 +623,9 @@ class AccountPaymentRegister(models.TransientModel):
                                 budget_remaining_line.amount_residual = 0.0
                                 # buget_inv_line.amount_residual = 0
                                 budget_remaining_line.released = True
-
+    
                                 ############################################################3
-
+    
                                 vendor_released_bucket = self.env['bucket'].sudo().search(
                                     [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
                                      ('bucket_status', '=', 'released')])
@@ -641,11 +644,11 @@ class AccountPaymentRegister(models.TransientModel):
                                         self.env['user.line.released'].sudo().create(
                                             {'user_id': budget_remaining_line.budget_remaining_user_id.id,
                                              'user_line_released_bucket_id': vendor_released_bucket.id})
-
+    
                                 #############################################################3
-
-
-
+    
+    
+    
                             else:
                                 budget_remaining_line.amount_residual = budget_remaining_line.amount_residual - total_released_amount
                                 invoiced_bucket = self.env['bucket'].sudo().search(
@@ -656,9 +659,9 @@ class AccountPaymentRegister(models.TransientModel):
                                     [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
                                      ('bucket_status', '=', 'released')])
                                 released_bucket.bucket_amount += total_released_amount
-
+    
                                 ############################################################3
-
+    
                                 vendor_released_bucket = self.env['bucket'].sudo().search(
                                     [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
                                      ('bucket_status', '=', 'released')])
@@ -677,17 +680,17 @@ class AccountPaymentRegister(models.TransientModel):
                                         self.env['user.line.released'].sudo().create(
                                             {'user_id': budget_remaining_line.budget_remaining_user_id.id,
                                              'user_line_released_bucket_id': vendor_released_bucket.id})
-
+    
                                 #############################################################3
-
-
+    
+    
                                 if budget_remaining_line.amount_residual != 0.0:
                                     total_released_amount = 0
                     elif total_released_amount == 0.0 and not budget_remaining_line.released:
                         budget_remaining_line.amount_residual = budget_remaining_line.amount
         else:
             if self.line_ids.move_id.product_remaining_budget_line:
-
+    
                 for budget_remaining_line in self.line_ids.move_id.product_remaining_budget_line:
                     if not budget_remaining_line.released:
                         invoiced_bucket = self.env['bucket'].sudo().search(
@@ -699,9 +702,9 @@ class AccountPaymentRegister(models.TransientModel):
                         released_bucket.bucket_amount += budget_remaining_line.amount_residual
                         budget_remaining_line.released = True
                         budget_remaining_line.amount_residual = 0.0
-
+    
                         ############################################################3
-
+    
                         vendor_released_bucket = self.env['bucket'].sudo().search(
                             [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
                              ('bucket_status', '=', 'released')])
@@ -720,9 +723,9 @@ class AccountPaymentRegister(models.TransientModel):
                                 self.env['user.line.released'].sudo().create(
                                     {'user_id': budget_remaining_line.budget_remaining_user_id.id,
                                      'user_line_released_bucket_id': vendor_released_bucket.id})
-
+    
                         #############################################################3
-
+    
         return res
     
 
