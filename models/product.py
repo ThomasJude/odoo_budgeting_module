@@ -9,6 +9,28 @@ class ProductTemplate(models.Model):
     product_fixed_budget_line = fields.One2many('product.budget.fixed', 'prod_id', 'product Fixed Budget')
     product_allocate_budget_line = fields.One2many('product.budget.allocate', 'prod_allocate_id', 'Product Allocate Budget')
     
+    
+    # @api.constrains('product_fixed_budget_line,product_fixed_budget_line.prod_priority')
+    # def prod_priority_val(self):
+    #     print ("2222222222222222")
+    #     lst = []
+    #     for rec in self:
+    #         if self.product_fixed_budget_line:
+    #             for fixed_item in self.product_fixed_budget_line:
+    #                 if fixed_item.prod_priority not in lst:
+    #                     lst.append(fixed_item.prod_priority)
+    #                 else:
+    #                     raise UserError(_('Product priority should be unique in Fixed Reduction budgeting tab'))
+    
+    
+    # @api.constrains('product_fixed_budget_line,product_fixed_budget_line.prod_priority')
+    # def prod_priority_val(self):
+    #     total = 0
+    #     for rec in self:
+    #         obj = self.env['product.budget.fixed'].search([('id','!=',rec.id),('prod_priority','=',rec.prod_priority)])
+    #         if obj:
+    #             raise UserError(_('Product priority should be unique in Fixed Reduction budgeting tab'))
+    
     @api.constrains('product_fixed_budget_line',"list_price")
     def selling_amount_check(self):
         total = 0
@@ -63,13 +85,19 @@ class ProductBudgetFixed(models.Model):
     # prod_fix_assigned_user_ids = fields.Many2many('res.users', 'prod_fix_budget_user', 'prod_fix_budget_usr_id', 'usr_id',string="Users Name",copy=False)
     prod_fix_assigned_user_id = fields.Many2one('res.users', string="User Name", copy=False)
     
-    @api.constrains('prod_priority')
-    def prod_priority_val(self):
-        total = 0
-        for rec in self:
-            obj = self.env['product.budget.fixed'].search([('id','!=',rec.id),('prod_priority','=',rec.prod_priority)])
-            if obj:
-                raise UserError(_('Product priority should be unique in Fixed Reduction budgeting tab'))
+    
+    # @api.constrains('prod_priority')
+    # def prod_priority_val(self):
+    #     total = 0
+    #     for rec in self:
+    #         # print ("aaaaaaaaaaaaaaaaa",self.prod_id,rec.prod_id.id)
+    #         obj = self.env['product.budget.fixed'].search([('id','!=',rec.id),('prod_priority','=',rec.prod_priority),('prod_id','!=',rec.prod_id.id)])
+    #         if obj:
+    #             raise UserError(_('Product priority should be unique in Fixed Reduction budgeting tab'))
+    
+    
+    
+    
     
     @api.onchange('bucket_type_id')
     def _onchange_bucket_type_id(self):

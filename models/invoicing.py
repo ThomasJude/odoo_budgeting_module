@@ -8,8 +8,10 @@ class AccountMove(models.Model):
     product_remaining_budget_line = fields.One2many('product.budget.remaining', 'prod_remaining_id', 'Product Remaining Budget')
     previous_released_amount = fields.Float('Previous Released')
     
-    @api.constrains("invoice_line_ids","invoice_line_ids.product_id")
-    def fetch_fixed_budget_product_data(self):
+    
+    @api.onchange("invoice_line_ids","invoice_line_ids.product_id")
+    def _onchange_fetch_fixed_budget_product_data(self):
+        print ("11111111111111111111111")
         for rec in self:
             if rec.invoice_line_ids:
                 for inv_line in rec.invoice_line_ids:
@@ -47,6 +49,47 @@ class AccountMove(models.Model):
                                                                                         'allocate_percent':allocate_budget_line.allocate_percent,
                                                                                         'amount':allocate_budget_line.amount
                                                                                         })
+    
+    # @api.constrains("invoice_line_ids","invoice_line_ids.product_id")
+    # def fetch_fixed_budget_product_data(self):
+    #     print ("11111111111111111111111")
+    #     for rec in self:
+    #         if rec.invoice_line_ids:
+    #             for inv_line in rec.invoice_line_ids:
+    #                 if inv_line.product_id and inv_line.product_id.product_tmpl_id and inv_line.product_id.product_fixed_budget_line:
+    #                     for fix_budget_line in inv_line.product_id.product_fixed_budget_line:
+    #                         budget_data= self.env['invoice.budget.line'].sudo().create({
+    #                                                                                     'product_id_budget':fix_budget_line.product_id.id,
+    #                                                                                     'name':fix_budget_line.name,
+    #                                                                                     'prod_inv_id':rec.id,
+    #                                                                                     'bucket_type_id':fix_budget_line.bucket_type_id.id,
+    #                                                                                     'assignable_status':fix_budget_line.assignable_status,
+    #                                                                                     'amount':fix_budget_line.amount,
+    #                                                                                     'bucket_user':fix_budget_line.bucket_user,
+    #                                                                                     # 'budget_inv_vendor_ids': [(6,0, fix_budget_line.prod_fix_vendor_ids.ids)] or [],
+    #                                                                                     'budget_inv_vendor_id': fix_budget_line.prod_fix_vendor_id.id,
+    #                                                                                     # 'budget_user_ids':[(6,0, fix_budget_line.prod_fix_assigned_user_ids.ids)] or [],
+    #                                                                                     'budget_user_id': fix_budget_line.prod_fix_assigned_user_id.id,
+    #                                                                                     'prod_priority':fix_budget_line.prod_priority
+    #                                                                                     })
+    #
+    #
+    #                 if inv_line.product_id and inv_line.product_id.product_tmpl_id and inv_line.product_id.product_allocate_budget_line:
+    #                     for allocate_budget_line in inv_line.product_id.product_allocate_budget_line:
+    #                         remaining_budget_data= self.env['product.budget.remaining'].sudo().create({
+    #                                                                                     'product_id_budget':allocate_budget_line.product_id.id,
+    #                                                                                     'name':allocate_budget_line.name,
+    #                                                                                     'prod_remaining_id':rec.id,
+    #                                                                                     'bucket_type_id':allocate_budget_line.bucket_type_id.id,
+    #                                                                                     'assignable_status':allocate_budget_line.assignable_status,
+    #                                                                                     'bucket_user':allocate_budget_line.bucket_user,
+    #                                                                                     # 'budget_inv_remaining_vendor_ids': [(6,0, allocate_budget_line.prod_remaining_budget_vendor_ids.ids)] or [],
+    #                                                                                     'budget_inv_remaining_vendor_id': allocate_budget_line.prod_remaining_budget_vendor_id.id,
+    #                                                                                     # 'budget_remaining_user_ids':[(6,0, allocate_budget_line.prod_remaining_budget_assigned_user_ids.ids)] or [],
+    #                                                                                     'budget_remaining_user_id': allocate_budget_line.prod_remaining_budget_assigned_user_id.id,
+    #                                                                                     'allocate_percent':allocate_budget_line.allocate_percent,
+    #                                                                                     'amount':allocate_budget_line.amount
+    #                                                                                     })
          
          
     def action_post(self):
