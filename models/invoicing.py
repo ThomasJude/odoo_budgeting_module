@@ -31,8 +31,8 @@ class AccountMove(models.Model):
                                                                                         'budget_user_id': fix_budget_line.prod_fix_assigned_user_id.id,
                                                                                         'prod_priority':fix_budget_line.prod_priority
                                                                                         })
-                            
-                            
+    
+    
                     if inv_line.product_id and inv_line.product_id.product_tmpl_id and inv_line.product_id.product_allocate_budget_line:
                         for allocate_budget_line in inv_line.product_id.product_allocate_budget_line:
                             remaining_budget_data= self.env['product.budget.remaining'].sudo().create({
@@ -228,6 +228,7 @@ class InvoiceBudgetLine(models.Model):
     product_id_budget = fields.Many2one('product.template', 'Product')
     prod_inv_id = fields.Many2one('account.move', 'Prod Invoice Id')
     bucket_type_id = fields.Many2one('bucket.type', 'Bucket Type')
+    inv_line_id = fields.Many2one('account.move.line', 'Inv Line Id')
     # budget_inv_vendor_ids = fields.Many2many(
     #     'res.partner', 'prod_inv_budget_vendor', 'prod_inv_budget_id', 'vendor_id',
     #     string='Vendors Name', copy=False)
@@ -253,6 +254,7 @@ class ProductBudgetRemaining(models.Model):
     name = fields.Text(string='Description', readonly=False)
     product_id_budget = fields.Many2one('product.template', 'Product', index='btree_not_null')
     prod_remaining_id = fields.Many2one('account.move', 'Prod Allocate')
+    inv_line_id = fields.Many2one('account.move.line', 'Inv Line Id')
     allocate_percent = fields.Integer("%", default=0)
     assignable_status = fields.Selection([('assigned', 'Assigned'),
                                           ('unassigned', 'Unassigned'),
@@ -726,6 +728,24 @@ class AccountPaymentRegister(models.TransientModel):
     
                         #############################################################3
     
+        return res
+    
+    
+class AccountMoveLine(models.Model):
+    _inherit = "account.move.line"
+    
+    
+
+    def unlink(self):
+        for rec in self:
+            if rec.move_id:
+                if rec.move_id.inv_budget_line:
+                    for record in rec.move_id.inv_budget_line:
+                        record.unlink()
+                if rec.move_id.product_remaining_budget_line:
+                    for record1 in rec.move_id.product_remaining_budget_line:
+                        record1.unlink()
+        res = super(AccountMoveLine,self).unlink()
         return res
     
 

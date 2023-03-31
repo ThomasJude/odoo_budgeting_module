@@ -216,25 +216,6 @@ class VendorLine(models.Model):
         for invoices in final_invoice_no:
             if invoices:
                 print("@!!!!",invoices)
-                # DRAFT
-                # if invoices.payment_state != 'partial' and invoices.payment_state != 'paid':
-                #     print("not partial vend")
-                #     total_vendor_amount = 0.0
-                #     total_amount_inv = 0.0
-                #     total_amount_rel = 0.0
-                #     for inv_budget_line in invoices.inv_budget_line:
-                #         # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
-                #         if inv_budget_line.budget_inv_vendor_id in self.vendor_id:
-                #             total_amount_inv += inv_budget_line.amount
-                #     for product_remaining_budget_line in invoices.product_remaining_budget_line:
-                #         # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
-                #         if product_remaining_budget_line.budget_inv_remaining_vendor_id in self.vendor_id:
-                #             total_amount_rel += product_remaining_budget_line.amount
-                #
-                #     total_vendor_amount_per_invoice = total_amount_rel + total_amount_inv
-                #     existing_record = self.env['vendor.invoice.detail'].sudo().search([('invoice_name','=',invoices.id),('vendor_id','=',self.vendor_id.id)])
-                #     if not existing_record:
-                #         create_record = self.env['vendor.invoice.detail'].sudo().create({"vendor_id":self.vendor_id.id,'invoice_name':invoices.id,'bucket_type_id':self.vendor_line_bucket_id.id,'vendor_amount_invoiced':total_vendor_amount_per_invoice})
                 if invoices.payment_state == 'partial':
                     total_vendor_amount = 0.0
                     total_amount_inv = 0.0
@@ -593,6 +574,11 @@ class VendorLineReleased(models.Model):
                              "bucket_type_id": self.vendor_line_released_bucket_id.bucket_type_id.id,
                              'released':True,'vendor_amount_released': total_vendor_amount_per_invoice,
                              'vendor_amount_invoiced':0.0})
+                    
+                    
+                    else:
+                        existing_record.write({'vendor_amount_released':total_vendor_amount_per_invoice,'released':True,'vendor_amount_invoiced':0.0})    
+                        
 
         domain = ['|',('released','=',True),('partial_due_amount','>',0.0),('vendor_id', '=', self.vendor_id.id)]
         vals = {
