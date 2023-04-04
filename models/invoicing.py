@@ -7,54 +7,337 @@ class AccountMove(models.Model):
     inv_budget_line = fields.One2many('invoice.budget.line', 'prod_inv_id', 'Budget Info')
     product_remaining_budget_line = fields.One2many('product.budget.remaining', 'prod_remaining_id', 'Product Remaining Budget')
     previous_released_amount = fields.Float('Previous Released')
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        rec = super(AccountMove,self).create(vals_list)
+        if rec.invoice_line_ids:
+                    for inv_line in rec.invoice_line_ids:
+                        print("SSSSSSS",inv_line.quantity)
+
+                        if inv_line.product_id and inv_line.product_id.product_tmpl_id and inv_line.product_id.product_fixed_budget_line:
+                            for fix_budget_line in inv_line.product_id.product_fixed_budget_line:
+                                budget_data= self.env['invoice.budget.line'].sudo().create({
+                                                                                            'product_id_budget':fix_budget_line.product_id.id,
+                                                                                            'name':fix_budget_line.name,
+                                                                                            'prod_inv_id':rec.id,
+                                                                                            'account_move_line_id':inv_line.id,
+                                                                                            'bucket_type_id':fix_budget_line.bucket_type_id.id,
+                                                                                            'assignable_status':fix_budget_line.assignable_status,
+                                                                                            'amount':fix_budget_line.amount*inv_line.quantity,
+                                                                                            'bucket_user':fix_budget_line.bucket_user,
+                                                                                            # 'budget_inv_vendor_ids': [(6,0, fix_budget_line.prod_fix_vendor_ids.ids)] or [],
+                                                                                            'budget_inv_vendor_id': fix_budget_line.prod_fix_vendor_id.id,
+                                                                                            # 'budget_user_ids':[(6,0, fix_budget_line.prod_fix_assigned_user_ids.ids)] or [],
+                                                                                            'budget_user_id': fix_budget_line.prod_fix_assigned_user_id.id,
+                                                                                            'prod_priority':fix_budget_line.prod_priority
+                                                                                            })
+
+                        if inv_line.product_id and inv_line.product_id.product_tmpl_id and inv_line.product_id.product_allocate_budget_line:
+                            for allocate_budget_line in inv_line.product_id.product_allocate_budget_line:
+                                remaining_budget_data= self.env['product.budget.remaining'].sudo().create({
+                                                                                            'product_id_budget':allocate_budget_line.product_id.id,
+                                                                                            'name':allocate_budget_line.name,
+                                                                                            'prod_remaining_id':rec.id,
+                                                                                            'account_move_line_id': inv_line.id,
+                                                                                            'bucket_type_id':allocate_budget_line.bucket_type_id.id,
+                                                                                            'assignable_status':allocate_budget_line.assignable_status,
+                                                                                            'bucket_user':allocate_budget_line.bucket_user,
+                                                                                            # 'budget_inv_remaining_vendor_ids': [(6,0, allocate_budget_line.prod_remaining_budget_vendor_ids.ids)] or [],
+                                                                                            'budget_inv_remaining_vendor_id': allocate_budget_line.prod_remaining_budget_vendor_id.id,
+                                                                                            # 'budget_remaining_user_ids':[(6,0, allocate_budget_line.prod_remaining_budget_assigned_user_ids.ids)] or [],
+                                                                                            'budget_remaining_user_id': allocate_budget_line.prod_remaining_budget_assigned_user_id.id,
+                                                                                            'allocate_percent':allocate_budget_line.allocate_percent,
+                                                                                            'amount':allocate_budget_line.amount*inv_line.quantity
+                                                                                            })
+
+        return rec
+
+
+    def write(self, vals):
+        res = super(AccountMove, self).write(vals)
+        if vals.get('invoice_line_ids'):
+            for addedline,addedlineid in zip(vals.get('invoice_line_ids'),self.invoice_line_ids):
+                print("WFXXXXXX",addedline,addedlineid)
+                if addedline[1] != addedlineid.id:
+
+                    if addedline[2] and addedline[2].get('product_id'):
+                        product_id = self.env['product.product'].sudo().search([('id','=',addedline[2]['product_id'])])
+                        if addedline[2].get('quantity'):
+                            quantity = addedline[2].get('quantity')
+                        else:
+                            quantity = 1
+                        if product_id and product_id.product_tmpl_id and product_id.product_fixed_budget_line:
+                            for fix_budget_line in product_id.product_fixed_budget_line:
+                                budget_data = self.env['invoice.budget.line'].sudo().create({
+                                    'product_id_budget': fix_budget_line.product_id.id,
+                                    'name': fix_budget_line.name,
+                                    'prod_inv_id': self.id,
+                                    'account_move_line_id': addedlineid.id,
+                                    'bucket_type_id': fix_budget_line.bucket_type_id.id,
+                                    'assignable_status': fix_budget_line.assignable_status,
+                                    'amount': fix_budget_line.amount * quantity,
+                                    'bucket_user': fix_budget_line.bucket_user,
+                                    # 'budget_inv_vendor_ids': [(6,0, fix_budget_line.prod_fix_vendor_ids.ids)] or [],
+                                    'budget_inv_vendor_id': fix_budget_line.prod_fix_vendor_id.id,
+                                    # 'budget_user_ids':[(6,0, fix_budget_line.prod_fix_assigned_user_ids.ids)] or [],
+                                    'budget_user_id': fix_budget_line.prod_fix_assigned_user_id.id,
+                                    'prod_priority': fix_budget_line.prod_priority
+                                })
+
+                        if product_id and product_id.product_tmpl_id and product_id.product_allocate_budget_line:
+                            for allocate_budget_line in product_id.product_allocate_budget_line:
+                                remaining_budget_data = self.env['product.budget.remaining'].sudo().create({
+                                    'product_id_budget': allocate_budget_line.product_id.id,
+                                    'name': allocate_budget_line.name,
+                                    'prod_remaining_id': self.id,
+                                    'account_move_line_id': addedlineid.id,
+                                    'bucket_type_id': allocate_budget_line.bucket_type_id.id,
+                                    'assignable_status': allocate_budget_line.assignable_status,
+                                    'bucket_user': allocate_budget_line.bucket_user,
+                                    # 'budget_inv_remaining_vendor_ids': [(6,0, allocate_budget_line.prod_remaining_budget_vendor_ids.ids)] or [],
+                                    'budget_inv_remaining_vendor_id': allocate_budget_line.prod_remaining_budget_vendor_id.id,
+                                    # 'budget_remaining_user_ids':[(6,0, allocate_budget_line.prod_remaining_budget_assigned_user_ids.ids)] or [],
+                                    'budget_remaining_user_id': allocate_budget_line.prod_remaining_budget_assigned_user_id.id,
+                                    'allocate_percent': allocate_budget_line.allocate_percent,
+                                    'amount': allocate_budget_line.amount * quantity
+                                })
+                else:
+                    if addedline[1] and addedline[2]:
+                        if addedline[2].get('quantity'):
+                            quantity = addedline[2].get('quantity')
+                        else:
+                            quantity = 1
+                        move_line = self.env['account.move.line'].sudo().search([('id','=',addedline[1])])
+                        get_move_line_product = self.env['product.product'].sudo().search([('id','=',move_line.product_id.id)])
+                        inv_buget_line_product_link_recrd = self.env['invoice.budget.line'].sudo().search([('account_move_line_id','=',addedline[1])])
+                        remaining_budget_line_product_link_recrd = self.env['product.budget.remaining'].sudo().search([('account_move_line_id','=',addedline[1])])
+
+                        if inv_buget_line_product_link_recrd:
+                            for records in inv_buget_line_product_link_recrd:
+                                for fix_budget_line in get_move_line_product.product_fixed_budget_line:
+                                    if fix_budget_line.prod_priority == records.prod_priority:
+                                        records.amount = fix_budget_line.amount * quantity
+                                # records.amount = records.amount * addedline[2]['quantity']
+                        if remaining_budget_line_product_link_recrd:
+                            for recrd in remaining_budget_line_product_link_recrd:
+                                for allocate_budget_line in get_move_line_product.product_allocate_budget_line:
+                                    if allocate_budget_line.allocate_percent == recrd.allocate_percent and allocate_budget_line.bucket_type_id.id == recrd.bucket_type_id.id:
+                                        recrd.amount = allocate_budget_line.amount * quantity
+
+                        # recrd.amount = recrd.amount * addedline[2]['quantity']
+        return res
+    # def unlink(self):
+    #     if self.inv_budget_line:
+    #         for buget_inv_line in self.inv_budget_line:
+    #             if not buget_inv_line.released:
+    #                 # --------------------------------------
+    #                 # buget_inv_line invoiced checkbox true
+    #                 # ----------------------------------------
+    #                 fixed_bucket = self.env['bucket'].sudo().search(
+    #                     [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+    #                      ('bucket_status', '=', 'invoiced')])
+    #                 fixed_bucket.bucket_amount -= buget_inv_line.amount
+    #                 if fixed_bucket.vendor_line:
+    #                     for vendor_line in fixed_bucket.vendor_line:
+    #                         if vendor_line.vendor_id.id == buget_inv_line.budget_inv_vendor_id.id:
+    #                             existing_rec = self.env['vendor.invoice.detail'].sudo().search([('invoice_name','=',self.id),('bucket_type_id','=',buget_inv_line.bucket_type_id.id),('vendor_id','=',buget_inv_line.budget_inv_vendor_id.id)])
+    #                             if existing_rec:
+    #                                 existing_rec.unlink()
+    #                             all_existing_rec_of_vendr = self.env['vendor.invoice.detail'].sudo().search(
+    #                                 [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+    #                                  ('vendor_id', '=', buget_inv_line.budget_inv_vendor_id.id)])
+    #                             print("111111111 fixed vendor",all_existing_rec_of_vendr)
+    #                             if not all_existing_rec_of_vendr:
+    #                                 vendor_line.unlink()
+    #
+    #
+    #                 else:
+    #                     for user_line in fixed_bucket.user_line.user_id:
+    #                         if user_line.user_id.id == buget_inv_line.budget_user_id.id:
+    #                             existing_rec = self.env['user.invoice.detail'].sudo().search([('invoice_name','=',self.id),('bucket_type_id','=',buget_inv_line.bucket_type_id.id),('user_id','=',buget_inv_line.budget_user_id.id)])
+    #                             if existing_rec:
+    #                                 existing_rec.unlink()
+    #                             all_existing_rec_of_user = self.env['user.invoice.detail'].sudo().search(
+    #                                 [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+    #                                  ('user_id', '=', buget_inv_line.budget_user_id.id)])
+    #                             print("111111111 fixed user",all_existing_rec_of_user)
+    #                             if not all_existing_rec_of_user:
+    #                                 user_line.unlink()
+    #             else:
+    #                 print("inside else inv")
+    #
+    #                 # --------------------------------------
+    #                 # buget_inv_line invoiced checkbox true
+    #                 # ----------------------------------------
+    #                 fixed_bucket = self.env['bucket'].sudo().search(
+    #                     [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+    #                      ('bucket_status', '=', 'released')])
+    #                 fixed_bucket.bucket_amount -= buget_inv_line.amount
+    #
+    #                 if fixed_bucket.vendor_line_released:
+    #                     for vendor_line in fixed_bucket.vendor_line_released:
+    #                         if vendor_line.vendor_id.id == buget_inv_line.budget_inv_vendor_id.id:
+    #                             existing_rec = self.env['vendor.invoice.detail'].sudo().search(
+    #                                 [('invoice_name', '=', self.id),
+    #                                  ('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+    #                                  ('vendor_id', '=', buget_inv_line.budget_inv_vendor_id.id)])
+    #                             print("released fixed bucket exist vendor line", existing_rec)
+    #                             if existing_rec:
+    #                                 existing_rec.unlink()
+    #                             all_existing_rec_of_vendr = self.env['vendor.invoice.detail'].sudo().search(
+    #                                 [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+    #                                  ('vendor_id', '=', buget_inv_line.budget_inv_vendor_id.id)])
+    #                             if not all_existing_rec_of_vendr:
+    #                                 vendor_line.unlink()
+    #
+    #
+    #                 else:
+    #                     for user_line in fixed_bucket.user_line_released.user_id:
+    #                         if user_line.user_id.id == buget_inv_line.budget_user_id.id:
+    #                             existing_rec = self.env['user.invoice.detail'].sudo().search(
+    #                                 [('invoice_name', '=', self.id),
+    #                                  ('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+    #                                  ('user_id', '=', buget_inv_line.budget_user_id.id)])
+    #                             print("released fixed bucket exist user line", existing_rec)
+    #                             if existing_rec:
+    #                                 existing_rec.unlink()
+    #                             all_existing_rec_of_user = self.env['user.invoice.detail'].sudo().search(
+    #                                 [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+    #                                  ('user_id', '=', buget_inv_line.budget_user_id.id)])
+    #                             if not all_existing_rec_of_user:
+    #                                 user_line.unlink()
+    #
+    #     if self.product_remaining_budget_line:
+    #         for budget_remaining_line in self.product_remaining_budget_line:
+    #             if not budget_remaining_line.released:
+    #                 # --------------------------------------
+    #                 # budget_remaining_line invoiced checkbox true
+    #                 # ----------------------------------------
+    #                 remaining_bucket = self.env['bucket'].sudo().search(
+    #                     [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id), ('bucket_status', '=', 'invoiced')])
+    #                 remaining_bucket.bucket_amount -= budget_remaining_line.amount
+    #
+    #                 if remaining_bucket.vendor_line:
+    #                     for vendor_line in remaining_bucket.vendor_line:
+    #                         if vendor_line.vendor_id.id == budget_remaining_line.budget_inv_remaining_vendor_id.id:
+    #                             existing_rec = self.env['vendor.invoice.detail'].sudo().search([('invoice_name','=',self.id),('bucket_type_id','=',budget_remaining_line.bucket_type_id.id),('vendor_id','=',budget_remaining_line.budget_inv_remaining_vendor_id.id)])
+    #                             # print(" remain",existing_rec)
+    #                             if existing_rec:
+    #                                 existing_rec.unlink()
+    #                             all_existing_rec_of_vendr = self.env['vendor.invoice.detail'].sudo().search(
+    #                                 [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
+    #                                  ('vendor_id', '=', budget_remaining_line.budget_inv_remaining_vendor_id.id)])
+    #                             if not all_existing_rec_of_vendr:
+    #                                 vendor_line.unlink()
+    #
+    #                 else:
+    #                     for user_line in remaining_bucket.user_line:
+    #                         if user_line.user_id.id == budget_remaining_line.budget_remaining_user_id.id:
+    #                             existing_rec = self.env['user.invoice.detail'].sudo().search([('invoice_name','=',self.id),('bucket_type_id','=',budget_remaining_line.bucket_type_id.id),('user_id','=',budget_remaining_line.budget_remaining_user_id.id)])
+    #                             if existing_rec:
+    #                                 existing_rec.unlink()
+    #                             all_existing_rec_of_rem_user = self.env['user.invoice.detail'].sudo().search(
+    #                                 [('bucket_type_id', '=', budget_remaining_line.budget_remaining_user_id.id),
+    #                                  ('user_id', '=', budget_remaining_line.budget_remaining_user_id.id)])
+    #                             if not all_existing_rec_of_rem_user:
+    #                                 user_line.unlink()
+    #             else:
+    #                 print("inside else remaining")
+    #                 # --------------------------------------
+    #                 # budget_remaining_line released checkbox true
+    #                 # ----------------------------------------
+    #                 remaining_bucket = self.env['bucket'].sudo().search(
+    #                     [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
+    #                      ('bucket_status', '=', 'released')])
+    #                 remaining_bucket.bucket_amount -= budget_remaining_line.amount
+    #
+    #                 if remaining_bucket.vendor_line_released:
+    #                     for vendor_line in remaining_bucket.vendor_line_released:
+    #                         if vendor_line.vendor_id.id == budget_remaining_line.budget_inv_remaining_vendor_id.id:
+    #                             existing_rec = self.env['vendor.invoice.detail'].sudo().search(
+    #                                 [('invoice_name', '=', self.id),
+    #                                  ('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
+    #                                  ('vendor_id', '=', budget_remaining_line.budget_inv_remaining_vendor_id.id)])
+    #                             print("remaining_bucket exist vendor line", existing_rec)
+    #                             if existing_rec:
+    #                                 existing_rec.unlink()
+    #                             all_existing_rec_of_vendr = self.env['vendor.invoice.detail'].sudo().search(
+    #                                 [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
+    #                                  ('vendor_id', '=', budget_remaining_line.budget_inv_remaining_vendor_id.id)])
+    #                             if not all_existing_rec_of_vendr:
+    #                                 vendor_line.unlink()
+    #
+    #                 else:
+    #                     for user_line in remaining_bucket.user_line_released:
+    #                         if user_line.user_id.id == budget_remaining_line.budget_remaining_user_id.id:
+    #                             existing_rec = self.env['user.invoice.detail'].sudo().search(
+    #                                 [('invoice_name', '=', self.id),
+    #                                  ('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
+    #                                  ('user_id', '=', budget_remaining_line.budget_remaining_user_id.id)])
+    #                             print("remaining_bucket exist user line", existing_rec)
+    #
+    #                             if existing_rec:
+    #                                 existing_rec.unlink()
+    #                             all_existing_rec_of_rem_user = self.env['user.invoice.detail'].sudo().search(
+    #                                 [('bucket_type_id', '=', budget_remaining_line.budget_remaining_user_id.id),
+    #                                  ('user_id', '=', budget_remaining_line.budget_remaining_user_id.id)])
+    #                             if not all_existing_rec_of_rem_user:
+    #                                 user_line.unlink()
+    #     return super(AccountMove,self).unlink()
     
-    
-    @api.onchange("invoice_line_ids","invoice_line_ids.product_id")
-    def _onchange_fetch_fixed_budget_product_data(self):
-        print ("11111111111111111111111")
-        for rec in self:
-            if rec.invoice_line_ids:
-                for inv_line in rec.invoice_line_ids:
-                    if inv_line.product_id and inv_line.product_id.product_tmpl_id and inv_line.product_id.product_fixed_budget_line:
-                        for fix_budget_line in inv_line.product_id.product_fixed_budget_line:
-                            budget_data= self.env['invoice.budget.line'].sudo().create({
-                                                                                        'product_id_budget':fix_budget_line.product_id.id,
-                                                                                        'name':fix_budget_line.name,
-                                                                                        'prod_inv_id':rec.id,
-                                                                                        'bucket_type_id':fix_budget_line.bucket_type_id.id,
-                                                                                        'assignable_status':fix_budget_line.assignable_status,
-                                                                                        'amount':fix_budget_line.amount,
-                                                                                        'bucket_user':fix_budget_line.bucket_user,
-                                                                                        # 'budget_inv_vendor_ids': [(6,0, fix_budget_line.prod_fix_vendor_ids.ids)] or [],
-                                                                                        'budget_inv_vendor_id': fix_budget_line.prod_fix_vendor_id.id,
-                                                                                        # 'budget_user_ids':[(6,0, fix_budget_line.prod_fix_assigned_user_ids.ids)] or [],
-                                                                                        'budget_user_id': fix_budget_line.prod_fix_assigned_user_id.id,
-                                                                                        'prod_priority':fix_budget_line.prod_priority
-                                                                                        })
-    
-    
-                    if inv_line.product_id and inv_line.product_id.product_tmpl_id and inv_line.product_id.product_allocate_budget_line:
-                        for allocate_budget_line in inv_line.product_id.product_allocate_budget_line:
-                            remaining_budget_data= self.env['product.budget.remaining'].sudo().create({
-                                                                                        'product_id_budget':allocate_budget_line.product_id.id,
-                                                                                        'name':allocate_budget_line.name,
-                                                                                        'prod_remaining_id':rec.id,
-                                                                                        'bucket_type_id':allocate_budget_line.bucket_type_id.id,
-                                                                                        'assignable_status':allocate_budget_line.assignable_status,
-                                                                                        'bucket_user':allocate_budget_line.bucket_user,
-                                                                                        # 'budget_inv_remaining_vendor_ids': [(6,0, allocate_budget_line.prod_remaining_budget_vendor_ids.ids)] or [],
-                                                                                        'budget_inv_remaining_vendor_id': allocate_budget_line.prod_remaining_budget_vendor_id.id,
-                                                                                        # 'budget_remaining_user_ids':[(6,0, allocate_budget_line.prod_remaining_budget_assigned_user_ids.ids)] or [],
-                                                                                        'budget_remaining_user_id': allocate_budget_line.prod_remaining_budget_assigned_user_id.id,
-                                                                                        'allocate_percent':allocate_budget_line.allocate_percent,
-                                                                                        'amount':allocate_budget_line.amount
-                                                                                        })
-    
-    # @api.constrains("invoice_line_ids","invoice_line_ids.product_id")
-    # def fetch_fixed_budget_product_data(self):
-    #     print ("11111111111111111111111")
+    # @api.onchange("invoice_line_ids","invoice_line_ids.product_id")
+    # def _onchange_fetch_fixed_budget_product_data(self):
     #     for rec in self:
     #         if rec.invoice_line_ids:
+    #             print("SSSSSSSSs",rec.invoice_line_ids)
+    #             for inv_line in rec.invoice_line_ids:
+    #                 print("########3", inv_line.id)
+    #                 if inv_line.product_id and inv_line.product_id.product_tmpl_id and inv_line.product_id.product_fixed_budget_line:
+    #
+    #
+    #                     for fix_budget_line in inv_line.product_id.product_fixed_budget_line:
+    #                         budget_data= self.env['invoice.budget.line'].sudo().create({
+    #                                                                                     'product_id_budget':fix_budget_line.product_id.id,
+    #                                                                                     'name':fix_budget_line.name,
+    #                                                                                     'prod_inv_id':rec.id,
+    #                                                                                     'account_move_line_id':inv_line.id,
+    #                                                                                     'bucket_type_id':fix_budget_line.bucket_type_id.id,
+    #                                                                                     'assignable_status':fix_budget_line.assignable_status,
+    #                                                                                     'amount':fix_budget_line.amount,
+    #                                                                                     'bucket_user':fix_budget_line.bucket_user,
+    #                                                                                     # 'budget_inv_vendor_ids': [(6,0, fix_budget_line.prod_fix_vendor_ids.ids)] or [],
+    #                                                                                     'budget_inv_vendor_id': fix_budget_line.prod_fix_vendor_id.id,
+    #                                                                                     # 'budget_user_ids':[(6,0, fix_budget_line.prod_fix_assigned_user_ids.ids)] or [],
+    #                                                                                     'budget_user_id': fix_budget_line.prod_fix_assigned_user_id.id,
+    #                                                                                     'prod_priority':fix_budget_line.prod_priority
+    #                                                                                     })
+    #
+    #                 if inv_line.product_id and inv_line.product_id.product_tmpl_id and inv_line.product_id.product_allocate_budget_line:
+    #                     for allocate_budget_line in inv_line.product_id.product_allocate_budget_line:
+    #                         remaining_budget_data= self.env['product.budget.remaining'].sudo().create({
+    #                                                                                     'product_id_budget':allocate_budget_line.product_id.id,
+    #                                                                                     'name':allocate_budget_line.name,
+    #                                                                                     'prod_remaining_id':rec.id,
+    #                                                                                     'account_move_line_id': inv_line.id,
+    #                                                                                     'bucket_type_id':allocate_budget_line.bucket_type_id.id,
+    #                                                                                     'assignable_status':allocate_budget_line.assignable_status,
+    #                                                                                     'bucket_user':allocate_budget_line.bucket_user,
+    #                                                                                     # 'budget_inv_remaining_vendor_ids': [(6,0, allocate_budget_line.prod_remaining_budget_vendor_ids.ids)] or [],
+    #                                                                                     'budget_inv_remaining_vendor_id': allocate_budget_line.prod_remaining_budget_vendor_id.id,
+    #                                                                                     # 'budget_remaining_user_ids':[(6,0, allocate_budget_line.prod_remaining_budget_assigned_user_ids.ids)] or [],
+    #                                                                                     'budget_remaining_user_id': allocate_budget_line.prod_remaining_budget_assigned_user_id.id,
+    #                                                                                     'allocate_percent':allocate_budget_line.allocate_percent,
+    #                                                                                     'amount':allocate_budget_line.amount
+    #                                                                                     })
+
+
+    # @api.constrains("invoice_line_ids","invoice_line_ids.product_id")
+    # def fetch_fixed_budget_product_data(self):
+    #     print ("WWWWWWWWWWWWWWWWWw")
+    #     for rec in self:
+    #         print(rec.invoice_line_ids)
+
     #             for inv_line in rec.invoice_line_ids:
     #                 if inv_line.product_id and inv_line.product_id.product_tmpl_id and inv_line.product_id.product_fixed_budget_line:
     #                     for fix_budget_line in inv_line.product_id.product_fixed_budget_line:
@@ -110,12 +393,15 @@ class AccountMove(models.Model):
             for inv_fix_budget in self.inv_budget_line:
                 priority_list.append(inv_fix_budget.prod_priority)
                 bucket_type_list.add(inv_fix_budget.bucket_type_id)
-            priority_list.sort()
-            for priority in priority_list:
+            remove_repitetion_priority_list = set(priority_list)
+            final_priority_list = sorted(remove_repitetion_priority_list)
+
+            for priority in final_priority_list:
                 for buget_inv_line in self.inv_budget_line:
                     if priority == buget_inv_line.prod_priority:
                         fixed_bucket = self.env['bucket'].sudo().search([('bucket_type_id','=',buget_inv_line.bucket_type_id.id),('bucket_status','=','invoiced')])
                         fixed_bucket.bucket_amount += buget_inv_line.amount
+
                         fixed_bucket_vendor_lst=[]
                         fixed_bucket_user_lst=[]
 
@@ -214,7 +500,6 @@ class AccountMove(models.Model):
                     {'vendor_line_bucket_id': vendor_inv_bucket.id, 'vendor_id': final_vendor_id.id})
 
 
-
         return res
     
 
@@ -227,8 +512,8 @@ class InvoiceBudgetLine(models.Model):
     name = fields.Text(string='Description', readonly=False)
     product_id_budget = fields.Many2one('product.template', 'Product')
     prod_inv_id = fields.Many2one('account.move', 'Prod Invoice Id')
+    account_move_line_id = fields.Many2one('account.move.line','Prod Move Line')
     bucket_type_id = fields.Many2one('bucket.type', 'Bucket Type')
-    inv_line_id = fields.Many2one('account.move.line', 'Inv Line Id')
     # budget_inv_vendor_ids = fields.Many2many(
     #     'res.partner', 'prod_inv_budget_vendor', 'prod_inv_budget_id', 'vendor_id',
     #     string='Vendors Name', copy=False)
@@ -254,8 +539,9 @@ class ProductBudgetRemaining(models.Model):
     name = fields.Text(string='Description', readonly=False)
     product_id_budget = fields.Many2one('product.template', 'Product', index='btree_not_null')
     prod_remaining_id = fields.Many2one('account.move', 'Prod Allocate')
-    inv_line_id = fields.Many2one('account.move.line', 'Inv Line Id')
     allocate_percent = fields.Integer("%", default=0)
+    account_move_line_id = fields.Many2one('account.move.line','Prod Allocate Move Line')
+
     assignable_status = fields.Selection([('assigned', 'Assigned'),
                                           ('unassigned', 'Unassigned'),
                                           ('assignable_at_inv', 'Assignable At Time of Invoice')
@@ -281,12 +567,13 @@ class AccountPaymentRegister(models.TransientModel):
     
     
     def action_create_payments(self):
-        print("AAAAAAAAAAAAAAA")
+        print("AAAAAAAAAAAAAAA",self)
         res = super(AccountPaymentRegister,self).action_create_payments()
         # assigned_vendor_lst = []
         invoice_amount = self.env['account.move'].sudo().search([('id', '=', self.line_ids.move_id.id)])
         total_released_amount = self.amount
         self.line_ids.move_id.previous_released_amount += self.amount
+        # print("TOTAL RELEASED AMOUNT",total_released_amount,invoice_amount.amount_residual)
         if invoice_amount.amount_total == self.amount and invoice_amount.payment_state == "paid" :
             if self.line_ids.move_id.inv_budget_line:
                 priority_list = []
@@ -367,12 +654,14 @@ class AccountPaymentRegister(models.TransientModel):
                 priority_list = []
                 for inv_fix_budget in self.line_ids.move_id.inv_budget_line:
                     priority_list.append(inv_fix_budget.prod_priority)
-                priority_list.sort()
-                for priority in priority_list:
+                final_priority_list = sorted(set(priority_list))
+
+                for priority in final_priority_list:
                     for buget_inv_line in self.line_ids.move_id.inv_budget_line:
-                        if priority == buget_inv_line.prod_priority and total_released_amount != 0 and not buget_inv_line.released:
+
+                        if priority == buget_inv_line.prod_priority and total_released_amount != 0.0 and not buget_inv_line.released:
                             if buget_inv_line.amount_residual == 0.0:
-                                
+                                print("BBBBBBBBBBBBBBBBBBB",total_released_amount, buget_inv_line.amount)
                                 if total_released_amount >= buget_inv_line.amount:
                                     print("WQQQQQQQQQQQQQQQQQQQQQ")
                                     total_released_amount = total_released_amount - buget_inv_line.amount
@@ -422,7 +711,7 @@ class AccountPaymentRegister(models.TransientModel):
                                          ('bucket_status', '=', 'released')])
                                     released_bucket.bucket_amount += total_released_amount
                                     total_released_amount = buget_inv_line.amount - total_released_amount
-    
+                                    print("WWWWWQQQQQQQQQ1111",buget_inv_line.amount_residual)
                                     ############################################################
     
                                     vendor_released_bucket = self.env['bucket'].sudo().search(
@@ -535,6 +824,9 @@ class AccountPaymentRegister(models.TransientModel):
             for buget_inv_line in self.line_ids.move_id.inv_budget_line:
                 if buget_inv_line.released:
                     line_amount_released.append(buget_inv_line.released)
+
+            print("FFFFFFf",line_amount_released)
+
             if self.line_ids.move_id.product_remaining_budget_line and buget_inv_line.released and len(self.line_ids.move_id.inv_budget_line) == len(line_amount_released):
                 for budget_remaining_line in self.line_ids.move_id.product_remaining_budget_line:
                     if total_released_amount != 0 and not budget_remaining_line.released:
@@ -691,20 +983,64 @@ class AccountPaymentRegister(models.TransientModel):
                     elif total_released_amount == 0.0 and not budget_remaining_line.released:
                         budget_remaining_line.amount_residual = budget_remaining_line.amount
         else:
-            if self.line_ids.move_id.product_remaining_budget_line:
+            if self.line_ids.move_id.inv_budget_line:
+
+                for inv_budget_line in self.line_ids.move_id.inv_budget_line:
+                    if not inv_budget_line.released:
+                        invoiced_bucket_inv = self.env['bucket'].sudo().search(
+                            [('bucket_type_id', '=', inv_budget_line.bucket_type_id.id),
+                             ('bucket_status', '=', 'invoiced')])
+                        invoiced_bucket_inv.bucket_amount -= inv_budget_line.amount_residual
+                        released_bucket_inv = self.env['bucket'].sudo().search(
+                            [('bucket_type_id', '=', inv_budget_line.bucket_type_id.id),
+                             ('bucket_status', '=', 'released')])
+
+                        released_bucket_inv.bucket_amount += inv_budget_line.amount_residual
+                        inv_budget_line.released = True
+                        inv_budget_line.amount_residual = 0.0
+
+                        ############################################################
+
+                        vendor_released_bucket = self.env['bucket'].sudo().search(
+                            [('bucket_type_id', '=', inv_budget_line.bucket_type_id.id),
+                             ('bucket_status', '=', 'released')])
+                        if inv_budget_line.budget_inv_vendor_id:
+                            existing_vendor_rel_line = self.env['vendor.line.released'].sudo().search(
+                                [('vendor_id', '=', inv_budget_line.budget_inv_vendor_id.id)])
+                            if not existing_vendor_rel_line:
+                                self.env['vendor.line.released'].sudo().create(
+                                    {'vendor_id': inv_budget_line.budget_inv_vendor_id.id,
+                                     'vendor_line_released_bucket_id': vendor_released_bucket.id})
+                        elif inv_budget_line.budget_user_id:
+                            existing_user_rel_line = self.env['user.line.released'].sudo().search(
+                                [('user_id', '=', inv_budget_line.budget_user_id.id),
+                                 ('user_line_released_bucket_id', '=', vendor_released_bucket.id)])
+                            if not existing_user_rel_line:
+                                self.env['user.line.released'].sudo().create(
+                                    {'user_id': inv_budget_line.budget_user_id.id,
+                                     'user_line_released_bucket_id': vendor_released_bucket.id})
+
+                        ##############################################################3
+
+
+
+            if self.line_ids.move_id.product_remaining_budget_line and invoice_amount.amount_residual != 0.0:
     
                 for budget_remaining_line in self.line_ids.move_id.product_remaining_budget_line:
                     if not budget_remaining_line.released:
                         invoiced_bucket = self.env['bucket'].sudo().search(
                             [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id), ('bucket_status', '=', 'invoiced')])
+
                         invoiced_bucket.bucket_amount -= budget_remaining_line.amount_residual
+
                         released_bucket = self.env['bucket'].sudo().search(
                             [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
                              ('bucket_status', '=', 'released')])
+
                         released_bucket.bucket_amount += budget_remaining_line.amount_residual
                         budget_remaining_line.released = True
                         budget_remaining_line.amount_residual = 0.0
-    
+
                         ############################################################3
     
                         vendor_released_bucket = self.env['bucket'].sudo().search(
@@ -727,27 +1063,105 @@ class AccountPaymentRegister(models.TransientModel):
                                      'user_line_released_bucket_id': vendor_released_bucket.id})
     
                         #############################################################3
-    
+
+            else:
+                for budget_remaining_line in self.line_ids.move_id.product_remaining_budget_line:
+                    if not budget_remaining_line.released:
+                        invoiced_bucket = self.env['bucket'].sudo().search(
+                            [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
+                             ('bucket_status', '=', 'invoiced')])
+
+                        invoiced_bucket.bucket_amount -= budget_remaining_line.amount
+
+                        released_bucket = self.env['bucket'].sudo().search(
+                            [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
+                             ('bucket_status', '=', 'released')])
+
+                        released_bucket.bucket_amount += budget_remaining_line.amount
+                        budget_remaining_line.released = True
+                        budget_remaining_line.amount_residual = 0.0
+
+                        ############################################################3
+
+                        vendor_released_bucket = self.env['bucket'].sudo().search(
+                            [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
+                             ('bucket_status', '=', 'released')])
+                        if budget_remaining_line.budget_inv_remaining_vendor_id:
+                            existing_vendor_rel_line = self.env['vendor.line.released'].sudo().search(
+                                [('vendor_id', '=', budget_remaining_line.budget_inv_remaining_vendor_id.id)])
+                            if not existing_vendor_rel_line:
+                                self.env['vendor.line.released'].sudo().create(
+                                    {'vendor_id': budget_remaining_line.budget_inv_remaining_vendor_id.id,
+                                     'vendor_line_released_bucket_id': vendor_released_bucket.id})
+                        elif budget_remaining_line.budget_remaining_user_id:
+                            existing_user_rel_line = self.env['user.line.released'].sudo().search(
+                                [('user_id', '=', budget_remaining_line.budget_remaining_user_id.id),
+                                 ('user_line_released_bucket_id', '=', vendor_released_bucket.id)])
+                            if not existing_user_rel_line:
+                                self.env['user.line.released'].sudo().create(
+                                    {'user_id': budget_remaining_line.budget_remaining_user_id.id,
+                                     'user_line_released_bucket_id': vendor_released_bucket.id})
+
+                        #############################################################3
         return res
     
-    
+
+
 class AccountMoveLine(models.Model):
     _inherit = "account.move.line"
-    
-    
+
+    inv_budget_line = fields.One2many('invoice.budget.line', 'account_move_line_id', 'Budget Info')
+    remaining_budget_line = fields.One2many('product.budget.remaining', 'account_move_line_id', 'Budget Info')
 
     def unlink(self):
         for rec in self:
-            if rec.move_id:
-                if rec.move_id.inv_budget_line:
-                    for record in rec.move_id.inv_budget_line:
-                        record.unlink()
-                if rec.move_id.product_remaining_budget_line:
-                    for record1 in rec.move_id.product_remaining_budget_line:
-                        record1.unlink()
+            for record in rec.move_id.inv_budget_line:
+                if record and record.account_move_line_id.id == rec.id:
+                    record.unlink()
+            for record1 in rec.move_id.product_remaining_budget_line:
+                if record1 and record1.account_move_line_id.id == rec.id:
+                    record1.unlink()
         res = super(AccountMoveLine,self).unlink()
         return res
-    
 
 
 
+
+    # @api.onchange("product_id")
+    # def _onchange_fetch_fixed_budget_product_data(self):
+    #     for rec in self:
+    #         print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",rec.move_id._origin)
+    #         print(rec.product_id.product_fixed_budget_line)
+    #         if rec.product_id and rec.product_id.product_tmpl_id and rec.product_id.product_fixed_budget_line:
+    #             for fix_budget_line in rec.product_id.product_fixed_budget_line:
+    #                 budget_data= self.env['invoice.budget.line'].sudo().create({
+    #                                                                             'product_id_budget':fix_budget_line.product_id.id,
+    #                                                                             'name':fix_budget_line.name,
+    #                                                                             'prod_inv_id':rec.move_id.id,
+    #                                                                             'bucket_type_id':fix_budget_line.bucket_type_id.id,
+    #                                                                             'assignable_status':fix_budget_line.assignable_status,
+    #                                                                             'amount':fix_budget_line.amount,
+    #                                                                             'bucket_user':fix_budget_line.bucket_user,
+    #                                                                             # 'budget_inv_vendor_ids': [(6,0, fix_budget_line.prod_fix_vendor_ids.ids)] or [],
+    #                                                                             'budget_inv_vendor_id': fix_budget_line.prod_fix_vendor_id.id,
+    #                                                                             # 'budget_user_ids':[(6,0, fix_budget_line.prod_fix_assigned_user_ids.ids)] or [],
+    #                                                                             'budget_user_id': fix_budget_line.prod_fix_assigned_user_id.id,
+    #                                                                             'prod_priority':fix_budget_line.prod_priority
+    #                                                                             })
+    #
+    #         if self.product_id and self.product_id.product_tmpl_id and self.product_id.product_allocate_budget_line:
+    #             for allocate_budget_line in self.product_id.product_allocate_budget_line:
+    #                 remaining_budget_data= self.env['product.budget.remaining'].sudo().create({
+    #                                                                             'product_id_budget':allocate_budget_line.product_id.id,
+    #                                                                             'name':allocate_budget_line.name,
+    #                                                                             'prod_remaining_id':rec.id,
+    #                                                                             'bucket_type_id':allocate_budget_line.bucket_type_id.id,
+    #                                                                             'assignable_status':allocate_budget_line.assignable_status,
+    #                                                                             'bucket_user':allocate_budget_line.bucket_user,
+    #                                                                             # 'budget_inv_remaining_vendor_ids': [(6,0, allocate_budget_line.prod_remaining_budget_vendor_ids.ids)] or [],
+    #                                                                             'budget_inv_remaining_vendor_id': allocate_budget_line.prod_remaining_budget_vendor_id.id,
+    #                                                                             # 'budget_remaining_user_ids':[(6,0, allocate_budget_line.prod_remaining_budget_assigned_user_ids.ids)] or [],
+    #                                                                             'budget_remaining_user_id': allocate_budget_line.prod_remaining_budget_assigned_user_id.id,
+    #                                                                             'allocate_percent':allocate_budget_line.allocate_percent,
+    #                                                                             'amount':allocate_budget_line.amount
+    #                                                                             })

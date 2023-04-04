@@ -8,11 +8,14 @@
 			<field name ="payment_reference" position="after">
 				<field name="previous_released_amount" readonly="1"/>
 			</field>
+			<xpath expr="//button[@name='button_draft']" position="attributes">
+				<attribute name="invisible">1</attribute>
+			</xpath>
 			<xpath expr="//notebook" position="inside">
 					<page string="Budgeting Tab" name="budget_info">
 						<separator string="Assigned Vendor/User"/>
 						<field name="inv_budget_line" >
-						<tree string="Fixed Budget Line" editable="bottom" create="0">
+						<tree string="Fixed Budget Line" editable="bottom" create="0" delete="0">
                                 <field name="product_id_budget" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
                                 <field name="name" readonly="1"/>
                                 <field name="bucket_type_id" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
@@ -34,7 +37,7 @@
 						
 						
 						<field name="product_remaining_budget_line" widget="section_and_note_one2many" mode="tree">
-							<tree string="Remaining Budget line" editable="bottom">
+							<tree string="Remaining Budget line" editable="bottom" create="0" delete="0">
 								<field name="product_id_budget" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
 								<field name="name" readonly="1"/>
 								<field name="bucket_type_id" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
