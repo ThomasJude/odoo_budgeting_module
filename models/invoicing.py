@@ -402,6 +402,10 @@ class AccountMove(models.Model):
                         fixed_bucket = self.env['bucket'].sudo().search([('bucket_type_id','=',buget_inv_line.bucket_type_id.id),('bucket_status','=','invoiced')])
                         fixed_bucket.bucket_amount += buget_inv_line.amount
 
+                        print("SCBBBBBBBBB",buget_inv_line.check_invoice_posted)
+                        buget_inv_line.check_invoice_posted = True
+                        print("SCBBBBBBBBB 2",buget_inv_line.check_invoice_posted)
+
                         fixed_bucket_vendor_lst=[]
                         fixed_bucket_user_lst=[]
 
@@ -439,7 +443,11 @@ class AccountMove(models.Model):
                 remaining_bucket = self.env['bucket'].sudo().search(
                     [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id), ('bucket_status', '=', 'invoiced')])
                 remaining_bucket.bucket_amount += budget_remaining_line.amount
-                
+
+                print("budget_remaining_line", budget_remaining_line.check_invoice_posted)
+                budget_remaining_line.check_invoice_posted = True
+                print("budget_remaining_line 2", budget_remaining_line.check_invoice_posted)
+                #
                 remaining_bucket_vendor_lst=[]
                 remaining_bucket_user_lst=[]
                 if remaining_bucket.vendor_line:
@@ -499,7 +507,7 @@ class AccountMove(models.Model):
                 vendor_bucket_line = self.env['vendor.line'].sudo().create(
                     {'vendor_line_bucket_id': vendor_inv_bucket.id, 'vendor_id': final_vendor_id.id})
 
-
+        # dfdfc
         return res
     
 
@@ -530,6 +538,7 @@ class InvoiceBudgetLine(models.Model):
     invoiced = fields.Boolean('Invoiced')
     released = fields.Boolean('Released')
     amount_residual = fields.Float('Amount Due')
+    check_invoice_posted = fields.Boolean('check invoice posted')
 
 
                     
@@ -560,6 +569,7 @@ class ProductBudgetRemaining(models.Model):
     invoiced = fields.Boolean('Invoiced')
     released = fields.Boolean('Released')
     amount_residual = fields.Float('Amount Due')
+    check_invoice_posted = fields.Boolean('check invoice posted')
     
     
 class AccountPaymentRegister(models.TransientModel):
