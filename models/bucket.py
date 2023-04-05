@@ -18,7 +18,8 @@ class Bucket(models.Model):
 
     check = fields.Boolean(compute='_get_value')
     check2 = fields.Boolean(compute='_get_status')
-    @api.constrains('user_type','bucket_status','bucket_type_id')
+    
+    @api.constrains('bucket_status','bucket_type_id')
     def bucket_user_type_status(self):
         total = 0
         for record in self:
@@ -45,151 +46,6 @@ class Bucket(models.Model):
             else:
                 rec.check2 = False
 
-    # def _get_amount(self):
-    #     # print("@@@@@@@@@@@@@##########################")
-    #     if self.vendor_line:
-    #         for rec in self.vendor_line:
-    #             all_vendor_invoice_lines = self.env['invoice.budget.line'].sudo().search(
-    #                 [('budget_inv_vendor_id.id', '=', rec.vendor_id.id), ('released', '=', False)])
-    #             all_vendor_remaining_lines = self.env['product.budget.remaining'].sudo().search(
-    #                 [('budget_inv_remaining_vendor_id.id', '=', rec.vendor_id.id), ('released', '=', False)])
-    #
-    #             all_invoices = []
-    #             for invoice_line in all_vendor_invoice_lines:
-    #                 all_invoices.append(invoice_line.prod_inv_id)
-    #             for remaining_inv_line in all_vendor_remaining_lines:
-    #                 all_invoices.append(remaining_inv_line.prod_remaining_id)
-    #
-    #             rem_duplicate_invoice_no_set = set(all_invoices)
-    #             final_invoice_no = list(rem_duplicate_invoice_no_set)
-    #             total_user_payable = 0.0
-    #             for invoices in final_invoice_no:
-    #                 total_amount_inv = 0.0
-    #                 total_amount_rel = 0.0
-    #
-    #                 for inv_budget_line in invoices.inv_budget_line:
-    #                     # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
-    #                     if inv_budget_line.budget_inv_vendor_id.id == rec.vendor_id.id and inv_budget_line.bucket_type_id.id == rec.vendor_line_bucket_id.bucket_type_id.id:
-    #                         total_amount_inv += inv_budget_line.amount
-    #                 for product_remaining_budget_line in invoices.product_remaining_budget_line:
-    #                     # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
-    #                     if product_remaining_budget_line.budget_inv_remaining_vendor_id.id == rec.vendor_id.id and product_remaining_budget_line.bucket_type_id.id == rec.vendor_line_bucket_id.bucket_type_id.id:
-    #                         total_amount_rel += product_remaining_budget_line.amount
-    #
-    #                 total_user_amount_per_invoice = total_amount_rel + total_amount_inv
-    #                 total_user_payable += total_user_amount_per_invoice
-    #
-    #             existing_record = self.env['vendor.line'].sudo().search(
-    #                 [('vendor_id', '=', rec.vendor_id.id)])
-    #             existing_record.write({'total_amount':total_user_payable})
-    #             # print("#########################",total_user_payable)
-    #
-    #     if self.vendor_line_released:
-    #         for rec in self.vendor_line_released:
-    #             all_vendor_invoice_lines = self.env['invoice.budget.line'].sudo().search(
-    #                 [('budget_inv_vendor_id.id', '=', rec.vendor_id.id), ('released', '=', True)])
-    #             all_vendor_remaining_lines = self.env['product.budget.remaining'].sudo().search(
-    #                 [('budget_inv_remaining_vendor_id.id', '=', rec.vendor_id.id), ('released', '=', True)])
-    #
-    #             all_invoices = []
-    #             for invoice_line in all_vendor_invoice_lines:
-    #                 all_invoices.append(invoice_line.prod_inv_id)
-    #             for remaining_inv_line in all_vendor_remaining_lines:
-    #                 all_invoices.append(remaining_inv_line.prod_remaining_id)
-    #
-    #             rem_duplicate_invoice_no_set = set(all_invoices)
-    #             final_invoice_no = list(rem_duplicate_invoice_no_set)
-    #             total_user_payable = 0.0
-    #             for invoices in final_invoice_no:
-    #                 total_amount_inv = 0.0
-    #                 total_amount_rel = 0.0
-    #
-    #                 for inv_budget_line in invoices.inv_budget_line:
-    #                     # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
-    #                     if inv_budget_line.budget_inv_vendor_id.id == rec.vendor_id.id and inv_budget_line.bucket_type_id.id == rec.vendor_line_released_bucket_id.bucket_type_id.id:
-    #                         total_amount_inv += inv_budget_line.amount
-    #                 for product_remaining_budget_line in invoices.product_remaining_budget_line:
-    #                     # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
-    #                     if product_remaining_budget_line.budget_inv_remaining_vendor_id.id == rec.vendor_id.id and product_remaining_budget_line.bucket_type_id.id == rec.vendor_line_released_bucket_id.bucket_type_id.id:
-    #                         total_amount_rel += product_remaining_budget_line.amount
-    #
-    #                 total_user_amount_per_invoice = total_amount_rel + total_amount_inv
-    #                 total_user_payable += total_user_amount_per_invoice
-    #
-    #             existing_record = self.env['vendor.line.released'].sudo().search(
-    #                 [('vendor_id', '=', rec.vendor_id.id)])
-    #             existing_record.write({'total_amount': total_user_payable})
-    #             # print("#########################", total_user_payable)
-    #
-    #     if self.user_line:
-    #         for rec in self.user_line:
-    #             all_user_invoice_lines = self.env['invoice.budget.line'].sudo().search(
-    #                 [('budget_user_id.id', '=', rec.user_id.id), ('released', '=', False)])
-    #             all_user_remaining_lines = self.env['product.budget.remaining'].sudo().search(
-    #                 [('budget_remaining_user_id.id', '=', rec.user_id.id), ('released', '=', False)])
-    #
-    #             all_invoices = []
-    #             for invoice_line in all_user_invoice_lines:
-    #                 all_invoices.append(invoice_line.prod_inv_id)
-    #             for remaining_inv_line in all_user_remaining_lines:
-    #                 all_invoices.append(remaining_inv_line.prod_remaining_id)
-    #
-    #             rem_duplicate_invoice_no_set = set(all_invoices)
-    #             final_invoice_no = list(rem_duplicate_invoice_no_set)
-    #             total_user_payable = 0.0
-    #             for invoices in final_invoice_no:
-    #                 total_amount_inv = 0.0
-    #                 total_amount_rel = 0.0
-    #
-    #                 for inv_budget_line in invoices.inv_budget_line:
-    #                     # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
-    #                     if inv_budget_line.budget_user_id.id == rec.user_id.id and inv_budget_line.bucket_type_id.id == rec.user_line_bucket_id.bucket_type_id.id:
-    #                         total_amount_inv += inv_budget_line.amount
-    #                 for product_remaining_budget_line in invoices.product_remaining_budget_line:
-    #                     # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
-    #                     if product_remaining_budget_line.budget_remaining_user_id.id == rec.user_id.id and product_remaining_budget_line.bucket_type_id.id == rec.user_line_bucket_id.bucket_type_id.id:
-    #                         total_amount_rel += product_remaining_budget_line.amount
-    #
-    #                 total_user_amount_per_invoice = total_amount_rel + total_amount_inv
-    #                 total_user_payable += total_user_amount_per_invoice
-    #             existing_record = self.env['user.line'].sudo().search(
-    #                 [('user_id', '=', rec.user_id.id)])
-    #             existing_record.write({'total_amount':total_user_payable})
-    #
-    #     if self.user_line_released:
-    #         for rec in self.user_line_released:
-    #             all_user_invoice_lines = self.env['invoice.budget.line'].sudo().search(
-    #                 [('budget_user_id.id', '=', rec.user_id.id), ('released', '=', True)])
-    #             all_user_remaining_lines = self.env['product.budget.remaining'].sudo().search(
-    #                 [('budget_remaining_user_id.id', '=', rec.user_id.id), ('released', '=', True)])
-    #
-    #             all_invoices = []
-    #             for invoice_line in all_user_invoice_lines:
-    #                 all_invoices.append(invoice_line.prod_inv_id)
-    #             for remaining_inv_line in all_user_remaining_lines:
-    #                 all_invoices.append(remaining_inv_line.prod_remaining_id)
-    #
-    #             rem_duplicate_invoice_no_set = set(all_invoices)
-    #             final_invoice_no = list(rem_duplicate_invoice_no_set)
-    #             total_user_payable = 0.0
-    #             for invoices in final_invoice_no:
-    #                 total_amount_inv = 0.0
-    #                 total_amount_rel = 0.0
-    #
-    #                 for inv_budget_line in invoices.inv_budget_line:
-    #                     # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
-    #                     if inv_budget_line.budget_user_id.id == rec.user_id.id and inv_budget_line.bucket_type_id.id == rec.user_line_released_bucket_id.bucket_type_id.id:
-    #                         total_amount_inv += inv_budget_line.amount
-    #                 for product_remaining_budget_line in invoices.product_remaining_budget_line:
-    #                     # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
-    #                     if product_remaining_budget_line.budget_remaining_user_id.id == rec.user_id.id and product_remaining_budget_line.bucket_type_id.id == rec.user_line_released_bucket_id.bucket_type_id.id:
-    #                         total_amount_rel += product_remaining_budget_line.amount
-    #
-    #                 total_user_amount_per_invoice = total_amount_rel + total_amount_inv
-    #                 total_user_payable += total_user_amount_per_invoice
-    #             existing_record = self.env['user.line.released'].sudo().search(
-    #                 [('user_id', '=', rec.user_id.id)])
-    #             existing_record.write({'total_amount':total_user_payable})
 
 class VendorLine(models.Model):
     _name = "vendor.line"
@@ -197,9 +53,9 @@ class VendorLine(models.Model):
     vendor_id = fields.Many2one('res.partner','Vendors')
     vendor_line_bucket_id = fields.Many2one('bucket','bucket')
     total_amount = fields.Float('Total Amount')
-    # released = fields.Boolean('Released')
+    
+    
     def fetch_vendor_bills_details(self):
-        print("AAAA")
         all_vendor_invoice_lines = self.env['invoice.budget.line'].sudo().search(
             [('budget_inv_vendor_id.id', '=', self.vendor_id.id), ('released', '=', False)])
         all_vendor_remaining_lines = self.env['product.budget.remaining'].sudo().search(
@@ -212,29 +68,8 @@ class VendorLine(models.Model):
             all_invoices.append(remaining_inv_line.prod_remaining_id)
         rem_duplicate_invoice_no_set = set(all_invoices)
         final_invoice_no = list(rem_duplicate_invoice_no_set)
-        print("@!!!! 11", final_invoice_no)
         for invoices in final_invoice_no:
             if invoices.state == 'posted':
-                print("@!!!!",invoices)
-                # DRAFT
-                # if invoices.payment_state != 'partial' and invoices.payment_state != 'paid':
-                #     print("not partial vend")
-                #     total_vendor_amount = 0.0
-                #     total_amount_inv = 0.0
-                #     total_amount_rel = 0.0
-                #     for inv_budget_line in invoices.inv_budget_line:
-                #         # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
-                #         if inv_budget_line.budget_inv_vendor_id in self.vendor_id:
-                #             total_amount_inv += inv_budget_line.amount
-                #     for product_remaining_budget_line in invoices.product_remaining_budget_line:
-                #         # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
-                #         if product_remaining_budget_line.budget_inv_remaining_vendor_id in self.vendor_id:
-                #             total_amount_rel += product_remaining_budget_line.amount
-                #
-                #     total_vendor_amount_per_invoice = total_amount_rel + total_amount_inv
-                #     existing_record = self.env['vendor.invoice.detail'].sudo().search([('invoice_name','=',invoices.id),('vendor_id','=',self.vendor_id.id)])
-                #     if not existing_record:
-                #         create_record = self.env['vendor.invoice.detail'].sudo().create({"vendor_id":self.vendor_id.id,'invoice_name':invoices.id,'bucket_type_id':self.vendor_line_bucket_id.id,'vendor_amount_invoiced':total_vendor_amount_per_invoice})
                 if invoices.payment_state == 'partial':
                     total_vendor_amount = 0.0
                     total_amount_inv = 0.0
@@ -242,8 +77,6 @@ class VendorLine(models.Model):
                     total_paid_amount_inv = 0.0
                     total_paid_amount_rel = 0.0
                     for inv_budget_line in invoices.inv_budget_line:
-                        print("CCCCCCCCCCVVVVVVVVV",inv_budget_line.budget_inv_vendor_id,self.vendor_id)
-                        # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
                         if inv_budget_line.budget_inv_vendor_id in self.vendor_id:
                             total_paid_amount_inv += inv_budget_line.amount_residual
                             total_amount_inv += inv_budget_line.amount
@@ -252,7 +85,6 @@ class VendorLine(models.Model):
                     for inv_budget_line in invoices.inv_budget_line:
                         if inv_budget_line.released:
                             all_fixed_amount_released.append(inv_budget_line.id)
-                    print("DDDDD",len(all_fixed_amount_released),len(invoices.inv_budget_line))
                     if len(all_fixed_amount_released) == len(invoices.inv_budget_line):
                         for product_remaining_budget_line in invoices.product_remaining_budget_line:
                             # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:

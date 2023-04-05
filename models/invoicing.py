@@ -25,7 +25,8 @@ class AccountMove(models.Model):
                                                                                             'bucket_type_id':fix_budget_line.bucket_type_id.id,
                                                                                             'assignable_status':fix_budget_line.assignable_status,
                                                                                             'amount':fix_budget_line.amount*inv_line.quantity,
-                                                                                            'bucket_user':fix_budget_line.bucket_user,
+                                                                                            'is_vendor':fix_budget_line.is_vendor,
+                                                                                            # 'bucket_user':fix_budget_line.bucket_user,
                                                                                             # 'budget_inv_vendor_ids': [(6,0, fix_budget_line.prod_fix_vendor_ids.ids)] or [],
                                                                                             'budget_inv_vendor_id': fix_budget_line.prod_fix_vendor_id.id,
                                                                                             # 'budget_user_ids':[(6,0, fix_budget_line.prod_fix_assigned_user_ids.ids)] or [],
@@ -42,7 +43,8 @@ class AccountMove(models.Model):
                                                                                             'account_move_line_id': inv_line.id,
                                                                                             'bucket_type_id':allocate_budget_line.bucket_type_id.id,
                                                                                             'assignable_status':allocate_budget_line.assignable_status,
-                                                                                            'bucket_user':allocate_budget_line.bucket_user,
+                                                                                            'is_vendor':fix_budget_line.is_vendor,
+                                                                                            # 'bucket_user':allocate_budget_line.bucket_user,
                                                                                             # 'budget_inv_remaining_vendor_ids': [(6,0, allocate_budget_line.prod_remaining_budget_vendor_ids.ids)] or [],
                                                                                             'budget_inv_remaining_vendor_id': allocate_budget_line.prod_remaining_budget_vendor_id.id,
                                                                                             # 'budget_remaining_user_ids':[(6,0, allocate_budget_line.prod_remaining_budget_assigned_user_ids.ids)] or [],
@@ -77,7 +79,8 @@ class AccountMove(models.Model):
                                     'bucket_type_id': fix_budget_line.bucket_type_id.id,
                                     'assignable_status': fix_budget_line.assignable_status,
                                     'amount': fix_budget_line.amount * quantity,
-                                    'bucket_user': fix_budget_line.bucket_user,
+                                    'is_vendor':fix_budget_line.is_vendor,
+                                    # 'bucket_user': fix_budget_line.bucket_user,
                                     # 'budget_inv_vendor_ids': [(6,0, fix_budget_line.prod_fix_vendor_ids.ids)] or [],
                                     'budget_inv_vendor_id': fix_budget_line.prod_fix_vendor_id.id,
                                     # 'budget_user_ids':[(6,0, fix_budget_line.prod_fix_assigned_user_ids.ids)] or [],
@@ -94,7 +97,8 @@ class AccountMove(models.Model):
                                     'account_move_line_id': addedlineid.id,
                                     'bucket_type_id': allocate_budget_line.bucket_type_id.id,
                                     'assignable_status': allocate_budget_line.assignable_status,
-                                    'bucket_user': allocate_budget_line.bucket_user,
+                                    # 'bucket_user': allocate_budget_line.bucket_user,
+                                    'is_vendor':allocate_budget_line.is_vendor,
                                     # 'budget_inv_remaining_vendor_ids': [(6,0, allocate_budget_line.prod_remaining_budget_vendor_ids.ids)] or [],
                                     'budget_inv_remaining_vendor_id': allocate_budget_line.prod_remaining_budget_vendor_id.id,
                                     # 'budget_remaining_user_ids':[(6,0, allocate_budget_line.prod_remaining_budget_assigned_user_ids.ids)] or [],
@@ -384,10 +388,10 @@ class AccountMove(models.Model):
         if self.inv_budget_line:
             for inv_budget in self.inv_budget_line: 
                 # if inv_budget.assignable_status == 'assignable_at_inv' and inv_budget.bucket_user=='vendor' and not inv_budget.budget_inv_vendor_ids:
-                if inv_budget.assignable_status == 'assignable_at_inv' and inv_budget.bucket_user=='vendor' and not inv_budget.budget_inv_vendor_id:
+                if inv_budget.assignable_status == 'assignable_at_inv' and inv_budget.is_vendor== True and not inv_budget.budget_inv_vendor_id:
                     raise UserError(_("Please assign vendors in budgeting tab"))
                 # if inv_budget.assignable_status == 'assignable_at_inv' and inv_budget.bucket_user!='vendor' and not inv_budget.budget_user_ids:
-                if inv_budget.assignable_status == 'assignable_at_inv' and inv_budget.bucket_user!='vendor' and not inv_budget.budget_user_id:
+                if inv_budget.assignable_status == 'assignable_at_inv' and inv_budget.is_vendor!= True and not inv_budget.budget_user_id:
                     raise UserError(_("Please assign Users in budgeting tab"))
 
             for inv_fix_budget in self.inv_budget_line:
@@ -497,7 +501,7 @@ class AccountMove(models.Model):
         assigned_user_set = set(assigned_user_lst)
         final_user_lst = list(assigned_user_set)
 
-        vendor_bucket_type_id=self.env['bucket.type'].sudo().search([('user_type','=','vendor')],limit=1)
+        vendor_bucket_type_id=self.env['bucket.type'].sudo().search([('is_vendor','=',True)],limit=1)
         vendor_inv_bucket = self.env['bucket'].sudo().search([('bucket_type_id', '=', vendor_bucket_type_id.id), ('bucket_status', '=', 'invoiced')])
         for final_vendor in final_vendor_lst:
             final_vendor_id= self.env['res.partner'].browse(final_vendor)
@@ -533,7 +537,9 @@ class InvoiceBudgetLine(models.Model):
                                           ('unassigned', 'Unassigned'),
                                           ('assignable_at_inv', 'Assignable At Time of Invoice')
                                           ], "Assignable Status")
-    bucket_user= fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
+    
+    is_vendor = fields.Boolean(string='Is Vendor')
+    # bucket_user= fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
     prod_priority = fields.Integer('Priority')
     invoiced = fields.Boolean('Invoiced')
     released = fields.Boolean('Released')
@@ -555,10 +561,8 @@ class ProductBudgetRemaining(models.Model):
                                           ('unassigned', 'Unassigned'),
                                           ('assignable_at_inv', 'Assignable At Time of Invoice')
                                           ], "Assignable Status")
-    bucket_user= fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
-    # budget_inv_remaining_vendor_ids = fields.Many2many(
-    #     'res.partner', 'prod_inv_remaining_budget_vendor', 'prod_inv_remaining_budget_id', 'vendor_id',
-    #     string='Vendors Name', copy=False)
+    is_vendor = fields.Boolean(string='Is Vendor')
+    # bucket_user= fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
     budget_inv_remaining_vendor_id = fields.Many2one('res.partner', string="Vendors Name", copy=False)
     # budget_remaining_user_ids = fields.Many2many('res.users', 'prod_inv_remaining_budget_user', 'prod_inv_remaining_budget_usr_id', 'usr_id',string="Users Name",copy=False)
     budget_remaining_user_id = fields.Many2one('res.users', string="Users Name", copy=False)

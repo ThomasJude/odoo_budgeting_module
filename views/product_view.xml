@@ -13,12 +13,13 @@
                                 <field name="product_id" attrs="{'readonly': [('name', '!=', False)],}" options="{'no_edit': True, 'no_create': True}"/>
                                 <field name="name" attrs="{'readonly': [('product_id', '!=', False)],}"/>
                                 <field name="bucket_type_id" options="{'no_edit': True, 'no_create': True}"/>
-                                <field name="bucket_user" invisible="1"/>
+                                <!--<field name="bucket_user" invisible="1"/>-->
+                                <field name="is_vendor" invisible="1"/>
                                 <field name="assignable_status" />
 <!--                                <field name="prod_fix_vendor_ids"  attrs="{'readonly': ['|',('bucket_user', '!=', 'vendor'),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>-->
-                                <field name="prod_fix_vendor_id"  attrs="{'readonly': ['|',('bucket_user', '!=', 'vendor'),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}"/>
+                                <field name="prod_fix_vendor_id"  attrs="{'readonly': ['|',('is_vendor', '!=', True),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}"/>
 <!--                                <field name="prod_fix_assigned_user_ids" attrs="{'readonly': ['|',('bucket_user', '=', 'vendor'),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>-->
-                                <field name="prod_fix_assigned_user_id" attrs="{'readonly': ['|',('bucket_user', '=', 'vendor'),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}"/>
+                                <field name="prod_fix_assigned_user_id" attrs="{'readonly': ['|',('is_vendor', '=', True),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}"/>
                                 <field name="prod_priority" />
                                 <field name="amount"  attrs="{'readonly': [('product_id', '!=', False)]}" force_save="1"/>
                                 <!--<field name="amount" />-->
@@ -32,12 +33,13 @@
                                 <field name="product_id" attrs="{'readonly': [('name', '!=', False)],}" options="{'no_edit': True, 'no_create': True}"/>
                                 <field name="name" attrs="{'readonly': [('product_id', '!=', False)],}"/>
                                 <field name="bucket_type_id" options="{'no_edit': True, 'no_create': True}"/>
-                                <field name="bucket_user" invisible="1"/>
+                                <!--<field name="bucket_user" invisible="1"/>-->
+                                <field name="is_vendor" invisible="1"/>
                                 <field name="assignable_status"/>
 <!--                                <field name="prod_remaining_budget_vendor_ids"  attrs="{'readonly': ['|',('bucket_user', '!=', 'vendor'),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>-->
-                                <field name="prod_remaining_budget_vendor_id"  attrs="{'readonly': ['|',('bucket_user', '!=', 'vendor'),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}"/>
+                                <field name="prod_remaining_budget_vendor_id"  attrs="{'readonly': ['|',('is_vendor', '!=', True),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}"/>
 <!--                                <field name="prod_remaining_budget_assigned_user_ids" attrs="{'readonly': ['|',('bucket_user', '=', 'vendor'),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>-->
-                                <field name="prod_remaining_budget_assigned_user_id" attrs="{'readonly': ['|',('bucket_user', '=', 'vendor'),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}"/>
+                                <field name="prod_remaining_budget_assigned_user_id" attrs="{'readonly': ['|',('is_vendor', '=', True),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}"/>
                                 <field name="allocate_percent" />
                                 <field name="amount"  attrs="{'readonly': [('product_id', '!=', False)]}" force_save="1"/>
                                 <!--<field name="amount" readonly="1" />-->

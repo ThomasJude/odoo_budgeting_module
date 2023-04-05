@@ -8,13 +8,14 @@ class BucketType(models.Model):
     
     name = fields.Char(string='Name')
     # bucket_amount = fields.Float(string='Bucket Amount')
-    user_type = fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
+    is_vendor = fields.Boolean(string='Is Vendor')
+    # user_type = fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
     # bucket_status = fields.Selection([('invoiced','Invoiced'),('released','Released')], "Bucket Status")
     
-    @api.constrains('user_type')
-    def bucket_user_type_status(self):
+    @api.constrains('is_vendor')
+    def bucket_is_vendor_status(self):
         total = 0
         for record in self:
-            obj = self.env['bucket.type'].search([('id','!=',record.id),('user_type','=',record.user_type)])
+            obj = self.env['bucket.type'].search([('id','!=',record.id),('is_vendor','=',True)])
             if obj:
-                raise UserError(_('There is already a bucket type exist with same user type'))
+                raise UserError(_('There is already a bucket type exist with Vendor'))

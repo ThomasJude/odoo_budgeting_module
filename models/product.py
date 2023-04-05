@@ -76,38 +76,34 @@ class ProductBudgetFixed(models.Model):
         default=False)
     
     bucket_type_id = fields.Many2one('bucket.type','Bucket Type')
-    bucket_user= fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
-    # vendor_ids= fields.Many2many('res.partner',string="Bucket Item")
-    # prod_fix_vendor_ids = fields.Many2many(
-    #     'res.partner', 'prod_fix_budget_vendor', 'prod_fix_budget_id', 'vendor_id',
-    #     string='Vendors Name', copy=False)
+    is_vendor = fields.Boolean(string='Is Vendor')
+    # bucket_user= fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
     prod_fix_vendor_id = fields.Many2one('res.partner', string='Vendor Name', copy=False)
     # prod_fix_assigned_user_ids = fields.Many2many('res.users', 'prod_fix_budget_user', 'prod_fix_budget_usr_id', 'usr_id',string="Users Name",copy=False)
     prod_fix_assigned_user_id = fields.Many2one('res.users', string="User Name", copy=False)
-    
-    
-    # @api.constrains('prod_priority')
-    # def prod_priority_val(self):
-    #     total = 0
-    #     for rec in self:
-    #         # print ("aaaaaaaaaaaaaaaaa",self.prod_id,rec.prod_id.id)
-    #         obj = self.env['product.budget.fixed'].search([('id','!=',rec.id),('prod_priority','=',rec.prod_priority),('prod_id','!=',rec.prod_id.id)])
-    #         if obj:
-    #             raise UserError(_('Product priority should be unique in Fixed Reduction budgeting tab'))
-    
-    
     
     
     
     @api.onchange('bucket_type_id')
     def _onchange_bucket_type_id(self):
         if self.bucket_type_id:
-            if self.bucket_type_id.user_type:
-                self.bucket_user = self.bucket_type_id.user_type
+            if self.bucket_type_id.is_vendor:
+                self.is_vendor = True
             else:
-                self.bucket_user = 'etc'
+                self.is_vendor=False
         else:
-            self.bucket_user = 'etc'
+            self.is_vendor=False
+    
+    
+    # @api.onchange('bucket_type_id')
+    # def _onchange_bucket_type_id(self):
+    #     if self.bucket_type_id:
+    #         if self.bucket_type_id.user_type:
+    #             self.bucket_user = self.bucket_type_id.user_type
+    #         else:
+    #             self.bucket_user = 'etc'
+    #     else:
+    #         self.bucket_user = 'etc'
 
     @api.onchange('product_id')
     def _onchange_product_amount(self):
@@ -165,7 +161,8 @@ class ProductBudgetAllocate(models.Model):
                                           ],"Assignable Status",default= "unassigned")
     
     bucket_type_id = fields.Many2one('bucket.type','Bucket Type')
-    bucket_user= fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
+    is_vendor = fields.Boolean(string='Is Vendor')
+    # bucket_user= fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
     # vendor_ids= fields.Many2many('res.partner',string="Bucket Item")
     # prod_remaining_budget_vendor_ids = fields.Many2many(
     #     'res.partner', 'prod_remaining_budget_budget_vendor', 'prod_remaining_budget_budget_id', 'vendor_id',
@@ -189,18 +186,30 @@ class ProductBudgetAllocate(models.Model):
                         total_fixed_reduction += fixed_reduction_line.amount
                 remaining_percent_allocation_amount = record.prod_allocate_id.list_price - total_fixed_reduction
                 record.amount = remaining_percent_allocation_amount*record.allocate_percent/100
-            
-            
-            
+                
+                
+                
     @api.onchange('bucket_type_id')
     def _onchange_bucket_type_id(self):
         if self.bucket_type_id:
-            if self.bucket_type_id.user_type:
-                self.bucket_user = self.bucket_type_id.user_type
+            if self.bucket_type_id.is_vendor:
+                self.is_vendor = True
             else:
-                self.bucket_user = 'etc'
+                self.is_vendor = False
         else:
-            self.bucket_user = 'etc'
+            self.is_vendor = False
+            
+            
+            
+    # @api.onchange('bucket_type_id')
+    # def _onchange_bucket_type_id(self):
+    #     if self.bucket_type_id:
+    #         if self.bucket_type_id.user_type:
+    #             self.bucket_user = self.bucket_type_id.user_type
+    #         else:
+    #             self.bucket_user = 'etc'
+    #     else:
+    #         self.bucket_user = 'etc'
             
             
     # @api.onchange('prod_remaining_budget_vendor_ids')
