@@ -8,8 +8,10 @@
 			<field name ="payment_reference" position="after">
 				<field name="previous_released_amount" readonly="1"/>
 			</field>
-			<xpath expr="//button[@name='button_draft']" position="attributes">
-				<attribute name="invisible">1</attribute>
+			<xpath expr="//button[@name='button_draft']" position="replace">
+				<button name="button_draft" string="Reset to Draft" type="object" groups="account.group_account_invoice"
+                                attrs="{'invisible' : ['|',('show_reset_to_draft_button', '=', False),('payment_state','!=','not_paid')]}" data-hotkey="q" />
+
 			</xpath>
 			<xpath expr="//notebook" position="inside">
 					<page string="Budgeting Tab" name="budget_info">

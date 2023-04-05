@@ -30,7 +30,7 @@ class Bucket(models.Model):
     @api.depends('bucket_type_id')
     def _get_value(self):
         for rec in self:
-            if rec.bucket_type_id.name == "Vendor":
+            if rec.bucket_type_id.is_vendor:
                 rec.check = True
                 # rec._get_amount()
             else:

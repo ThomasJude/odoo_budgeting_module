@@ -8,6 +8,97 @@ class AccountMove(models.Model):
     product_remaining_budget_line = fields.One2many('product.budget.remaining', 'prod_remaining_id', 'Product Remaining Budget')
     previous_released_amount = fields.Float('Previous Released')
 
+    def button_draft(self):
+        res = super(AccountMove,self).button_draft()
+        if self.inv_budget_line:
+            for buget_inv_line in self.inv_budget_line:
+                if not buget_inv_line.released and buget_inv_line.check_invoice_posted:
+
+                    # --------------------------------------
+                    # buget_inv_line invoiced checkbox true
+                    # ----------------------------------------
+
+                    fixed_bucket = self.env['bucket'].sudo().search(
+                        [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
+                         ('bucket_status', '=', 'invoiced')])
+                    fixed_bucket.bucket_amount -= buget_inv_line.amount
+                    if fixed_bucket.vendor_line:
+                        for vendor_line in fixed_bucket.vendor_line:
+                            if vendor_line.vendor_id.id == buget_inv_line.budget_inv_vendor_id.id:
+                                existing_rec = self.env['vendor.invoice.detail'].sudo().search([('invoice_name','=',self.id),('bucket_type_id','=',buget_inv_line.bucket_type_id.id),('vendor_id','=',buget_inv_line.budget_inv_vendor_id.id)])
+                                if existing_rec:
+                                    existing_rec.unlink()
+                                cr = self.env.cr
+                                cr.execute(
+                                    "SELECT id FROM invoice_budget_line where check_invoice_posted = '%s' and budget_inv_vendor_id = '%s' and bucket_type_id = '%s' and prod_inv_id != '%s'",
+                                    (True, buget_inv_line.budget_inv_vendor_id.id,
+                                     buget_inv_line.bucket_type_id.id, self.id))
+                                existing_vendor_ids_in_inv_line = cr.fetchall()
+                                if not existing_vendor_ids_in_inv_line:
+                                    vendor_line.unlink()
+                                buget_inv_line.check_invoice_posted = False
+                    else:
+                        for user_line in fixed_bucket.user_line:
+                            if user_line.user_id.id == buget_inv_line.budget_user_id.id:
+                                existing_rec = self.env['user.invoice.detail'].sudo().search([('invoice_name','=',self.id),('bucket_type_id','=',buget_inv_line.bucket_type_id.id),('user_id','=',buget_inv_line.budget_user_id.id)])
+                                if existing_rec:
+                                    for del_rec in existing_rec:
+                                        del_rec.unlink()
+                                cr = self.env.cr
+                                cr.execute(
+                                    "SELECT id FROM invoice_budget_line where check_invoice_posted = '%s' and budget_user_id = '%s' and bucket_type_id = '%s' and prod_inv_id != '%s'",
+                                    (True, buget_inv_line.budget_user_id.id, buget_inv_line.bucket_type_id.id, self.id))
+                                survey_user_ids = cr.fetchall()
+                                if not survey_user_ids:
+                                    user_line.unlink()
+                                buget_inv_line.check_invoice_posted = False
+                                
+                    buget_inv_line.check_invoice_posted = False
+        if self.product_remaining_budget_line:
+            for budget_remaining_line in self.product_remaining_budget_line:
+                if not budget_remaining_line.released and budget_remaining_line.check_invoice_posted:
+
+                    # --------------------------------------
+                    # budget_remaining_line invoiced checkbox true
+                    # ----------------------------------------
+                    remaining_bucket = self.env['bucket'].sudo().search(
+                        [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id), ('bucket_status', '=', 'invoiced')])
+                    remaining_bucket.bucket_amount -= budget_remaining_line.amount
+                    if remaining_bucket.vendor_line:
+                        for vendor_line in remaining_bucket.vendor_line:
+                            if vendor_line.vendor_id.id == budget_remaining_line.budget_inv_remaining_vendor_id.id:
+                                existing_rec = self.env['vendor.invoice.detail'].sudo().search([('invoice_name','=',self.id),('bucket_type_id','=',budget_remaining_line.bucket_type_id.id),('vendor_id','=',budget_remaining_line.budget_inv_remaining_vendor_id.id)])
+                                if existing_rec:
+                                    existing_rec.unlink()
+                                cr = self.env.cr
+                                cr.execute(
+                                    "SELECT id FROM product_budget_remaining where check_invoice_posted = '%s' and budget_inv_remaining_vendor_id = '%s' and bucket_type_id = '%s' and prod_remaining_id != '%s'",
+                                    (True, budget_remaining_line.budget_inv_remaining_vendor_id.id,
+                                     budget_remaining_line.bucket_type_id.id, self.id))
+                                existing_rec_of_rem_vendr = cr.fetchall()
+                                if not existing_rec_of_rem_vendr:
+                                    vendor_line.unlink()
+                                budget_remaining_line.check_invoice_posted = False
+                    else:
+                        for user_line in remaining_bucket.user_line:
+                            if user_line.user_id.id == budget_remaining_line.budget_remaining_user_id.id:
+                                existing_rec = self.env['user.invoice.detail'].sudo().search([('invoice_name','=',self.id),('bucket_type_id','=',budget_remaining_line.bucket_type_id.id),('user_id','=',budget_remaining_line.budget_remaining_user_id.id)])
+                                if existing_rec:
+                                    existing_rec.unlink()
+                                cr = self.env.cr
+                                cr.execute(
+                                    "SELECT id FROM product_budget_remaining where check_invoice_posted = '%s' and budget_remaining_user_id = '%s' and bucket_type_id = '%s' and prod_remaining_id != '%s'",
+                                    (True, budget_remaining_line.budget_remaining_user_id.id,
+                                     budget_remaining_line.bucket_type_id.id, self.id))
+                                existing_user_ids_in_rem = cr.fetchall()
+                                if not existing_user_ids_in_rem:
+
+                                    user_line.unlink()
+                                budget_remaining_line.check_invoice_posted = False
+                    budget_remaining_line.check_invoice_posted = False
+
+        return res
+
     @api.model_create_multi
     def create(self, vals_list):
         rec = super(AccountMove,self).create(vals_list)
@@ -442,6 +533,14 @@ class AccountMove(models.Model):
 
 
         if self.product_remaining_budget_line:
+            for rem_budget in self.product_remaining_budget_line: 
+                # if inv_budget.assignable_status == 'assignable_at_inv' and inv_budget.bucket_user=='vendor' and not inv_budget.budget_inv_vendor_ids:
+                if rem_budget.assignable_status == 'assignable_at_inv' and rem_budget.is_vendor== True and not rem_budget.budget_inv_remaining_vendor_id:
+                    raise UserError(_("Please assign vendors in budgeting tab"))
+                # if inv_budget.assignable_status == 'assignable_at_inv' and inv_budget.bucket_user!='vendor' and not inv_budget.budget_user_ids:
+                if rem_budget.assignable_status == 'assignable_at_inv' and rem_budget.is_vendor!= True and not rem_budget.budget_remaining_user_id:
+                    raise UserError(_("Please assign Users in budgeting tab"))
+            
             for budget_remaining_line in self.product_remaining_budget_line:
                 bucket_type_list.add(budget_remaining_line.bucket_type_id)
                 remaining_bucket = self.env['bucket'].sudo().search(
