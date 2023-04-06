@@ -53,7 +53,7 @@ class AccountMove(models.Model):
                                     user_line.unlink()
                                 buget_inv_line.check_invoice_posted = False
                                 
-                    buget_inv_line.check_invoice_posted = False
+                    # buget_inv_line.check_invoice_posted = False
         if self.product_remaining_budget_line:
             for budget_remaining_line in self.product_remaining_budget_line:
                 if not budget_remaining_line.released and budget_remaining_line.check_invoice_posted:
@@ -95,7 +95,7 @@ class AccountMove(models.Model):
 
                                     user_line.unlink()
                                 budget_remaining_line.check_invoice_posted = False
-                    budget_remaining_line.check_invoice_posted = False
+                    # budget_remaining_line.check_invoice_posted = False
 
         return res
 
