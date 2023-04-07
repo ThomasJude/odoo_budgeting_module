@@ -18,4 +18,5 @@ class BucketType(models.Model):
         for record in self:
             obj = self.env['bucket.type'].search([('id','!=',record.id),('is_vendor','=',True)])
             if obj:
-                raise UserError(_('There is already a bucket type exist with Vendor'))
+                if record.is_vendor:
+                    raise UserError(_('There is already a bucket type exist with Vendor'))

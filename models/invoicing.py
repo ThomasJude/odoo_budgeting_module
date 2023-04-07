@@ -666,7 +666,7 @@ class AccountPaymentRegister(models.TransientModel):
                                     [('vendor_id', '=', budget_remaining_line.budget_inv_remaining_vendor_id.id)])
                                 if not existing_vendor_rel_line:
                                     self.env['vendor.line.released'].sudo().create(
-                                        {'vendor_id': buget_inv_line.budget_inv_remaining_vendor_id.id,
+                                        {'vendor_id': budget_remaining_line.budget_inv_remaining_vendor_id.id,
                                          'vendor_line_released_bucket_id': vendor_released_bucket.id})
                             elif budget_remaining_line.budget_remaining_user_id:
                                 existing_user_rel_line = self.env['user.line.released'].sudo().search(

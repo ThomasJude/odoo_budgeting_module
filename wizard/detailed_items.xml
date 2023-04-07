@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="detailed_items_tree_view" model="ir.ui.view">
+		<field name="name">detailed.items.tree</field>
+		<field name="model">detailed.items</field>
+		<field name="type">tree</field>
+		<field name="arch" type="xml">
+            <tree create="0" delete="0" edit="0" duplicate="0">
+<!--            <field name="is_vendor"/>-->
+<!--            <field name="is_user"/>-->
+            <field name="invoice_id" invisible="1"/>
+            <field name="name"/>
+            <field name="user_id" invisible="1"/>
+            <field name="vendor_id" invisible="1"/>
+            <field name="bucket_type_id" invisible="1"/>
+            <field name="item"/>
+            <field name="amount" sum="total"/>
+            </tree>
+        </field>
+        </record>
+    </data>
+</odoo>

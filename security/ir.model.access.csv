@@ -16,3 +16,4 @@ access_user_line_released,user.line.released,model_user_line_released,base.group
 
 access_vendor_invoice_detail,vendor.invoice.detail,model_vendor_invoice_detail,base.group_user,1,1,1,1
 access_user_invoice_detail,user.invoice.detail,model_user_invoice_detail,base.group_user,1,1,1,1
+access_detailed_items,detailed.items,model_detailed_items,base.group_user,1,1,1,1
