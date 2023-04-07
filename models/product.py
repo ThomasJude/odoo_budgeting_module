@@ -10,7 +10,6 @@ class ProductTemplate(models.Model):
     product_allocate_budget_line = fields.One2many('product.budget.allocate', 'prod_allocate_id', 'Product Allocate Budget')
     
     
-    
     def write(self, vals):
         res = super(ProductTemplate, self).write(vals)
         print(vals)

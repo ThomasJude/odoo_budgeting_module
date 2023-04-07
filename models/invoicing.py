@@ -7,6 +7,7 @@ class AccountMove(models.Model):
     inv_budget_line = fields.One2many('invoice.budget.line', 'prod_inv_id', 'Budget Info')
     product_remaining_budget_line = fields.One2many('product.budget.remaining', 'prod_remaining_id', 'Product Remaining Budget')
     previous_released_amount = fields.Float('Previous Released')
+    
 
     def button_draft(self):
         res = super(AccountMove,self).button_draft()
