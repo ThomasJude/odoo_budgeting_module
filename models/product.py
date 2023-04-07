@@ -113,6 +113,41 @@ class ProductTemplate(models.Model):
     @api.constrains('list_price')
     def calculate_percentage_allocation(self):
         self.product_allocate_budget_line._constrains_allocate_percent()
+        
+        
+    @api.constrains('product_fixed_budget_line','product_fixed_budget_line.bucket_type_id','product_fixed_budget_line.assignable_status')
+    def vendor_user_allocation_assigned_status(self):
+        if self.product_fixed_budget_line:
+            for fixed_budg in self.product_fixed_budget_line:
+                if fixed_budg.bucket_type_id.is_vendor and fixed_budg.assignable_status == 'assigned':
+                    if not fixed_budg.prod_fix_vendor_id:
+                        raise UserError(_("Please add vendor for assigned status fixed reduction budgeting tab "))
+                    
+                if not fixed_budg.bucket_type_id.is_vendor and fixed_budg.assignable_status == 'assigned':
+                    if not fixed_budg.prod_fix_assigned_user_id:
+                        raise UserError(_("Please add User for assigned status fixed reduction budgeting tab "))
+                    
+                    
+    @api.constrains('product_allocate_budget_line','product_allocate_budget_line.bucket_type_id','product_allocate_budget_line.assignable_status')
+    def remaining_vendor_user_allocation_assigned_status(self):
+        if self.product_allocate_budget_line:
+            for rem_budg in self.product_allocate_budget_line:
+                if rem_budg.bucket_type_id.is_vendor and rem_budg.assignable_status == 'assigned':
+                    if not rem_budg.prod_remaining_budget_vendor_id:
+                        raise UserError(_("Please add vendor for assigned status Remaining Allocation budgeting tab "))
+                    
+                if not rem_budg.bucket_type_id.is_vendor and rem_budg.assignable_status == 'assigned':
+                    if not rem_budg.prod_remaining_budget_assigned_user_id:
+                        raise UserError(_("Please add User for assigned status Remaining Allocation budgeting tab "))
+        
+        
+    # @api.constrains('product_fixed_budget_line','product_fixed_budget_line.bucket_type_id')
+    # def bucket_type_allocation(self):
+    #     if self.product_fixed_budget_line:
+    #         for fixed_budg in self.product_fixed_budget_line:
+    #             if not fixed_budg.bucket_type_id:
+    #                 raise UserError(_("Please add bucket type in fixed reduction budgeting tab"))
+                    
     
     
     
@@ -162,6 +197,7 @@ class ProductBudgetFixed(models.Model):
                 self.is_vendor=False
         else:
             self.is_vendor=False
+
     
     
     # @api.onchange('bucket_type_id')
@@ -263,10 +299,26 @@ class ProductBudgetAllocate(models.Model):
         if self.bucket_type_id:
             if self.bucket_type_id.is_vendor:
                 self.is_vendor = True
+                self.prod_remaining_budget_vendor_id = False or None
+                self.prod_remaining_budget_assigned_user_id = False or None
+                self.assignable_status = False
             else:
                 self.is_vendor = False
+                self.prod_remaining_budget_vendor_id = False or None
+                self.prod_remaining_budget_assigned_user_id = False or None
+                self.assignable_status = False
         else:
             self.is_vendor = False
+            self.prod_remaining_budget_vendor_id = False or None
+            self.prod_remaining_budget_assigned_user_id = False or None
+            self.assignable_status = False
+            
+            
+    @api.onchange('assignable_status')
+    def _onchange_assignable_status(self):
+        if self.assignable_status or self.assignable_status == False:
+            self.prod_remaining_budget_vendor_id = False or None
+            self.prod_remaining_budget_assigned_user_id = False or None
             
             
             
