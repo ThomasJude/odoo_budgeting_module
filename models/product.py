@@ -10,6 +10,11 @@ class ProductTemplate(models.Model):
     product_allocate_budget_line = fields.One2many('product.budget.allocate', 'prod_allocate_id', 'Product Allocate Budget')
     
     
+    @api.onchange('product_fixed_budget_line')
+    def calculate_remaining_check(self):
+        self.product_allocate_budget_line._constrains_allocate_percent()
+    
+    
     def write(self, vals):
         res = super(ProductTemplate, self).write(vals)
         print(vals)
