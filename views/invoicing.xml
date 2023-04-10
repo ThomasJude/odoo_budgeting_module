@@ -30,7 +30,7 @@
 <!--                                <field name="budget_user_ids" attrs="{'readonly': ['|','|',('bucket_user', '=', 'vendor'),('assignable_status', 'in', ('unassigned','assigned')),('assignable_status', 'not in', ('unassigned','assigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>-->
                                 <field name="budget_user_id" attrs="{'readonly': ['|','|','|',('is_vendor', '=', True),('assignable_status', 'in', ('unassigned','assigned')),('assignable_status', 'not in', ('unassigned','assigned','assignable_at_inv')),('check_invoice_posted','!=',False)],}" options="{'no_edit': True, 'no_create': True}"/>
                                 <field name="prod_priority" readonly="1"/>
-                                <field name="amount" readonly="1"/>
+                                <field name="amount" readonly="1" force_save="1"/>
                                 <field name="released" readonly="1"/>
                                 <field name="amount_residual" readonly="1"/>
                                 
@@ -54,7 +54,7 @@
 <!--                                <field name="budget_remaining_user_ids" attrs="{'readonly': ['|',('bucket_user', '=', 'vendor'),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>-->
                                 <field name="budget_remaining_user_id" attrs="{'readonly': ['|','|',('is_vendor', '=', True),('assignable_status', 'in', ('unassigned','assigned')),('check_invoice_posted','!=',False)]}" options="{'no_edit': True, 'no_create': True}"/>
 								<field name="allocate_percent" readonly="1"/>
-								<field name="amount" readonly="1"/>
+								<field name="amount" readonly="1" force_save="1"/>
 								<field name="released" readonly="1"/>
 								<field name="amount_residual" readonly="1"/>
 							</tree>

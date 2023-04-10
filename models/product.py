@@ -29,6 +29,16 @@ class ProductTemplate(models.Model):
 
         product_product_id = self.env['product.product'].sudo().search([('product_tmpl_id','=',self.id)])
         invoices_lines = self.env['account.move.line'].sudo().search([('product_id','=',product_product_id.id)])
+        
+        prod_fixed_budget_lines= self.env['product.budget.fixed'].sudo().search([('product_id','=',self.id)])
+        for fixed_budgt in prod_fixed_budget_lines:
+            fixed_budgt.amount= product_product_id.standard_price
+            
+        inv_fixed_budget_lines= self.env['invoice.budget.line'].sudo().search([('product_id_budget','=',self.id)])
+        for fixed_inv_budgt in inv_fixed_budget_lines:
+            
+            if fixed_inv_budgt.prod_inv_id.state == 'draft':
+                fixed_inv_budgt.amount= self.standard_price
         # print("NNNNNNNNNNNNNNNNNNN",invoices_lines.move_id.state)
         for invoice in invoices_lines:
             if invoice.move_id.state == 'draft':
