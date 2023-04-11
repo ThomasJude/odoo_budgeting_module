@@ -605,7 +605,7 @@ class AccountPaymentRegister(models.TransientModel):
             total_released_amount = self.amount
             self.line_ids.move_id.previous_released_amount += self.amount
             # print("TOTAL RELEASED AMOUNT",total_released_amount,invoice_amount.amount_residual)
-            if invoice_amount.amount_total == self.amount and invoice_amount.payment_state == "paid" :
+            if invoice_amount.amount_total == self.amount and invoice_amount.payment_state in ("paid","in_payment") :
                 if self.line_ids.move_id.inv_budget_line:
                     priority_list = []
                     for inv_fix_budget in self.line_ids.move_id.inv_budget_line:
