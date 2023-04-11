@@ -201,6 +201,14 @@ class ProductBudgetFixed(models.Model):
     prod_fix_assigned_user_id = fields.Many2one('res.users', string="User Name", copy=False)
     
     
+    @api.onchange('product_id','assignable_status','is_vendor')
+    def fetch_vendors(self):
+        if self.assignable_status == 'assigned' and self.product_id and self.is_vendor:
+            fetch_product_vendor = self.env['product.supplierinfo'].sudo().search([('product_tmpl_id','=',self.product_id.id)],limit=1)
+            if fetch_product_vendor:
+                self.prod_fix_vendor_id = fetch_product_vendor.partner_id.id
+    
+    
     
     @api.onchange('bucket_type_id')
     def _onchange_bucket_type_id(self):
@@ -290,6 +298,14 @@ class ProductBudgetAllocate(models.Model):
     # prod_remaining_budget_assigned_user_ids= fields.Many2many('res.users', 'prod_remaining_budget_budget_user', 'prod_remaining_budget_budget_usr_id', 'usr_id',string="Users Name",copy=False)
     prod_remaining_budget_assigned_user_id = fields.Many2one('res.users', string="Users Name", copy=False)
     amount = fields.Float("amount")
+    
+    @api.onchange('product_id', 'assignable_status', 'is_vendor')
+    def fetch_vendors(self):
+        if self.assignable_status == 'assigned' and self.product_id and self.is_vendor:
+            fetch_product_vendor = self.env['product.supplierinfo'].sudo().search(
+                [('product_tmpl_id', '=', self.product_id.id)], limit=1)
+            if fetch_product_vendor:
+                self.prod_remaining_budget_vendor_id = fetch_product_vendor.partner_id.id
 
 
     
