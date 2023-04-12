@@ -19,7 +19,7 @@ class ProductTemplate(models.Model):
         res = super(ProductTemplate, self).write(vals)
         print(vals)
         if vals.get("seller_ids"):
-            fixed_budget_product = self.env['product.budget.fixed'].sudo().search([('product_id','=',self.id),('is_vendor','=',True),('assignable_status','=','assigned')])
+            fixed_budget_product = self.env['product.budget.fixed'].sudo().search([('product_id','=',self.id),('is_vendor','=',True)])
             
             inv_fixed_budget_liness= self.env['invoice.budget.line'].sudo().search([('product_id_budget','=',self.id)])
             for fixed_inv_budgtt in inv_fixed_budget_liness:
@@ -30,10 +30,8 @@ class ProductTemplate(models.Model):
                 product_product_id = self.env['product.product'].sudo().search(
                     [('product_tmpl_id', '=', product.prod_id.id)])
 
-                print("anchalllll", self.name,self.standard_price,product.amount)
                 
                 product.amount= self.standard_price
-                print("vishakhaaaaaaaaaaa", self.name,self.standard_price)
                 invoices_lines = self.env['account.move.line'].sudo().search([('product_id', '=', product_product_id.id)])
                 # print("NNNNNNNNNNNNNNNNNNN",invoices_lines.move_id.state)
                 for invoice in invoices_lines:
@@ -336,10 +334,13 @@ class ProductBudgetFixed(models.Model):
     
     @api.onchange('product_id','assignable_status','is_vendor')
     def fetch_vendors(self):
-        if self.assignable_status == 'assigned' and self.product_id and self.is_vendor:
+        if self.product_id and self.is_vendor:
             fetch_product_vendor = self.env['product.supplierinfo'].sudo().search([('product_tmpl_id','=',self.product_id.id)],limit=1,order = "id desc",)
             if fetch_product_vendor:
                 self.prod_fix_vendor_id = fetch_product_vendor.partner_id.id
+                self.assignable_status = 'assigned'
+            else:
+                self.assignable_status = 'unassigned'
     
     
     
@@ -434,11 +435,14 @@ class ProductBudgetAllocate(models.Model):
     
     @api.onchange('product_id', 'assignable_status', 'is_vendor')
     def fetch_vendors(self):
-        if self.assignable_status == 'assigned' and self.product_id and self.is_vendor:
+        if self.product_id and self.is_vendor:
             fetch_product_vendor = self.env['product.supplierinfo'].sudo().search(
                 [('product_tmpl_id', '=', self.product_id.id)], limit=1,order = "id desc",)
             if fetch_product_vendor:
                 self.prod_remaining_budget_vendor_id = fetch_product_vendor.partner_id.id
+                self.assignable_status = 'assigned'
+            else:
+                self.assignable_status = 'unassigned'
 
 
     
@@ -545,6 +549,22 @@ class ProductSupplierinfo(models.Model):
                 fixed_lines.prod_fix_vendor_id = seller_id.partner_id.id
             for allocate_lines in product_in_all_allocate_line:
                 allocate_lines.prod_remaining_budget_vendor_id = seller_id.partner_id.id
+                
+        else:
+            print("inside delete all vendors in supplier")
+            product_in_all_fixed_line = self.env['product.budget.fixed'].sudo().search(
+                [('product_id', '=', product_template_id.id), ('is_vendor', '=', True),
+                 ('assignable_status', '=', 'assigned')])
+            product_in_all_allocate_line = self.env['product.budget.allocate'].sudo().search(
+                [('product_id', '=', product_template_id.id), ('is_vendor', '=', True),
+                 ('assignable_status', '=', 'assigned')])
+
+            for fixed_lines in product_in_all_fixed_line:
+                fixed_lines.prod_fix_vendor_id = ''
+                fixed_lines.assignable_status = 'unassigned'
+            for allocate_lines in product_in_all_allocate_line:
+                allocate_lines.prod_remaining_budget_vendor_id = ''
+                allocate_lines.assignable_status = 'unassigned'
 
         return res
     
@@ -571,18 +591,26 @@ class ProductSupplierinfo(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         res = super(ProductSupplierinfo,self).create(vals_list)
-        if res.partner_id:
-            product_in_all_fixed_line = self.env['product.budget.fixed'].sudo().search(
-                [('product_id', '=', res.product_tmpl_id.id), ('is_vendor', '=', True),
-                 ('assignable_status', '=', 'assigned')])
-            product_in_all_allocate_line = self.env['product.budget.allocate'].sudo().search(
-                [('product_id', '=', res.product_tmpl_id.id), ('is_vendor', '=', True),
-                 ('assignable_status', '=', 'assigned')])
-
-            for fixed_lines in product_in_all_fixed_line:
-                fixed_lines.prod_fix_vendor_id = res.partner_id.id
-            for allocate_lines in product_in_all_allocate_line:
-                allocate_lines.prod_remaining_budget_vendor_id = res.partner_id.id
+        for rec in res:
+            if rec.partner_id:
+                product_in_all_fixed_line = self.env['product.budget.fixed'].sudo().search(
+                    [('product_id', '=', rec.product_tmpl_id.id), ('is_vendor', '=', True),
+                     ])
+                product_in_all_allocate_line = self.env['product.budget.allocate'].sudo().search(
+                    [('product_id', '=', rec.product_tmpl_id.id), ('is_vendor', '=', True),
+                     ])
+                for fixed_lines in product_in_all_fixed_line:
+                    if fixed_lines.assignable_status == 'assigned':
+                        fixed_lines.prod_fix_vendor_id = rec.partner_id.id
+                    elif fixed_lines.assignable_status == 'unassigned':
+                        fixed_lines.prod_fix_vendor_id = rec.partner_id.id
+                        fixed_lines.assignable_status = 'assigned'
+                for allocate_lines in product_in_all_allocate_line:
+                    if allocate_lines.assignable_status == 'assigned':
+                        allocate_lines.prod_remaining_budget_vendor_id = rec.partner_id.id
+                    elif allocate_lines.assignable_status == 'unassigned':
+                        allocate_lines.prod_remaining_budget_vendor_id = rec.partner_id.id
+                        allocate_lines.assignable_status = 'assigned'
         return res
     
     
