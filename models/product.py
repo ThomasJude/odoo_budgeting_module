@@ -85,6 +85,74 @@ class ProductTemplate(models.Model):
                                     'allocate_percent': allocate_budget_line.allocate_percent,
                                     'amount': allocate_budget_line.amount * invoice.quantity
                                 })
+                                
+        elif vals.get('standard_price'):
+            product_product_id = self.env['product.product'].sudo().search([('product_tmpl_id', '=', self.id)])
+
+            prod_fixed_budget_lines = self.env['product.budget.fixed'].sudo().search([('product_id', '=', self.id)])
+            for fixed_budgt in prod_fixed_budget_lines:
+                fixed_budgt.amount= product_product_id.standard_price
+
+
+            prod_inv_line = self.env['invoice.budget.line'].sudo().search([('product_id_budget','=',self.id)])
+            # for all_invoices in prod_inv_line:
+            # print("product in fixed inv lines",prod_inv_line)
+            if prod_fixed_budget_lines:
+                for inv_product in prod_fixed_budget_lines:
+                    moveline_product_id = self.env['product.product'].sudo().search(
+                        [('product_tmpl_id', '=', inv_product.prod_id.id)])
+
+                    invoices_lines = self.env['account.move.line'].sudo().search([('product_id', '=', moveline_product_id.id)])
+                    for invoice in invoices_lines:
+                        print("jjjjjjjjjjjjj", invoice.id)
+                        if invoice.move_id.state == 'draft':
+                            for inv_budget_line in invoice.move_id.inv_budget_line:
+                                # print('SAADDDDD',inv_budget_line.account_move_line_id,invoice.id)
+                                if inv_budget_line.account_move_line_id.id == invoice.id:
+                                    inv_budget_line.unlink()
+                            for remain_budget_line in invoice.move_id.product_remaining_budget_line:
+                                # print('SAADDDDD',remain_budget_line.account_move_line_id,invoice.id)
+                                if remain_budget_line.account_move_line_id.id == invoice.id:
+                                    remain_budget_line.unlink()
+                            if invoice.product_id and invoice.product_id.product_tmpl_id and invoice.product_id.product_fixed_budget_line:
+                                for fix_budget_line in inv_product.prod_id.product_fixed_budget_line:
+                                    budget_data = self.env['invoice.budget.line'].sudo().create({
+                                        'product_id_budget': fix_budget_line.product_id.id,
+                                        'name': fix_budget_line.name,
+                                        'prod_inv_id': invoice.move_id.id,
+                                        'account_move_line_id': invoice.id,
+                                        'bucket_type_id': fix_budget_line.bucket_type_id.id,
+                                        'assignable_status': fix_budget_line.assignable_status,
+                                        'amount': fix_budget_line.amount * invoice.quantity,
+                                        'is_vendor': fix_budget_line.is_vendor,
+                                        # 'bucket_user': fix_budget_line.bucket_user,
+                                        # 'budget_inv_vendor_ids': [(6,0, fix_budget_line.prod_fix_vendor_ids.ids)] or [],
+                                        'budget_inv_vendor_id': fix_budget_line.prod_fix_vendor_id.id,
+                                        # 'budget_user_ids':[(6,0, fix_budget_line.prod_fix_assigned_user_ids.ids)] or [],
+                                        'budget_user_id': fix_budget_line.prod_fix_assigned_user_id.id,
+                                        'prod_priority': fix_budget_line.prod_priority,
+                                        # 'fixed_budget_line_id': fix_budget_line.id
+                                    })
+                            if invoice.product_id and invoice.product_id.product_tmpl_id and invoice.product_id.product_allocate_budget_line:
+                                for allocate_budget_line in inv_product.prod_id.product_allocate_budget_line:
+                                    remaining_budget_data = self.env['product.budget.remaining'].sudo().create({
+                                        'product_id_budget': allocate_budget_line.product_id.id,
+                                        'name': allocate_budget_line.name,
+                                        'prod_remaining_id': invoice.move_id.id,
+                                        'account_move_line_id': invoice.id,
+
+                                        'bucket_type_id': allocate_budget_line.bucket_type_id.id,
+                                        'assignable_status': allocate_budget_line.assignable_status,
+                                        # 'bucket_user': allocate_budget_line.bucket_user,
+                                        'is_vendor': allocate_budget_line.is_vendor,
+                                        # 'budget_inv_remaining_vendor_ids': [(6,0, allocate_budget_line.prod_remaining_budget_vendor_ids.ids)] or [],
+                                        'budget_inv_remaining_vendor_id': allocate_budget_line.prod_remaining_budget_vendor_id.id,
+                                        # 'budget_remaining_user_ids':[(6,0, allocate_budget_line.prod_remaining_budget_assigned_user_ids.ids)] or [],
+                                        'budget_remaining_user_id': allocate_budget_line.prod_remaining_budget_assigned_user_id.id,
+                                        'allocate_percent': allocate_budget_line.allocate_percent,
+                                        'amount': allocate_budget_line.amount * invoice.quantity
+                                    })
+                                    
         else:
             product_product_id = self.env['product.product'].sudo().search([('product_tmpl_id','=',self.id)])
             
@@ -259,6 +327,11 @@ class ProductBudgetFixed(models.Model):
     prod_fix_vendor_id = fields.Many2one('res.partner', string='Vendor Name', copy=False)
     # prod_fix_assigned_user_ids = fields.Many2many('res.users', 'prod_fix_budget_user', 'prod_fix_budget_usr_id', 'usr_id',string="Users Name",copy=False)
     prod_fix_assigned_user_id = fields.Many2one('res.users', string="User Name", copy=False)
+    
+    
+    @api.constrains('amount')
+    def calculate_remaining_amount(self):
+        self.prod_id.product_allocate_budget_line._constrains_allocate_percent()
     
     
     @api.onchange('product_id','assignable_status','is_vendor')
