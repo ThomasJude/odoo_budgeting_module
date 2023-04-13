@@ -19,6 +19,13 @@ class Bucket(models.Model):
     check = fields.Boolean(compute='_get_value')
     check2 = fields.Boolean(compute='_get_status')
     
+    def name_get(self):
+        result = []
+        for record in self:
+            result.append((record.id, "{} ({})".format(record.name, record.bucket_amount)))
+        return result
+    
+    
     @api.constrains('bucket_status','bucket_type_id')
     def bucket_user_type_status(self):
         total = 0

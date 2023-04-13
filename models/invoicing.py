@@ -7,6 +7,23 @@ class AccountMove(models.Model):
     inv_budget_line = fields.One2many('invoice.budget.line', 'prod_inv_id', 'Budget Info')
     product_remaining_budget_line = fields.One2many('product.budget.remaining', 'prod_remaining_id', 'Product Remaining Budget')
     previous_released_amount = fields.Float('Previous Released')
+    bill_bucket_id= fields.Many2one('bucket','Bucket')
+    # bill_bucket_amount = fields.Float('Bill Bucket Amount ')
+    bill_bucket_amount = fields.Float(string='Bill Bucket Amount', compute='_compute_bill_bucket_amount')
+    
+    @api.depends('bill_bucket_id')
+    def _compute_bill_bucket_amount(self):
+        self.bill_bucket_amount=0.0
+        if self.bill_bucket_id:
+            self.bill_bucket_amount = self.bill_bucket_id.bucket_amount
+    
+    
+    # @api.onchange('bill_bucket_id')
+    # def bill_bucket_amount_val(self):
+    #     if self.bill_bucket_id:
+    #         self.bill_bucket_amount= self.bill_bucket_id.bucket_amount
+    
+    
     
 
     def button_draft(self):
@@ -597,10 +614,15 @@ class AccountPaymentRegister(models.TransientModel):
     
     
     def action_create_payments(self):
-        print("AAAAAAAAAAAAAAA",self)
         res = super(AccountPaymentRegister,self).action_create_payments()
-        # assigned_vendor_lst = []
         invoice_amount = self.env['account.move'].sudo().search([('id', '=', self.line_ids.move_id.id)])
+        if invoice_amount.move_type == 'in_invoice':
+            if invoice_amount.bill_bucket_amount < self.amount:
+                raise UserError(_('Bucket Amount is less than amount'))
+            
+            if invoice_amount.bill_bucket_id:
+                invoice_amount.bill_bucket_id.bucket_amount= invoice_amount.bill_bucket_id.bucket_amount - self.amount
+        
         if invoice_amount.move_type == 'out_invoice':
             total_released_amount = self.amount
             self.line_ids.move_id.previous_released_amount += self.amount
