@@ -17,7 +17,7 @@
                 <field name="vendor_released" invisible="1"/>
                 <field name="user_invoiced" invisible="1"/>
                 <field name="vendor_invoiced" invisible="1"/>
-
+                <field name="refunded_amount" readonly="1" force_save="1"/>
                 <field name="user_amount_released" sum="Total"/>
                 <field name="user_amount_invoiced" sum="Total"/>
                 <field name="bucket_type_id" />

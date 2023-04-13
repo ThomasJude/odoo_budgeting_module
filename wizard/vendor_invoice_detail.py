@@ -8,8 +8,8 @@ class VendorInvoiceDetail(models.TransientModel):
 
     vendor_id = fields.Many2one('res.partner','Name')
     invoice_name = fields.Many2one('account.move',string="Invoices",copy=False)
-    vendor_amount_invoiced = fields.Float("inv Amount")
-    vendor_amount_released = fields.Float("rel Amount")
+    vendor_amount_invoiced = fields.Float("Invoiced Amount")
+    vendor_amount_released = fields.Float("Released Amount")
     released = fields.Boolean('Released')
 
     user_released = fields.Many2one('user.line.released', string='User Released')
@@ -20,6 +20,7 @@ class VendorInvoiceDetail(models.TransientModel):
     bucket_type_id = fields.Many2one('bucket.type', 'Bucket Type')
     partial_due_amount = fields.Float("Partial Due Amount")
     partial_paid_amount = fields.Float("Partial Paid Amount")
+    refunded_amount = fields.Float('Refunded Amount')
     
     
     def show_detailed_items(self):
