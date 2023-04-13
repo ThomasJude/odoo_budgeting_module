@@ -274,9 +274,7 @@ class AccountMove(models.Model):
                             fixed_bucket = self.env['bucket'].sudo().search([('bucket_type_id','=',buget_inv_line.bucket_type_id.id),('bucket_status','=','invoiced')])
                             fixed_bucket.bucket_amount += buget_inv_line.amount
     
-                            print("SCBBBBBBBBB",buget_inv_line.check_invoice_posted)
                             buget_inv_line.check_invoice_posted = True
-                            print("SCBBBBBBBBB 2",buget_inv_line.check_invoice_posted)
     
                             fixed_bucket_vendor_lst=[]
                             fixed_bucket_user_lst=[]
@@ -288,10 +286,7 @@ class AccountMove(models.Model):
                             if fixed_bucket.user_line:
                                 for fixed_user in fixed_bucket.user_line:
                                     fixed_bucket_user_lst.append(fixed_user.user_id.id)
-                            # if buget_inv_line.budget_inv_vendor_ids:
-                            #     for vendr_id in buget_inv_line.budget_inv_vendor_ids:
-                            #         if vendr_id.id not in fixed_bucket_vendor_lst:
-                            #             assigned_vendor_lst.append(vendr_id.id)
+
                             if buget_inv_line.budget_inv_vendor_id:
                                 for vendr_id in buget_inv_line.budget_inv_vendor_id:
                                     if vendr_id.id not in fixed_bucket_vendor_lst:
@@ -305,16 +300,12 @@ class AccountMove(models.Model):
                                             user_bucket_line = self.env['user.line'].sudo().create(
                                                 {'user_line_bucket_id': user_inv_bucket.id,
                                                  'user_id': user_id.id})
-                                        # assigned_user_lst.append(user_id.id)
-    
     
     
             if self.product_remaining_budget_line:
                 for rem_budget in self.product_remaining_budget_line: 
-                    # if inv_budget.assignable_status == 'assignable_at_inv' and inv_budget.bucket_user=='vendor' and not inv_budget.budget_inv_vendor_ids:
                     if rem_budget.assignable_status == 'assignable_at_inv' and rem_budget.is_vendor== True and not rem_budget.budget_inv_remaining_vendor_id:
                         raise UserError(_("Please assign vendors in budgeting tab"))
-                    # if inv_budget.assignable_status == 'assignable_at_inv' and inv_budget.bucket_user!='vendor' and not inv_budget.budget_user_ids:
                     if rem_budget.assignable_status == 'assignable_at_inv' and rem_budget.is_vendor!= True and not rem_budget.budget_remaining_user_id:
                         raise UserError(_("Please assign Users in budgeting tab"))
                 
@@ -338,10 +329,6 @@ class AccountMove(models.Model):
                         for remaining_user in remaining_bucket.user_line:
                             remaining_bucket_user_lst.append(remaining_user.id)
                     
-                    # if budget_remaining_line.budget_inv_remaining_vendor_ids:
-                    #     for rem_vendr_id in budget_remaining_line.budget_inv_remaining_vendor_ids:
-                    #         if rem_vendr_id.id not in remaining_bucket_vendor_lst:
-                    #             assigned_vendor_lst.append(rem_vendr_id.id)
                     if budget_remaining_line.budget_inv_remaining_vendor_id:
                         for rem_vendr_id in budget_remaining_line.budget_inv_remaining_vendor_id:
                             if rem_vendr_id.id not in remaining_bucket_vendor_lst:
@@ -359,7 +346,6 @@ class AccountMove(models.Model):
                                     user_bucket_line = self.env['user.line'].sudo().create(
                                         {'user_line_bucket_id': user_inv_bucket.id,
                                          'user_id': rem_user_id.id})
-                                # assigned_user_lst.append(rem_user_id.id)
     
                 for bucket_type_id in bucket_type_list:
                     existing_bucket_dashboard = self.env['bucket.dashboard'].sudo().search([('bucket_type_id','=',bucket_type_id.id)])
@@ -381,13 +367,11 @@ class AccountMove(models.Model):
             vendor_inv_bucket = self.env['bucket'].sudo().search([('bucket_type_id', '=', vendor_bucket_type_id.id), ('bucket_status', '=', 'invoiced')])
             for final_vendor in final_vendor_lst:
                 final_vendor_id= self.env['res.partner'].browse(final_vendor)
-                # vendor_bucket_line= self.env['vendor.line'].sudo().create({'vendor_line_bucket_id':vendor_inv_bucket.id,'vendor_id':final_vendor_id.id})
                 existing_vendor = self.env['vendor.line'].sudo().search([("vendor_id", '=', final_vendor_id.id)])
                 if not existing_vendor:
                     vendor_bucket_line = self.env['vendor.line'].sudo().create(
                         {'vendor_line_bucket_id': vendor_inv_bucket.id, 'vendor_id': final_vendor_id.id})
     
-            # dfdfc
         return res
     
 
@@ -402,11 +386,7 @@ class InvoiceBudgetLine(models.Model):
     prod_inv_id = fields.Many2one('account.move', 'Prod Invoice Id')
     account_move_line_id = fields.Many2one('account.move.line','Prod Move Line')
     bucket_type_id = fields.Many2one('bucket.type', 'Bucket Type')
-    # budget_inv_vendor_ids = fields.Many2many(
-    #     'res.partner', 'prod_inv_budget_vendor', 'prod_inv_budget_id', 'vendor_id',
-    #     string='Vendors Name', copy=False)
     budget_inv_vendor_id = fields.Many2one('res.partner', string="Vendors Name", copy=False)
-    # budget_user_ids = fields.Many2many('res.users', 'prod_inv_budget_user', 'prod_inv_budget_usr_id', 'usr_id',string="Users Name",copy=False)
     budget_user_id = fields.Many2one('res.users', string="Users Name")
     amount = fields.Float("Amount")
     assignable_status = fields.Selection([('assigned', 'Assigned'),
@@ -415,7 +395,6 @@ class InvoiceBudgetLine(models.Model):
                                           ], "Assignable Status")
     
     is_vendor = fields.Boolean(string='Is Vendor')
-    # bucket_user= fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
     prod_priority = fields.Integer('Priority')
     invoiced = fields.Boolean('Invoiced')
     released = fields.Boolean('Released')
@@ -504,13 +483,6 @@ class AccountPaymentRegister(models.TransientModel):
                                         self.env['user.line.released'].sudo().create(
                                             {'user_id': buget_inv_line.budget_user_id.id,
                                              'user_line_released_bucket_id': vendor_released_bucket.id})
-                                # vendor_bill = self.env['vendor.invoice.detail'].sudo().search([('invoice_name','=',buget_inv_line.prod_inv_id.name),('vendor_id','=',buget_inv_line.budget_inv_vendor_id.id)])
-                                # vendor_bill.released = True
-                                # user_bill = self.env['user.invoice.detail'].sudo().search(
-                                #     [('invoice_name', '=', buget_inv_line.prod_inv_id.name),
-                                #      ('vendor_id', '=', buget_inv_line.budget_inv_vendor_id.id)])
-                                # vendor_bill.released = True
-                                # print("wWWWWWWWDddddddddddddd",vendor_bill.released)
         
                 if self.line_ids.move_id.product_remaining_budget_line:
         
@@ -524,8 +496,6 @@ class AccountPaymentRegister(models.TransientModel):
                                  ('bucket_status', '=', 'released')])
                             released_bucket.bucket_amount += budget_remaining_line.amount
                             budget_remaining_line.released = True
-        
-                            # //////////////////////////
         
                             vendor_released_bucket = self.env['bucket'].sudo().search(
                                 [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
@@ -545,10 +515,6 @@ class AccountPaymentRegister(models.TransientModel):
                                         {'user_id': budget_remaining_line.budget_remaining_user_id.id,
                                          'user_line_released_bucket_id': vendor_released_bucket.id})
         
-                            # user_bill = self.env['user.invoice.detail'].sudo().search(
-                            #     [('invoice_name', '=', budget_remaining_line.prod_remaining_id.name),
-                            #      ('user_id', '=', budget_remaining_line.budget_remaining_user_id.id)])
-                            # vendor_bill.released = True
             elif invoice_amount.amount_total > self.amount and invoice_amount.payment_state == "partial":
                 if self.line_ids.move_id.inv_budget_line:
                     priority_list = []
@@ -561,9 +527,7 @@ class AccountPaymentRegister(models.TransientModel):
     
                             if priority == buget_inv_line.prod_priority and total_released_amount != 0.0 and not buget_inv_line.released:
                                 if buget_inv_line.amount_residual == 0.0:
-                                    print("BBBBBBBBBBBBBBBBBBB",total_released_amount, buget_inv_line.amount)
                                     if total_released_amount >= buget_inv_line.amount:
-                                        print("WQQQQQQQQQQQQQQQQQQQQQ")
                                         total_released_amount = total_released_amount - buget_inv_line.amount
                                         buget_inv_line.released = True
         
@@ -638,7 +602,6 @@ class AccountPaymentRegister(models.TransientModel):
                                             total_released_amount = 0
                                 else:
                                     if total_released_amount >= buget_inv_line.amount_residual:
-                                        print("WQQQQQQQQQQQQQQQQQQQQQ 222222222")
         
                                         total_released_amount = total_released_amount - buget_inv_line.amount_residual
                                         buget_inv_line.released = True
@@ -676,10 +639,7 @@ class AccountPaymentRegister(models.TransientModel):
         
                                         ##############################################################3
         
-        
-        
                                     else:
-                                        print("########EEEE",total_released_amount)
                                         buget_inv_line.amount_residual = buget_inv_line.amount_residual - total_released_amount
                                         invoices_bucket = self.env['bucket'].sudo().search(
                                             [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
@@ -725,7 +685,6 @@ class AccountPaymentRegister(models.TransientModel):
                     if buget_inv_line.released:
                         line_amount_released.append(buget_inv_line.released)
     
-                print("FFFFFFf",line_amount_released)
     
                 if self.line_ids.move_id.product_remaining_budget_line  and len(self.line_ids.move_id.inv_budget_line) == len(line_amount_released):
                     for budget_remaining_line in self.line_ids.move_id.product_remaining_budget_line:
@@ -1144,12 +1103,10 @@ class AccountPaymentRegister(models.TransientModel):
                             elif priority == buget_inv_line.prod_priority and total_released_amount == 0 and not buget_inv_line.item_refunded:
                                 buget_inv_line.refund_residual = buget_inv_line.amount
                 # pass
-                            print("CSSSSSSSSSSSS", buget_inv_line.item_refunded,buget_inv_line.amount,buget_inv_line.amount_residual)
                 line_amount_released = []
                 for buget_inv_line in self.line_ids.move_id.reversed_entry_id.inv_budget_line:
                     if buget_inv_line.item_refunded:
                         line_amount_released.append(buget_inv_line.item_refunded)
-                print("##########",line_amount_released)
                 if self.line_ids.move_id.reversed_entry_id.product_remaining_budget_line and len(self.line_ids.move_id.reversed_entry_id.inv_budget_line) == len(line_amount_released):
                     for budget_remaining_line in self.line_ids.move_id.reversed_entry_id.product_remaining_budget_line:
                         if total_released_amount != 0 and not budget_remaining_line.item_refunded:
