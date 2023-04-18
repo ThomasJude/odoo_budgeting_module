@@ -443,11 +443,43 @@ class AccountPaymentRegister(models.TransientModel):
         res = super(AccountPaymentRegister,self).action_create_payments()
         invoice_amount = self.env['account.move'].sudo().search([('id', '=', self.line_ids.move_id.id)])
         if invoice_amount.move_type == 'in_invoice':
+            total_released_amount = self.amount
             if invoice_amount.bill_bucket_amount < self.amount:
                 raise UserError(_('Bucket Amount is less than amount'))
-            
             if invoice_amount.bill_bucket_id:
-                invoice_amount.bill_bucket_id.bucket_amount= invoice_amount.bill_bucket_id.bucket_amount - self.amount
+                invoice_amount.bill_bucket_id.bucket_amount = invoice_amount.bill_bucket_id.bucket_amount - self.amount
+            if invoice_amount.amount_total > self.amount and invoice_amount.payment_state == "partial":
+                if invoice_amount.invoice_line_ids:
+                    for bill_line in invoice_amount.invoice_line_ids:
+                        if total_released_amount != 0.0 and not bill_line.is_bill_paid:
+                            if bill_line.bill_residual_amount == 0.0:
+                                if total_released_amount >= bill_line.price_subtotal:
+                                    total_released_amount = total_released_amount - bill_line.bill_residual_amount
+                                    bill_line.is_bill_paid = True
+                                else:
+                                    bill_line.bill_residual_amount = bill_line.price_subtotal - total_released_amount
+                                    total_released_amount = bill_line.price_subtotal - total_released_amount
+                                    if bill_line.bill_residual_amount != 0.0:
+                                        total_released_amount = 0
+                            else:
+                                if total_released_amount >= bill_line.bill_residual_amount:
+                                    total_released_amount = total_released_amount - bill_line.bill_residual_amount
+                                    bill_line.is_bill_paid = True
+                                    bill_line.bill_residual_amount = 0.0
+                                else:
+                                    bill_line.bill_residual_amount = bill_line.bill_residual_amount - total_released_amount
+                                    if bill_line.bill_residual_amount != 0.0:
+                                        total_released_amount = 0
+                        elif total_released_amount == 0 and not bill_line.is_bill_paid:
+                            bill_line.bill_residual_amount = bill_line.price_subtotal
+
+            else:
+                if invoice_amount.invoice_line_ids:
+                    for bill_line in invoice_amount.invoice_line_ids:
+                        if not bill_line.is_bill_paid:
+                            bill_line.is_bill_paid = True
+                            bill_line.bill_residual_amount = 0.0
+
         
         if invoice_amount.move_type == 'out_invoice':
             total_released_amount = self.amount
@@ -1218,6 +1250,9 @@ class AccountMoveLine(models.Model):
 
     inv_budget_line = fields.One2many('invoice.budget.line', 'account_move_line_id', 'Budget Info')
     remaining_budget_line = fields.One2many('product.budget.remaining', 'account_move_line_id', 'Budget Info')
+    is_bill_paid = fields.Boolean('Paid')
+    bill_residual_amount = fields.Float('Due Amount')
+    parent_move_type = fields.Selection(related='move_id.move_type', store=True, readonly=True, precompute=True,)
 
     def unlink(self):
         for rec in self:

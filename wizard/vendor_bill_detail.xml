@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Wizard  Form View  -->
+
+        <record id="vendor_bill_detail_tree" model="ir.ui.view">
+		<field name="name">vendor.bill.detail.tree</field>
+		<field name="model">vendor.bill.detail</field>
+		<field name="type">tree</field>
+		<field name="arch" type="xml">
+			<tree string="Vendor Bill Detail" create="false" edit="false" duplicate="false">
+                <field name="vendor_line_released_id" invisible="1"/>
+                <field name="bill_name"/>
+                <field name="bill_paid" invisible="1"/>
+                <field name="vendor_amount_bill" sum="Total"/>
+                <field name="vendor_amount_paid" sum="Total"/>
+
+                <field name="vendor_id" />
+                <field name="bucket_type_id" />
+
+                <button name="show_billed_items" type="object" class="btn btn-primary" string="show billed items"/>
+
+            </tree>
+        </field>
+        </record>
+
+
+    </data>
+</odoo>

@@ -14,6 +14,8 @@ Budget Module
         'security/ir.model.access.csv',
         'security/user_group.xml',
         'wizard/vendor_invoice_detail.xml',
+        'wizard/vendor_bill_detail.xml',
+        'wizard/vendor_bill_item.xml',
         'wizard/user_invoice_detail.xml',
         'wizard/detailed_items.xml',
         'views/bucket_type_view.xml',

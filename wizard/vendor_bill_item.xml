@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="vendor_bill_items_tree_view" model="ir.ui.view">
+		<field name="name">vendor.bill.items.tree</field>
+		<field name="model">vendor.bill.items</field>
+		<field name="type">tree</field>
+		<field name="arch" type="xml">
+            <tree create="0" delete="0" edit="0" duplicate="0">
+<!--            <field name="is_vendor"/>-->
+<!--            <field name="is_user"/>-->
+            <field name="bill_id" invisible="1"/>
+            <field name="vendor_id" invisible="1"/>
+            <field name="bucket_type_id" invisible="1"/>
+            <field name="name"/>
+            <field name="amount" sum="total"/>
+            </tree>
+        </field>
+        </record>
+    </data>
+</odoo>
