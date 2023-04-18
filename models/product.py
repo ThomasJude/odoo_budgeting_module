@@ -313,6 +313,18 @@ class ProductBudgetFixed(models.Model):
     prod_fix_assigned_user_id = fields.Many2one('res.users', string="User Name", copy=False)
     
     
+    
+    @api.onchange('bucket_type_id')
+    def _onchange_bucket_type_id(self):
+        if self.bucket_type_id:
+            if self.bucket_type_id.is_vendor:
+                self.is_vendor = True
+            else:
+                self.is_vendor=False
+        else:
+            self.is_vendor=False
+    
+    
     @api.constrains('amount')
     def calculate_remaining_amount(self):
         self.prod_id.product_allocate_budget_line._constrains_allocate_percent()
@@ -335,7 +347,6 @@ class ProductBudgetFixed(models.Model):
     
     @api.onchange('bucket_type_id')
     def _onchange_bucket_type(self):
-        print("_onchange_bucket_type")
         if self.bucket_type_id.is_vendor:
             self.prod_fix_vendor_id = False or None
             self.prod_fix_assigned_user_id = False or None
@@ -469,7 +480,6 @@ class ProductBudgetAllocate(models.Model):
     def _onchange_bucket_type_id(self):
         if self.bucket_type_id:
             if self.bucket_type_id.is_vendor:
-                print("_onchange_bucket_type_id")
                 self.is_vendor = True
                 self.prod_remaining_budget_vendor_id = False or None
                 self.prod_remaining_budget_assigned_user_id = False or None
@@ -517,22 +527,6 @@ class ProductBudgetAllocate(models.Model):
             
             
             
-    # @api.onchange('bucket_type_id')
-    # def _onchange_bucket_type_id(self):
-    #     if self.bucket_type_id:
-    #         if self.bucket_type_id.user_type:
-    #             self.bucket_user = self.bucket_type_id.user_type
-    #         else:
-    #             self.bucket_user = 'etc'
-    #     else:
-    #         self.bucket_user = 'etc'
-            
-            
-    # @api.onchange('prod_remaining_budget_vendor_ids')
-    # def _onchange_prod_remaining_budget_vendor_ids(self):
-    #     if self.prod_remaining_budget_vendor_ids:
-    #         if not self.assignable_status:
-    #             raise UserError(_('1st select the Assignable status'))
             
     @api.onchange('prod_remaining_budget_vendor_id')
     def _onchange_prod_remaining_budget_vendor_id(self):
@@ -540,12 +534,7 @@ class ProductBudgetAllocate(models.Model):
             if not self.assignable_status:
                 raise UserError(_('1st select the Assignable status'))
             
-    # @api.onchange('prod_remaining_budget_assigned_user_ids')
-    # def _onchange_prod_remaining_budget_assigned_user_ids(self):
-    #     if self.prod_remaining_budget_assigned_user_ids:
-    #         if not self.assignable_status:
-    #             raise UserError(_('1st select the Assignable status'))
-            
+
     @api.onchange('prod_remaining_budget_assigned_user_id')
     def _onchange_prod_remaining_budget_assigned_user_id(self):
         if self.prod_remaining_budget_assigned_user_id:

@@ -154,7 +154,7 @@ class AccountMove(models.Model):
                                                                                         'account_move_line_id': inv_line.id,
                                                                                         'bucket_type_id':allocate_budget_line.bucket_type_id.id,
                                                                                         'assignable_status':allocate_budget_line.assignable_status,
-                                                                                        'is_vendor':fix_budget_line.is_vendor,
+                                                                                        'is_vendor':allocate_budget_line.is_vendor,
                                                                                         # 'bucket_user':allocate_budget_line.bucket_user,
                                                                                         # 'budget_inv_remaining_vendor_ids': [(6,0, allocate_budget_line.prod_remaining_budget_vendor_ids.ids)] or [],
                                                                                         'budget_inv_remaining_vendor_id': allocate_budget_line.prod_remaining_budget_vendor_id.id,
