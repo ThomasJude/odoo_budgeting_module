@@ -12,6 +12,12 @@ class ProductTemplate(models.Model):
     
     @api.onchange('product_fixed_budget_line')
     def calculate_remaining_check(self):
+        total_cost_val=0.0
+        if self.product_fixed_budget_line:
+            for fixed in self.product_fixed_budget_line:
+                total_cost_val=total_cost_val+fixed.amount
+        self.standard_price = total_cost_val
+            
         self.product_allocate_budget_line._constrains_allocate_percent()
     
     
@@ -243,8 +249,10 @@ class ProductTemplate(models.Model):
         
     @api.constrains('product_fixed_budget_line','product_fixed_budget_line.bucket_type_id','product_fixed_budget_line.assignable_status')
     def vendor_user_allocation_assigned_status(self):
+        total_cost_Val=0.0
         if self.product_fixed_budget_line:
             for fixed_budg in self.product_fixed_budget_line:
+                total_cost_Val= total_cost_Val+ fixed_budg.amount
                 if fixed_budg.bucket_type_id.is_vendor and fixed_budg.assignable_status == 'assigned':
                     if not fixed_budg.prod_fix_vendor_id:
                         raise UserError(_("Please add vendor for assigned status fixed reduction budgeting tab "))
@@ -252,6 +260,8 @@ class ProductTemplate(models.Model):
                 if not fixed_budg.bucket_type_id.is_vendor and fixed_budg.assignable_status == 'assigned':
                     if not fixed_budg.prod_fix_assigned_user_id:
                         raise UserError(_("Please add User for assigned status fixed reduction budgeting tab "))
+                    
+            self.standard_price = total_cost_Val
                     
                     
     @api.constrains('product_allocate_budget_line','product_allocate_budget_line.bucket_type_id','product_allocate_budget_line.assignable_status')
