@@ -2,7 +2,7 @@ from odoo import models, fields, api,_
 from odoo.exceptions import UserError
 
 
-class VendorInvoiceDetail(models.TransientModel):
+class UserInvoiceDetail(models.TransientModel):
     _name = 'user.invoice.detail'
     _description = 'User Invoice Detail'
 
@@ -23,6 +23,7 @@ class VendorInvoiceDetail(models.TransientModel):
     partial_due_amount = fields.Float("Partial Due Amount")
     partial_paid_amount = fields.Float("Partial Paid Amount")
     refunded_amount = fields.Float('Refunded Amount')
+    refunded_invoice_name = fields.Many2one('account.move',string="Refund Invoices",copy=False)
     
     def show_detailed_items(self):
         for rec in self:

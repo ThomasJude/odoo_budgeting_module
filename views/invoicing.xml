@@ -78,6 +78,10 @@
 					<field name="is_bill_paid" attrs="{'invisible' : [('parent_move_type', '!=', 'in_invoice')]}"/>
 					<field name="bill_residual_amount" attrs="{'invisible' : [('parent_move_type', '!=', 'in_invoice')]}"/>
 				</xpath>
+				
+				<xpath expr = "//field[@name='invoice_line_ids']/tree/field[@name='product_id']" position = "after">
+					<field name="bucket_ids" options="{'no_edit': True, 'no_create': True}" domain="[('bucket_amount', '>', 0),('bucket_status', '=', 'released')]" attrs="{'readonly' : [('parent.move_type', '!=', 'in_invoice')]}" widget ="many2many_tags"/>
+				</xpath>
 		</field>
         </record>
     </data>

@@ -1253,6 +1253,9 @@ class AccountMoveLine(models.Model):
     is_bill_paid = fields.Boolean('Paid')
     bill_residual_amount = fields.Float('Due Amount')
     parent_move_type = fields.Selection(related='move_id.move_type', store=True, readonly=True, precompute=True,)
+    bucket_ids = fields.Many2many('bucket', 'bucket_move_line_rel', 'bucket_move_line_id', 'bkt_id',string="Buckets",copy=False)
+    
+    
 
     def unlink(self):
         for rec in self:

@@ -10,7 +10,8 @@
 		<field name="arch" type="xml">
 			<tree string="User Invoice Detail" create="false" >
 <!--                <field name="vendor_id"/>-->
-                <field name="invoice_name"/>
+                <field name="invoice_name" widget="many2onebutton"/>
+                <field name="refunded_invoice_name" widget="many2onebutton"/>
                 <field name="released" invisible="1"/>
 
                 <field name="user_released" invisible="1"/>
