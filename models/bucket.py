@@ -61,6 +61,17 @@ class VendorLine(models.Model):
     vendor_line_bucket_id = fields.Many2one('bucket','bucket')
     total_amount = fields.Float('Total Amount')
     
+    def fetch_vendor_invoiced_bill_inv_show(self):
+        return {
+            'name': "Invoice Visibility",
+            'type': 'ir.actions.act_window',
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': 'invoice.visibility.wiz',
+            'view_id': self.env.ref('odoo_budgeting_module.invoice_visibility_wiz_form').id,
+            'target': 'new',
+                }
+    
     
     def fetch_vendor_bills_details(self):
         all_vendor_invoice_lines = self.env['invoice.budget.line'].sudo().search(
@@ -272,7 +283,7 @@ class VendorLine(models.Model):
             'type': 'ir.actions.act_window',
             'view_type': 'form',
             'view_mode': 'tree',
-            # 'target':'new',
+            'target':'new',
             'res_model': 'vendor.invoice.detail',
         }
 
@@ -283,6 +294,20 @@ class VendorLineReleased(models.Model):
     vendor_id = fields.Many2one('res.partner', 'Vendors')
     vendor_line_released_bucket_id = fields.Many2one('bucket', 'bucket')
     total_amount = fields.Float('Total Amount')
+    
+    
+    def fetch_vendor_bill_inv_show(self):
+        return {
+            'name': "Invoice/Bill Visibility",
+            'type': 'ir.actions.act_window',
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': 'invoice.bill.wiz',
+            'view_id': self.env.ref('odoo_budgeting_module.invoice_bill_wiz_form').id,
+            'target': 'new',
+                }
+        
+        
     
     
     
@@ -372,7 +397,7 @@ class VendorLineReleased(models.Model):
             'type': 'ir.actions.act_window',
             'view_type': 'form',
             'view_mode': 'tree',
-            # 'target':'new',
+            'target':'new',
             'res_model': 'vendor.bill.detail',
         }
         return vals
@@ -708,7 +733,7 @@ class VendorLineReleased(models.Model):
             'type': 'ir.actions.act_window',
             'view_type': 'form',
             'view_mode': 'tree',
-            # 'target':'new',
+            'target':'new',
             'res_model': 'vendor.invoice.detail',
         }
         return vals
@@ -722,6 +747,17 @@ class UserLine(models.Model):
     user_id = fields.Many2one('res.users', 'Users')
     user_line_bucket_id = fields.Many2one('bucket', 'bucket')
     total_amount = fields.Float('Total Amount')
+    
+    def fetch_user_invoiced_bill_inv_show(self):
+        return {
+            'name': "Invoice Visibility",
+            'type': 'ir.actions.act_window',
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': 'user.invoice.visibility.wiz',
+            'view_id': self.env.ref('odoo_budgeting_module.user_invoice_visibility_wiz_form').id,
+            'target': 'new',
+                }
 
 
 
@@ -957,7 +993,7 @@ class UserLine(models.Model):
                 'type': 'ir.actions.act_window',
                 'view_type': 'form',
                 'view_mode': 'tree',
-                # 'target': 'new',
+                'target': 'new',
                 'res_model': 'user.invoice.detail',
             }
 
@@ -969,6 +1005,17 @@ class UserLineReleased(models.Model):
     user_id = fields.Many2one('res.users', 'Users')
     user_line_released_bucket_id = fields.Many2one('bucket', 'bucket')
     total_amount = fields.Float('Total Amount')
+    
+    def fetch_user_released_bill_inv_show(self):
+        return {
+            'name': "Invoice Visibility",
+            'type': 'ir.actions.act_window',
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': 'user.invoice.visibility.wiz',
+            'view_id': self.env.ref('odoo_budgeting_module.user_invoice_visibility_wiz_form').id,
+            'target': 'new',
+                }
 
     def fetch_user_paid_bills_details(self):
         all_user_invoice_lines = self.env['invoice.budget.line'].sudo().search(
@@ -1314,6 +1361,6 @@ class UserLineReleased(models.Model):
             'type': 'ir.actions.act_window',
             'view_type': 'form',
             'view_mode': 'tree',
-            # 'target': 'new',
+            'target': 'new',
             'res_model': 'user.invoice.detail',
         }

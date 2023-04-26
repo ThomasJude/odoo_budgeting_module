@@ -44,6 +44,7 @@
 									<tree string="Vendor Line Invoiced" create="false" edit="false" duplicate="false" delete="false">
 		                                <field name="vendor_id" domain="[('supplier_rank', '>', 0)]" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
 		                                <field name="total_amount" readonly="1" invisible="1"/>
+		                                <!--<button name="fetch_vendor_invoiced_bill_inv_show" type="object" class="btn btn-link" icon="fa-eye-slash"/>-->
                                         <button name="fetch_vendor_bills_details" type="object" class="btn btn-primary" string="Show Invoices"/>
                                     </tree>
 		                        </field>
@@ -53,6 +54,7 @@
 									<tree string="Vendor Line Released" create="false" edit="false" duplicate="false" delete="false">
 		                                <field name="vendor_id" domain="[('supplier_rank', '>', 0)]" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
 		                                <field name="total_amount" readonly="1" invisible="1"/>
+		                                <!--<button name="fetch_vendor_bill_inv_show" type="object" class="btn btn-link" icon="fa-eye-slash"/>-->
                                         <button name="fetch_vendor_paid_bills_details" type="object" class="btn btn-primary" string="Show Invoices"/>
                                         <button name="fetch_ven_bill_details" type="object" class="btn btn-primary" string="Show Bills"/>
                                     </tree>
@@ -64,7 +66,7 @@
 									<tree string="User Line Invoiced" create="false" edit="false" duplicate="false" delete="false">
 		                                <field name="user_id" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
 		                                <field name="total_amount" readonly="1" invisible="1"/>
-
+										<!--<button name="fetch_user_invoiced_bill_inv_show" type="object" class="btn btn-link" icon="fa-eye-slash"/>-->
                                         <button name="fetch_user_bills_details" type="object" class="btn btn-primary" string="Show Invoices"/>
                                     </tree>
 		                        </field>
@@ -77,7 +79,7 @@
 									<tree string="User Line Released" create="false" edit="false" duplicate="false" delete="false">
 		                                <field name="user_id" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
 		                                <field name="total_amount" readonly="1" invisible="1"/>
-
+										<!--<button name="fetch_user_released_bill_inv_show" type="object" class="btn btn-link" icon="fa-eye-slash"/>-->
                                         <button name="fetch_user_paid_bills_details" type="object" class="btn btn-primary" string="Show Invoices"/>
                                     </tree>
 		                        </field>

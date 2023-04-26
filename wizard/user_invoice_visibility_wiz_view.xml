@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Wizard  Form View  -->
+
+        <record id="user_invoice_visibility_wiz_form" model="ir.ui.view">
+		<field name="name">user.invoice.visibility.wiz.form</field>
+		<field name="model">user.invoice.visibility.wiz</field>
+		<field name="type">form</field>
+		<field name="arch" type="xml">
+			<form string="Invoice Visibility" create="false" edit="false" duplicate="false">
+				<notebook>
+					<page string="Invoice Details" name="user_invoice_info_visibility">
+                            <field name="user_invoice_details_visibility_line" >
+								<tree string="Invoice Details" create="false" edit="false" duplicate="false" delete="false">
+	                                	<field name="invoice_name" widget="many2onebutton"/>
+						                <field name="refunded_invoice_name" widget="many2onebutton"/>
+						                <field name="released" invisible="1"/>
+						
+						                <field name="user_released" invisible="1"/>
+						                <field name="vendor_released" invisible="1"/>
+						                <field name="user_invoiced" invisible="1"/>
+						                <field name="vendor_invoiced" invisible="1"/>
+						                <field name="refunded_amount" readonly="1" force_save="1"/>
+						                <field name="user_amount_released" sum="Total"/>
+						                <field name="user_amount_invoiced" sum="Total"/>
+						                <field name="bucket_type_id" />
+						                <field name="partial_due_amount" invisible="1"/>
+						                <field name="partial_paid_amount" invisible="1"/>
+						                <button name="show_detailed_items" type="object" class="btn btn-primary" string="show detailed items"/>
+						
+                                </tree>
+	                        </field>
+						</page>
+				</notebook>
+
+            </form>
+        </field>
+        </record>
+
+
+    </data>
+</odoo>

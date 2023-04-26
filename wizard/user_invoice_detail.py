@@ -24,6 +24,7 @@ class UserInvoiceDetail(models.TransientModel):
     partial_paid_amount = fields.Float("Partial Paid Amount")
     refunded_amount = fields.Float('Refunded Amount')
     refunded_invoice_name = fields.Many2one('account.move',string="Refund Invoices",copy=False)
+    user_inv_visibility_wiz_id = fields.Many2one('user.invoice.visibility.wiz',string="User Invoice Wiz Id",copy=False)
     
     def show_detailed_items(self):
         for rec in self:
@@ -162,7 +163,7 @@ class UserInvoiceDetail(models.TransientModel):
             'domain':domain,
             'view_type': 'form',
             'view_mode': 'tree',
-            # 'target':'new',
+            'target':'new',
             'res_model': 'detailed.items',
         }
         return vals

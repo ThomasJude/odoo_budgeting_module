@@ -68,8 +68,8 @@
             <field name="context">{'search_default_group_by_bucket_type_id': 1,'search_group_by_bucket_inv_ids': 1} </field>
          </record>
 
-		<menuitem name="Bucket Dashboard" id="bucket_dashboard_menu" parent="sale.sale_menu_root"
-     		action="action_bucket_dashboard_form"/>
+		<!--<menuitem name="Bucket Dashboard" id="bucket_dashboard_menu" parent="sale.sale_menu_root"
+     		action="action_bucket_dashboard_form"/>-->
      
     </data>
 </odoo>

@@ -22,6 +22,8 @@ class VendorInvoiceDetail(models.TransientModel):
     partial_paid_amount = fields.Float("Partial Paid Amount")
     refunded_amount = fields.Float('Refunded Amount')
     refunded_invoice_name = fields.Many2one('account.move',string="Refund Invoices",copy=False)
+    inv_bill_wiz_id = fields.Many2one('invoice.bill.wiz',string="inv/bill wiz Id",copy=False)
+    inv_visibility_wiz_id = fields.Many2one('invoice.visibility.wiz',string="inv wiz Id",copy=False)
     
     
     def show_detailed_items(self):
@@ -154,10 +156,11 @@ class VendorInvoiceDetail(models.TransientModel):
             vals = {
                 'name': _('Show Detailed Items'),
                 'type': 'ir.actions.act_window',
+                # "type": "ir.actions.client",
                 'domain':domain,
                 'view_type': 'form',
                 'view_mode': 'tree',
-                # 'target':'new',
+                'target':'new',
                 'res_model': 'detailed.items',
             }
             return vals

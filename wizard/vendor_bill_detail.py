@@ -13,6 +13,7 @@ class VendorBillDetail(models.TransientModel):
     vendor_line_released_id = fields.Many2one('vendor.line.released', string='Vendor Released')
     bill_paid = fields.Boolean('Paid')
     bucket_type_id = fields.Many2one('bucket.type', 'Bucket Type')
+    bill_bill_wiz_id = fields.Many2one('invoice.bill.wiz',string="inv/bill wiz Id",copy=False)
 
 
 
@@ -53,7 +54,7 @@ class VendorBillDetail(models.TransientModel):
                 'domain': domain,
                 'view_type': 'form',
                 'view_mode': 'tree',
-                # 'target':'new',
+                'target':'new',
                 'res_model': 'vendor.bill.items',
             }
             return vals
