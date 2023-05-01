@@ -63,7 +63,7 @@
 						</field>
 					</page>
 					
-					<page string="Budget Tab" name="budget_val_info" attrs="{'invisible' : [('move_type', '!=', 'in_invoice')]}" >
+					<!--<page string="Budget Tab" name="budget_val_info" attrs="{'invisible' : [('move_type', '!=', 'in_invoice')]}" >
 						<group>
 							<field name="bill_bucket_id" options="{'no_edit': True, 'no_create': True}" domain="[('bucket_amount', '>', 0),('bucket_status', '=', 'released')]"/>
 						</group>
@@ -71,7 +71,7 @@
 							<field name="bill_bucket_amount" readonly="1"/>
 						</group>
 						
-					</page>
+					</page>-->
                 </xpath>
                 <xpath expr = "//field[@name='invoice_line_ids']/tree/field[@name='price_subtotal']" position = "after">
 					<field name="parent_move_type" invisible="1"/>

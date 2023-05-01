@@ -9,7 +9,7 @@ class AccountMove(models.Model):
     previous_released_amount = fields.Float('Previous Released')
     bill_bucket_id= fields.Many2one('bucket','Bucket')
     # bill_bucket_amount = fields.Float('Bill Bucket Amount ')
-    bill_bucket_amount = fields.Float(string='Bill Bucket Amount', compute='_compute_bill_bucket_amount')
+    # bill_bucket_amount = fields.Float(string='Bill Bucket Amount', compute='_compute_bill_bucket_amount')
 
     # def js_assign_outstanding_line(self, line_id):
     #
@@ -17,11 +17,11 @@ class AccountMove(models.Model):
     #     print("AAAAAAAAAAAAAAAAAAAAAAA",res,line_id,self.amount_residual,self.amount_total)
     #     return res
 
-    @api.depends('bill_bucket_id')
-    def _compute_bill_bucket_amount(self):
-        self.bill_bucket_amount=0.0
-        if self.bill_bucket_id:
-            self.bill_bucket_amount = self.bill_bucket_id.bucket_amount
+    # @api.depends('bill_bucket_id')
+    # def _compute_bill_bucket_amount(self):
+    #     self.bill_bucket_amount=0.0
+    #     if self.bill_bucket_id:
+    #         self.bill_bucket_amount = self.bill_bucket_id.bucket_amount
     
     
     # @api.onchange('bill_bucket_id')
