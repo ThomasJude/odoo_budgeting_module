@@ -22,3 +22,4 @@ access_detailed_items,detailed.items,model_detailed_items,base.group_user,1,1,1,
 access_invoice_bill_wiz,invoice.bill.wiz,model_invoice_bill_wiz,base.group_user,1,1,1,1
 access_invoice_visibility_wiz,invoice.visibility.wiz,model_invoice_visibility_wiz,base.group_user,1,1,1,1
 access_user_invoice_visibility_wiz,user.invoice.visibility.wiz,model_user_invoice_visibility_wiz,base.group_user,1,1,1,1
+access_vendor_line_released_inside_user,vendor.line.released.inside.user,model_vendor_line_released_inside_user,base.group_user,1,1,1,1

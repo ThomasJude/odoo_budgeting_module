@@ -84,6 +84,16 @@
                                     </tree>
 		                        </field>
 							</page>
+							<page string="Vendor Details" name="vendor_info" attrs="{'invisible':['|','&amp;','|',('check','=',True),('check2','!=',False),('check','!=',False),('check2','!=',False)]}">
+								<field name="vendor_line_released_inside_user" >
+									<tree string="vendor Line Released" create="false" edit="false" duplicate="false" delete="false">
+		                                <field name="vendor_id" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
+		                                <field name="total_amount" readonly="1" invisible="1"/>
+<!--                                        <button name="fetch_user_released_bill_inv_show" type="object" class="btn btn-link" icon="fa-eye-slash"/>-->
+                                        <button name="fetch_ven_bills_details_inside_user" type="object" class="btn btn-primary" string="Show Invoices" />
+                                    </tree>
+		                        </field>
+							</page>
 						</notebook>
                     </sheet>
                 </form>

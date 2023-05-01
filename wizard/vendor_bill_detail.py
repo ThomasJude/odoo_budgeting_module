@@ -14,6 +14,8 @@ class VendorBillDetail(models.TransientModel):
     bill_paid = fields.Boolean('Paid')
     bucket_type_id = fields.Many2one('bucket.type', 'Bucket Type')
     bill_bill_wiz_id = fields.Many2one('invoice.bill.wiz',string="inv/bill wiz Id",copy=False)
+    vendor_line_released_from_user_bucket_id = fields.Many2one('vendor.line.released.inside.user', string='Vendor Released from User Bucket')
+    debit = fields.Boolean('Debit')
 
 
 
