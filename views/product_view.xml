@@ -25,7 +25,10 @@
                                     
                             </tree>
                         </field>
+                        <label for="remaining_allocation_temp" string="Remaining Allocation Template"/>
+                        <field name="remaining_allocation_temp"/>
                         <separator string="Remaining % Allocation"/>
+                        
                         <field name="product_allocate_budget_line" widget="section_and_note_one2many" mode="tree">
 						<tree string="Allocate Budget" editable="bottom">
                                 <field name="product_id" attrs="{'readonly': [('name', '!=', False)],}" options="{'no_edit': True, 'no_create': True}"/>

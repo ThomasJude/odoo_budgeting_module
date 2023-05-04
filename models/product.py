@@ -6,9 +6,63 @@ from odoo.exceptions import UserError, ValidationError
 class ProductTemplate(models.Model):
     _inherit = "product.template"
     
+    remaining_allocation_temp = fields.Many2one('allocation.template',string='Remaining Allocation Template')
     product_fixed_budget_line = fields.One2many('product.budget.fixed', 'prod_id', 'product Fixed Budget')
     product_allocate_budget_line = fields.One2many('product.budget.allocate', 'prod_allocate_id', 'Product Allocate Budget')
     
+    @api.onchange('remaining_allocation_temp')
+    def remaining_allocation_temp_data_val (self):
+
+        lst = []  
+        if self.remaining_allocation_temp:
+            if self.remaining_allocation_temp.allocation_temp_line:
+                for remaining_allocation in self.remaining_allocation_temp.allocation_temp_line:
+                    lst.append([0,0,{
+                                        'product_id': remaining_allocation.product_id.id,
+                                        'name': remaining_allocation.desc,
+                                        'bucket_type_id': remaining_allocation.bucket_type.id,
+                                        'assignable_status': remaining_allocation.assignable_status,
+                                        'is_vendor': remaining_allocation.is_vendor,
+                                        'prod_allocate_id': self.id,
+                                        'prod_remaining_budget_assigned_user_id': remaining_allocation.allocate_user_id.id,
+                                        'allocate_percent': remaining_allocation.allocate_percent,
+                                        'allocation_temp_id':self.remaining_allocation_temp.id
+                                    }])
+        print('lst',lst)
+        self.product_allocate_budget_line = False
+        self.write({'product_allocate_budget_line' : lst})
+        return 
+    
+    
+    # @api.onchange('remaining_allocation_temp')
+    # def remaining_allocation_temp_data_val(self):
+    #     print ("aaaaaaaaaaaaaaaaaaaaa",self.remaining_allocation_temp.name)
+    #
+    #     if self.remaining_allocation_temp:
+    #         if self.remaining_allocation_temp.allocation_temp_line:
+    #             for remaining_allocation in self.remaining_allocation_temp.allocation_temp_line:
+    #                 remaining_budget_data = self.env['product.budget.allocate'].sudo().create({
+    #                                 'product_id': remaining_allocation.product_id.id,
+    #                                 'name': remaining_allocation.desc,
+    #                                 'bucket_type_id': remaining_allocation.bucket_type.id,
+    #                                 'assignable_status': remaining_allocation.assignable_status,
+    #                                 'is_vendor': remaining_allocation.is_vendor,
+    #                                 'prod_allocate_id': self.id,
+    #                                 'prod_remaining_budget_assigned_user_id': remaining_allocation.allocate_user_id.id,
+    #                                 'allocate_percent': remaining_allocation.allocate_percent,
+    #                                 'allocation_temp_id':self.remaining_allocation_temp.id
+    #                             })
+    #
+    #     lst=[]
+    #     if self.product_allocate_budget_line:
+    #         for all in self.product_allocate_budget_line:
+    #             if all.allocation_temp_id.id != self.remaining_allocation_temp.id:
+    #                 lst.append(all)
+    #
+    #
+    #         self.product_allocate_budget_line.remove(lst)
+            
+                    
     
     @api.onchange('product_fixed_budget_line')
     def calculate_remaining_check(self):
@@ -86,8 +140,8 @@ class ProductTemplate(models.Model):
                                     'allocate_percent': allocate_budget_line.allocate_percent,
                                     'amount': allocate_budget_line.amount * invoice.quantity
                                 })
-
-        elif vals.get('standard_price'):
+        
+        elif vals.get('standard_price') and not vals.get('product_fixed_budget_line') :
             product_product_id = self.env['product.product'].sudo().search([('product_tmpl_id', '=', self.id)])
 
             prod_fixed_budget_lines = self.env['product.budget.fixed'].sudo().search([('product_id', '=', self.id)])
@@ -454,6 +508,7 @@ class ProductBudgetAllocate(models.Model):
     # prod_remaining_budget_assigned_user_ids= fields.Many2many('res.users', 'prod_remaining_budget_budget_user', 'prod_remaining_budget_budget_usr_id', 'usr_id',string="Users Name",copy=False)
     prod_remaining_budget_assigned_user_id = fields.Many2one('res.users', string="Users Name", copy=False)
     amount = fields.Float("amount")
+    allocation_temp_id= fields.Many2one('allocation.template', string="Template", copy=False)
     
     @api.onchange('product_id')
     def fetch_vendors(self):

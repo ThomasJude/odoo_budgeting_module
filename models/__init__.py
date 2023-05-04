@@ -5,3 +5,4 @@ from . import invoicing
 from . import bucket_type
 from . import bucket
 from . import bucket_dashboard
+from . import allocation_template

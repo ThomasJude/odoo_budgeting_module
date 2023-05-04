@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_allocation_template_tree" model="ir.ui.view">
+            <field name="name">allocation.template.tree</field>
+            <field name="model">allocation.template</field>
+            <field name="arch" type="xml">
+                <tree string="Budget Allocation template">
+                    <field name="name" required="1"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_allocation_template_form" model="ir.ui.view">
+            <field name="name">allocation.template.form</field>
+            <field name="model">allocation.template</field>
+            <field name="arch" type="xml">
+                <form string="Budget Allocation template">
+					<header>
+                    </header>
+                    <sheet>
+	                    <group>
+	                        <group>
+	                            <field name="name" required="1"/>
+	                            
+	                        </group>
+	                        <group>
+							</group>
+	                    </group>
+	                     <notebook>
+							<page string="Template Details" name="temp_info" >
+                                <field name="allocation_temp_line">
+									<tree string="Template Details" editable="bottom">
+										<field name="product_id" attrs="{'readonly': [('desc', '!=', False)],}" options="{'no_edit': True, 'no_create': True}" />
+										<field name="desc" attrs="{'readonly': [('product_id', '!=', False)],}"/>
+		                                <field name="bucket_type" options="{'no_edit': True, 'no_create': True}" required="1"/>
+		                                <field name="assignable_status" required="1"/>
+		                                <field name="allocate_user_id" options="{'no_edit': True, 'no_create': True}" />
+		                                <field name="allocate_percent" />
+                                    </tree>
+		                        </field>
+							</page>
+						</notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_allocation_template_form" model="ir.actions.act_window">
+            <field name="name"> Budget Allocation template</field>
+            <field name="res_model">allocation.template</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+		<menuitem name="Budget Allocation template" id="allocation_template_menu" parent="sale.sale_menu_root"
+     		action="action_allocation_template_form"/>
+     
+    </data>
+</odoo>

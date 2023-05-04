@@ -26,6 +26,7 @@ Budget Module
         'views/bucket_dashboard_view.xml',
         'views/product_view.xml',
         'views/invoicing.xml',
+        'views/allocation_template_view.xml',
     ],
     
     'installable': True,
