@@ -32,8 +32,8 @@
 							<page string="Template Details" name="temp_info" >
                                 <field name="allocation_temp_line">
 									<tree string="Template Details" editable="bottom">
-										<field name="product_id" attrs="{'readonly': [('desc', '!=', False)],}" options="{'no_edit': True, 'no_create': True}" />
-										<field name="desc" attrs="{'readonly': [('product_id', '!=', False)],}"/>
+										<field name="product_id" attrs="{'readonly': [('desc', '!=', False)],'required': [('desc', '=', False)]}" options="{'no_edit': True, 'no_create': True}" />
+										<field name="desc" attrs="{'readonly': [('product_id', '!=', False)],'required': [('product_id', '=', False)]}"/>
 		                                <field name="bucket_type" domain="[('is_vendor', '!=', True)]" options="{'no_edit': True, 'no_create': True}" required="1"/>
 		                                <field name="assignable_status" required="1"/>
 		                                <field name="allocate_user_id" options="{'no_edit': True, 'no_create': True}" />
