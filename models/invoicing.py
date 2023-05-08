@@ -392,7 +392,6 @@ class InvoiceBudgetLine(models.Model):
     prod_inv_id = fields.Many2one('account.move', 'Prod Invoice Id')
     account_move_line_id = fields.Many2one('account.move.line','Prod Move Line')
     bucket_type_id = fields.Many2one('bucket.type', 'Bucket Type')
-    budget_inv_vendor_id = fields.Many2one('res.partner', string="Vendors Name", copy=False)
     budget_user_id = fields.Many2one('res.users', string="Users Name")
     amount = fields.Float("Amount")
     assignable_status = fields.Selection([('assigned', 'Assigned'),
@@ -408,6 +407,7 @@ class InvoiceBudgetLine(models.Model):
     check_invoice_posted = fields.Boolean('check invoice posted')
     item_refunded = fields.Boolean('Refunded')
     refund_residual = fields.Float('Refund Due')
+    budget_inv_vendor_id = fields.Many2one('res.partner', string="Name", copy=False)
 
 
                     
@@ -428,8 +428,6 @@ class ProductBudgetRemaining(models.Model):
     # bucket_user= fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
     budget_inv_remaining_vendor_id = fields.Many2one('res.partner', string="Vendors Name", copy=False)
     # budget_remaining_user_ids = fields.Many2many('res.users', 'prod_inv_remaining_budget_user', 'prod_inv_remaining_budget_usr_id', 'usr_id',string="Users Name",copy=False)
-    budget_remaining_user_id = fields.Many2one('res.users', string="Users Name", copy=False)
-
     
     bucket_type_id = fields.Many2one('bucket.type', 'Bucket Type')
     amount = fields.Float("amount")
@@ -439,6 +437,7 @@ class ProductBudgetRemaining(models.Model):
     check_invoice_posted = fields.Boolean('check invoice posted')
     item_refunded = fields.Boolean('Refunded')
     refund_residual = fields.Float('Refund Due')
+    budget_remaining_user_id = fields.Many2one('res.users', string="Name", copy=False)
     
     
 class AccountPaymentRegister(models.TransientModel):

@@ -372,7 +372,8 @@ class ProductBudgetFixed(models.Model):
     bucket_type_id = fields.Many2one('bucket.type','Bucket Type')
     is_vendor = fields.Boolean(string='Is Vendor')
     # bucket_user= fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
-    prod_fix_vendor_id = fields.Many2one('res.partner', string='Vendor Name', copy=False)
+    prod_fix_vendor_id = fields.Many2one('res.partner', string='Name', copy=False)
+    
     # prod_fix_assigned_user_ids = fields.Many2many('res.users', 'prod_fix_budget_user', 'prod_fix_budget_usr_id', 'usr_id',string="Users Name",copy=False)
     prod_fix_assigned_user_id = fields.Many2one('res.users', string="User Name", copy=False)
     
@@ -506,9 +507,9 @@ class ProductBudgetAllocate(models.Model):
     #     string='Vendors Name', copy=False)
     prod_remaining_budget_vendor_id = fields.Many2one('res.partner', string="Vendors Name", copy=False)
     # prod_remaining_budget_assigned_user_ids= fields.Many2many('res.users', 'prod_remaining_budget_budget_user', 'prod_remaining_budget_budget_usr_id', 'usr_id',string="Users Name",copy=False)
-    prod_remaining_budget_assigned_user_id = fields.Many2one('res.users', string="Users Name", copy=False)
     amount = fields.Float("amount")
     allocation_temp_id= fields.Many2one('allocation.template', string="Template", copy=False)
+    prod_remaining_budget_assigned_user_id = fields.Many2one('res.users', string="Name", copy=False)
     
     @api.onchange('product_id')
     def fetch_vendors(self):
