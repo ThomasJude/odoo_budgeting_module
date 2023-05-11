@@ -1282,7 +1282,7 @@ class UserLineReleased(models.Model):
                             self.env['user.invoice.detail'].sudo().create(
                                 {"user_id": self.user_id.id, 'invoice_name': paid_invoices.id,
                                  'bucket_type_id': self.user_line_released_bucket_id.bucket_type_id.id, 'released': True,
-                                 'user_amount': 0.0, 'partial_due_amount': 0.0, 'partial_paid_amount': 0.0,
+                                 'user_amount_invoiced': 0.0, 'partial_due_amount': 0.0, 'partial_paid_amount': 0.0,
                                  'user_amount_released': total_vendor_paid_amount - total_user_amount_part_paid_per_invoice})
 
                 else:
