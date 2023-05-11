@@ -1361,6 +1361,7 @@ class UserLineReleased(models.Model):
                     print("VENODR PAID AMOUNT",total_user_amount_part_paid_per_invoice,paid_invoices.reversed_entry_id.id,paid_invoices.id)
                     if total_user_amount_part_paid_per_invoice != 0.0:
                         if existing_record_1 and user_id_check:
+                            
                             existing_record_1.write(
                                 {'released': True,
                                  'user_amount_released': total_user_amount_part_paid_per_invoice,
