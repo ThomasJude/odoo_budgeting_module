@@ -6,9 +6,24 @@ from odoo.exceptions import UserError, ValidationError
 class ProductTemplate(models.Model):
     _inherit = "product.template"
     
-    remaining_allocation_temp = fields.Many2one('allocation.template',string='Remaining Allocation Template')
+    def remaining_allocation_temp_default_val (self):
+        defalt_val_id= False
+        self.remaining_allocation_temp=False
+        default_temp_id= self.env['allocation.template'].search([('is_default_temp','=',True)],limit=1)
+        if default_temp_id:
+            self.remaining_allocation_temp= default_temp_id.id
+            defalt_val_id= default_temp_id.id
+        else:
+            self.remaining_allocation_temp=False
+            defalt_val_id=False
+            
+        return defalt_val_id
+    
+    remaining_allocation_temp = fields.Many2one('allocation.template',string='Remaining Allocation Template',default=remaining_allocation_temp_default_val)
     product_fixed_budget_line = fields.One2many('product.budget.fixed', 'prod_id', 'product Fixed Budget')
     product_allocate_budget_line = fields.One2many('product.budget.allocate', 'prod_allocate_id', 'Product Allocate Budget')
+    
+    
     
     @api.onchange('remaining_allocation_temp')
     def remaining_allocation_temp_data_val (self):

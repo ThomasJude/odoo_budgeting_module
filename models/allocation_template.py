@@ -8,6 +8,7 @@ class AllocationTemplate(models.Model):
     
     name = fields.Char(string='Name')
     allocation_temp_line = fields.One2many('allocation.template.line', 'allocation_temp_id', 'Allocation Template')
+    is_default_temp= fields.Boolean(string='Default Template',default=False)
     
     
     @api.constrains('allocation_temp_line')
