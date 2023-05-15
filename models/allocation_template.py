@@ -11,6 +11,15 @@ class AllocationTemplate(models.Model):
     is_default_temp= fields.Boolean(string='Default Template',default=False)
     
     
+    @api.constrains('is_default_temp')
+    def allocation_temp_is_default_temp(self):
+        total = 0
+        for record in self:
+            obj = self.env['allocation.template'].search([('id','!=',record.id),('is_default_temp','=',True)])
+            if obj:
+                if record.is_default_temp:
+                    raise UserError(_('There is already a Default allocation template exist'))
+    
     @api.constrains('allocation_temp_line')
     def total_percentage_val(self):
         total = 0
