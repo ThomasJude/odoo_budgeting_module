@@ -427,22 +427,23 @@ class ProductBudgetFixed(models.Model):
     
     @api.onchange('bucket_type_id')
     def _onchange_bucket_type(self):
-        if self.bucket_type_id.is_vendor:
-            self.prod_fix_vendor_id = False or None
-            self.prod_fix_assigned_user_id = False or None
-
-            fetch_product_vendor = self.env['product.supplierinfo'].sudo().search([('product_tmpl_id','=',self.product_id.id)],limit=1,order = "id desc",)
-
-            if not fetch_product_vendor:
-                self.assignable_status = 'assignable_at_inv'
+        if self.product_id:
+            if self.bucket_type_id.is_vendor:
+                self.prod_fix_vendor_id = False or None
+                self.prod_fix_assigned_user_id = False or None
+    
+                fetch_product_vendor = self.env['product.supplierinfo'].sudo().search([('product_tmpl_id','=',self.product_id.id)],limit=1,order = "id desc",)
+    
+                if not fetch_product_vendor:
+                    self.assignable_status = 'assignable_at_inv'
+                else:
+                    self.prod_fix_vendor_id = fetch_product_vendor.partner_id.id
+                    self.assignable_status = 'assigned'
             else:
-                self.prod_fix_vendor_id = fetch_product_vendor.partner_id.id
-                self.assignable_status = 'assigned'
-        else:
-
-            self.prod_fix_vendor_id = False or None
-            self.prod_fix_assigned_user_id = False or None
-            self.assignable_status = 'assignable_at_inv'
+    
+                self.prod_fix_vendor_id = False or None
+                self.prod_fix_assigned_user_id = False or None
+                self.assignable_status = 'assignable_at_inv'
 
     
 
@@ -453,21 +454,22 @@ class ProductBudgetFixed(models.Model):
 
     @api.onchange('assignable_status')
     def _onchange_vendor_name(self):
-        if self.assignable_status or self.assignable_status == False:
-            if self.assignable_status != 'assigned':
-                self.prod_fix_vendor_id = False or None
-                self.prod_fix_assigned_user_id = False or None
-            else:
-                fetch_product_vendor = self.env['product.supplierinfo'].sudo().search(
-                    [('product_tmpl_id', '=', self.product_id.id)], limit=1, order="id desc", )
-
-                if not fetch_product_vendor:
-                    if self.bucket_type_id.is_vendor:
-                        self.assignable_status = 'assignable_at_inv'
+        if self.product_id:
+            if self.assignable_status or self.assignable_status == False:
+                if self.assignable_status != 'assigned':
+                    self.prod_fix_vendor_id = False or None
+                    self.prod_fix_assigned_user_id = False or None
                 else:
-                    if self.bucket_type_id.is_vendor:
-                        self.prod_fix_vendor_id = fetch_product_vendor.partner_id.id
-                    self.assignable_status = 'assigned'
+                    fetch_product_vendor = self.env['product.supplierinfo'].sudo().search(
+                        [('product_tmpl_id', '=', self.product_id.id)], limit=1, order="id desc", )
+    
+                    if not fetch_product_vendor:
+                        if self.bucket_type_id.is_vendor:
+                            self.assignable_status = 'assignable_at_inv'
+                    else:
+                        if self.bucket_type_id.is_vendor:
+                            self.prod_fix_vendor_id = fetch_product_vendor.partner_id.id
+                        self.assignable_status = 'assigned'
 
     @api.onchange('bucket_type_id')
     def _onchange_bucket_type(self):

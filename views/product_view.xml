@@ -12,7 +12,7 @@
 						<tree string="Fixed Budget" editable="bottom">
                                 <field name="product_id" attrs="{'readonly': [('name', '!=', False)],}" options="{'no_edit': True, 'no_create': True}"/>
                                 <field name="name" attrs="{'readonly': [('product_id', '!=', False)],}"/>
-                                <field name="bucket_type_id" options="{'no_edit': True, 'no_create': True}" required="1"/>
+                                <field name="bucket_type_id" options="{'no_edit': True, 'no_create': True}" domain="[('is_vendor', '=', True)]"  required="1"/>
                                 <!--<field name="bucket_user" invisible="1"/>-->
                                 <field name="is_vendor" invisible="1"/>
                                 <field name="assignable_status" required="1"/>
