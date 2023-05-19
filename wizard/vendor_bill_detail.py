@@ -10,6 +10,7 @@ class VendorBillDetail(models.TransientModel):
     bill_name = fields.Many2one('account.move',string="Bills",copy=False)
     vendor_amount_bill = fields.Float("Bill Amount")
     vendor_amount_paid = fields.Float("Bill Paid Amount")
+    vendor_bill_amount_refunded = fields.Float("Bill Refunded Amount")
     vendor_line_released_id = fields.Many2one('vendor.line.released', string='Vendor Released')
     bill_paid = fields.Boolean('Paid')
     bucket_type_id = fields.Many2one('bucket.type', 'Bucket Type')

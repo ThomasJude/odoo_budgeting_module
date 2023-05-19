@@ -8,10 +8,7 @@
 		<field name="model">vendor.bill.detail</field>
 		<field name="type">tree</field>
 		<field name="arch" type="xml">
-			<!--<script>
-                        console.log("anchal");
 
-              </script>-->
 			<tree string="Vendor Bill Detail" create="false" edit="false" duplicate="false">
 				
                 <field name="vendor_line_released_id" invisible="1"/>
@@ -19,6 +16,7 @@
                 <field name="bill_name"/>
                 <field name="bill_paid" invisible="1"/>
                 <field name="vendor_amount_bill" sum="Total"/>
+                <field name="vendor_bill_amount_refunded" sum="Total" invisible="1"/>
                 <field name="vendor_amount_paid" sum="Total"/>
 
                 <field name="vendor_id" />
