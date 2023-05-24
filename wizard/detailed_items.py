@@ -11,6 +11,8 @@ class DetailedItems(models.TransientModel):
     bucket_type_id = fields.Many2one('bucket.type', 'Bucket Type')
     item = fields.Many2one('product.template','Item')
     amount = fields.Float('Amount')
+    main_product_name = fields.Char("Product Name")
+    user_check = fields.Boolean("user_check")
     # check_released=fields.Boolean(compute='_get_released_value')
     # is_vendor = fields.Boolean('is_vendor')
     # is_user = fields.Boolean('is_user')

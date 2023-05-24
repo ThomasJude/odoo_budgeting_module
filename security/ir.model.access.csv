@@ -25,3 +25,4 @@ access_user_invoice_visibility_wiz,user.invoice.visibility.wiz,model_user_invoic
 access_vendor_line_released_inside_user,vendor.line.released.inside.user,model_vendor_line_released_inside_user,base.group_user,1,1,1,1
 access_allocation_template,allocation.template,model_allocation_template,base.group_user,1,1,1,1
 access_allocation_template_line,allocation.template.line,model_allocation_template_line,base.group_user,1,1,1,1
+access_show_vendors,show.vendors,model_show_vendors,base.group_user,1,1,1,1

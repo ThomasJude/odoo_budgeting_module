@@ -8,6 +8,7 @@ class VendorBillDetail(models.TransientModel):
 
     vendor_id = fields.Many2one('res.partner','Name')
     bill_name = fields.Many2one('account.move',string="Bills",copy=False)
+    refund_bill_name = fields.Many2one('account.move',string="Refund Bills",copy=False)
     vendor_amount_bill = fields.Float("Bill Amount")
     vendor_amount_paid = fields.Float("Bill Paid Amount")
     vendor_bill_amount_refunded = fields.Float("Bill Refunded Amount")

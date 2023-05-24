@@ -27,6 +27,7 @@ Budget Module
         'views/product_view.xml',
         'views/invoicing.xml',
         'views/allocation_template_view.xml',
+        'views/show_vendors.xml',
     ],
     
     'installable': True,

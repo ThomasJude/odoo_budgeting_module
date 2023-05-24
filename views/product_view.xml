@@ -12,7 +12,7 @@
 						<tree string="Fixed Budget" editable="bottom">
                                 <field name="product_id" attrs="{'readonly': [('name', '!=', False)],}" options="{'no_edit': True, 'no_create': True}"/>
                                 <field name="name" attrs="{'readonly': [('product_id', '!=', False)],}"/>
-                                <field name="bucket_type_id" options="{'no_edit': True, 'no_create': True}" domain="[('is_vendor', '=', True)]"  required="1"/>
+                                <field name="bucket_type_id" domain="[('is_vendor', '=', True)]" options="{'no_edit': True, 'no_create': True}" required="1"/>
                                 <!--<field name="bucket_user" invisible="1"/>-->
                                 <field name="is_vendor" invisible="1"/>
                                 <field name="assignable_status" required="1"/>
@@ -32,8 +32,8 @@
                         
                         <field name="product_allocate_budget_line" widget="section_and_note_one2many" mode="tree" readonly="1" force_save="1">
 						<tree string="Allocate Budget" editable="bottom">
-                                <field name="product_id" attrs="{'readonly': [('name', '!=', False)],}" options="{'no_edit': True, 'no_create': True}"/>
-                                <field name="name" attrs="{'readonly': [('product_id', '!=', False)],}"/>
+                                <field name="product_id" invisible="1" attrs="{'readonly': [('name', '!=', False)],}" options="{'no_edit': True, 'no_create': True}"/>
+                                <field name="name" invisible="1" attrs="{'readonly': [('product_id', '!=', False)],}"/>
                                 <field name="bucket_type_id" options="{'no_edit': True, 'no_create': True}" required="1"/>
                                 <!--<field name="bucket_user" invisible="1"/>-->
                                 <field name="is_vendor" invisible="1"/>
@@ -53,5 +53,16 @@
             </xpath>
 			</field>
 		</record>
+
+        <record id="product_budget_template_tree_view" model="ir.ui.view">
+        <field name="name">product.template.product.budget.tree.inherit</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_tree_view"/>
+        <field name="arch" type="xml">
+            <field name="standard_price" position="after">
+                <field name="fixed_amount" readonly="1" force_save="1" optional="show" decoration-danger="fixed_amount &lt; 0" decoration-bf="1"/>
+            </field>
+        </field>
+    </record>
 	</data>
 </odoo>

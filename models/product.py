@@ -22,9 +22,18 @@ class ProductTemplate(models.Model):
     remaining_allocation_temp = fields.Many2one('allocation.template',string='Remaining Allocation Template',default=remaining_allocation_temp_default_val)
     product_fixed_budget_line = fields.One2many('product.budget.fixed', 'prod_id', 'product Fixed Budget')
     product_allocate_budget_line = fields.One2many('product.budget.allocate', 'prod_allocate_id', 'Product Allocate Budget')
+    fixed_amount = fields.Float("Fixed Reduction",compute="_compute_fixed_amount")
     
-    
-    
+    @api.depends("product_fixed_budget_line")
+    def _compute_fixed_amount(self):
+        for rec in self:
+            total_cost_val = 0.0
+            total_fixed_amount = 0.0
+            if rec.product_fixed_budget_line:
+                for fixed in rec.product_fixed_budget_line:
+                    total_cost_val += fixed.amount
+                total_fixed_amount = rec.list_price - total_cost_val
+            rec.fixed_amount = total_fixed_amount
     @api.onchange('remaining_allocation_temp')
     def remaining_allocation_temp_data_val (self):
 
@@ -344,8 +353,15 @@ class ProductTemplate(models.Model):
                 if not rem_budg.bucket_type_id.is_vendor and rem_budg.assignable_status == 'assigned':
                     if not rem_budg.prod_remaining_budget_assigned_user_id:
                         raise UserError(_("Please add User for assigned status Remaining Allocation budgeting tab "))
-        
-        
+
+    # @api.constrains('product_fixed_budget_line','product_fixed_budget_line.bucket_type_id',
+    #                 )
+    # def only_vendor_in_fixed_allocation(self):
+    #     if self.product_fixed_budget_line:
+    #         for fixed_budg in self.product_fixed_budget_line:
+    #             if not fixed_budg.bucket_type_id.is_vendor:
+    #                 raise UserError(_("Please Select Bucket Type to Vendor in fixed reduction budgeting tab"))
+
     # @api.constrains('product_fixed_budget_line','product_fixed_budget_line.bucket_type_id')
     # def bucket_type_allocation(self):
     #     if self.product_fixed_budget_line:
@@ -391,9 +407,9 @@ class ProductBudgetFixed(models.Model):
     
     # prod_fix_assigned_user_ids = fields.Many2many('res.users', 'prod_fix_budget_user', 'prod_fix_budget_usr_id', 'usr_id',string="Users Name",copy=False)
     prod_fix_assigned_user_id = fields.Many2one('res.users', string="User Name", copy=False)
-    
-    
-    
+
+
+
     @api.onchange('bucket_type_id')
     def _onchange_bucket_type_id(self):
         if self.bucket_type_id:
@@ -431,16 +447,16 @@ class ProductBudgetFixed(models.Model):
             if self.bucket_type_id.is_vendor:
                 self.prod_fix_vendor_id = False or None
                 self.prod_fix_assigned_user_id = False or None
-    
+
                 fetch_product_vendor = self.env['product.supplierinfo'].sudo().search([('product_tmpl_id','=',self.product_id.id)],limit=1,order = "id desc",)
-    
+
                 if not fetch_product_vendor:
                     self.assignable_status = 'assignable_at_inv'
                 else:
                     self.prod_fix_vendor_id = fetch_product_vendor.partner_id.id
                     self.assignable_status = 'assigned'
             else:
-    
+
                 self.prod_fix_vendor_id = False or None
                 self.prod_fix_assigned_user_id = False or None
                 self.assignable_status = 'assignable_at_inv'
@@ -462,7 +478,7 @@ class ProductBudgetFixed(models.Model):
                 else:
                     fetch_product_vendor = self.env['product.supplierinfo'].sudo().search(
                         [('product_tmpl_id', '=', self.product_id.id)], limit=1, order="id desc", )
-    
+
                     if not fetch_product_vendor:
                         if self.bucket_type_id.is_vendor:
                             self.assignable_status = 'assignable_at_inv'

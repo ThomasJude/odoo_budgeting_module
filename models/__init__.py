@@ -6,3 +6,4 @@ from . import bucket_type
 from . import bucket
 from . import bucket_dashboard
 from . import allocation_template
+from . import show_vendors

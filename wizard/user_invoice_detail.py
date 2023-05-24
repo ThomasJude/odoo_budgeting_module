@@ -87,21 +87,27 @@ class UserInvoiceDetail(models.TransientModel):
                                 else:
                                     self.env['detailed.items'].sudo().create(record_vals)
                             # print("if name in inv budget line",record_vals)
+                # invoice_line_item_list = set([invoice_line_item.product_id.name for invoice_line_item in invoice.invoice_line_ids])
+                # # for invoice_line_item in invoice.invoice_line_ids:
+                # print("DEVVVVVv",invoice_line_item_list)
 
                 for product_remaining_budget_line in invoice.product_remaining_budget_line:
                     if product_remaining_budget_line.budget_remaining_user_id.id == rec.user_id.id and product_remaining_budget_line.bucket_type_id.id == rec.bucket_type_id.id:
-                        if product_remaining_budget_line.product_id_budget:
+                        print("DEVVVVVv",product_remaining_budget_line.account_move_line_id.product_id.name)
+                        if product_remaining_budget_line.account_move_line_id:
+
                             record_vals_remain = dict(
                                 invoice_id = rec.invoice_name.id,
                                 bucket_type_id = product_remaining_budget_line.bucket_type_id.id,
                                 user_id = rec.user_id.id,
-                                item = product_remaining_budget_line.product_id_budget.id,
-                                amount = product_remaining_budget_line.amount
+                                main_product_name = product_remaining_budget_line.account_move_line_id.product_id.name,
+                                # item = product_remaining_budget_line.product_id_budget.id,
+                                amount = product_remaining_budget_line.amount,
+                                user_check = True,
                             )
                             existing_name_remain = self.env['detailed.items'].sudo().search(
                                 [('invoice_id', '=', rec.invoice_name.id), ('user_id', '=', rec.user_id.id),
-                                 ('bucket_type_id', '=', product_remaining_budget_line.bucket_type_id.id),
-                                 ('item', '=', product_remaining_budget_line.product_id_budget.id)])
+                                 ('bucket_type_id', '=', product_remaining_budget_line.bucket_type_id.id),('main_product_name' ,'=', product_remaining_budget_line.account_move_line_id.product_id.name)])
                             if existing_name_remain:
                                 total = 0
                                 for inv_budget_line in invoice.inv_budget_line:
@@ -110,42 +116,42 @@ class UserInvoiceDetail(models.TransientModel):
                                             total += inv_budget_line.amount
                                 for product_remaining_budget_line in invoice.product_remaining_budget_line:
                                     if product_remaining_budget_line.budget_remaining_user_id.id == rec.user_id.id and product_remaining_budget_line.bucket_type_id.id == rec.bucket_type_id.id:
-                                        if product_remaining_budget_line.product_id_budget.id == existing_name_remain.item.id:
+                                        if product_remaining_budget_line.account_move_line_id.product_id.name == existing_name_remain.main_product_name:
                                             total += product_remaining_budget_line.amount
-                                existing_name_remain.write({'amount': total})
+                                existing_name_remain.write({'amount': total,'user_check':True})
 
                             else:
                                 self.env['detailed.items'].sudo().create(record_vals_remain)
                             # print("if product in remaining budget line",record_vals_remain)
 
-                        else:
-                            if product_remaining_budget_line.name:
-                                record_vals_remain = dict(
-                                    invoice_id=rec.invoice_name.id,
-                                    bucket_type_id=product_remaining_budget_line.bucket_type_id.id,
-                                    user_id=rec.user_id.id,
-                                    name=product_remaining_budget_line.name,
-                                    amount=product_remaining_budget_line.amount
-                                )
-
-                                existing_name_remain = self.env['detailed.items'].sudo().search(
-                                    [('invoice_id', '=', rec.invoice_name.id), ('user_id', '=', rec.user_id.id),
-                                     ('bucket_type_id', '=', product_remaining_budget_line.bucket_type_id.id),
-                                     ('name', '=', product_remaining_budget_line.name)])
-                                if existing_name_remain:
-                                    total = 0
-                                    for inv_budget_line in invoice.inv_budget_line:
-                                        if inv_budget_line.budget_user_id.id == rec.user_id.id and inv_budget_line.bucket_type_id.id == rec.bucket_type_id.id:
-                                            if inv_budget_line.name == existing_name_remain.name:
-                                                total += inv_budget_line.amount
-                                    for product_remaining_budget_line in invoice.product_remaining_budget_line:
-                                        if product_remaining_budget_line.budget_remaining_user_id.id == rec.user_id.id and product_remaining_budget_line.bucket_type_id.id == rec.bucket_type_id.id:
-                                            if product_remaining_budget_line.name == existing_name_remain.name:
-                                                total += product_remaining_budget_line.amount
-                                    print("EXISTING NAME TOTAL",total)
-                                    existing_name_remain.write({'amount': total})
-                                else:
-                                    self.env['detailed.items'].sudo().create(record_vals_remain)
+                        # else:
+                        #     if product_remaining_budget_line.name:
+                        #         record_vals_remain = dict(
+                        #             invoice_id=rec.invoice_name.id,
+                        #             bucket_type_id=product_remaining_budget_line.bucket_type_id.id,
+                        #             user_id=rec.user_id.id,
+                        #             name=product_remaining_budget_line.name,
+                        #             amount=product_remaining_budget_line.amount
+                        #         )
+                        #
+                        #         existing_name_remain = self.env['detailed.items'].sudo().search(
+                        #             [('invoice_id', '=', rec.invoice_name.id), ('user_id', '=', rec.user_id.id),
+                        #              ('bucket_type_id', '=', product_remaining_budget_line.bucket_type_id.id),
+                        #              ('name', '=', product_remaining_budget_line.name)])
+                        #         if existing_name_remain:
+                        #             total = 0
+                        #             for inv_budget_line in invoice.inv_budget_line:
+                        #                 if inv_budget_line.budget_user_id.id == rec.user_id.id and inv_budget_line.bucket_type_id.id == rec.bucket_type_id.id:
+                        #                     if inv_budget_line.name == existing_name_remain.name:
+                        #                         total += inv_budget_line.amount
+                        #             for product_remaining_budget_line in invoice.product_remaining_budget_line:
+                        #                 if product_remaining_budget_line.budget_remaining_user_id.id == rec.user_id.id and product_remaining_budget_line.bucket_type_id.id == rec.bucket_type_id.id:
+                        #                     if product_remaining_budget_line.name == existing_name_remain.name:
+                        #                         total += product_remaining_budget_line.amount
+                        #             print("EXISTING NAME TOTAL",total)
+                        #             existing_name_remain.write({'amount': total})
+                        #         else:
+                        #             self.env['detailed.items'].sudo().create(record_vals_remain)
                             # print("if name in remaining budget line",record_vals)
 
                     # else:
