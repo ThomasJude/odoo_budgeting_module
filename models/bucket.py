@@ -27,6 +27,11 @@ class Bucket(models.Model):
             result.append((record.id, "{} ({})".format(record.name, record.bucket_amount)))
         return result
 
+    def unlink(self):
+        if not self.env.user.has_group('odoo_budgeting_module.bucket_delete_group'):
+            raise UserError("You don't have permission to delete this record.")
+        return super(Bucket,self).unlink()
+
 
     @api.constrains('bucket_status','bucket_type_id')
     def bucket_user_type_status(self):

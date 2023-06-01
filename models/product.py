@@ -166,11 +166,19 @@ class ProductTemplate(models.Model):
                                 })
         
         elif vals.get('standard_price') and not vals.get('product_fixed_budget_line') :
-            product_product_id = self.env['product.product'].sudo().search([('product_tmpl_id', '=', self.id)])
 
+            product_product_id = self.env['product.product'].sudo().search([('product_tmpl_id', '=', self.id)])
             prod_fixed_budget_lines = self.env['product.budget.fixed'].sudo().search([('product_id', '=', self.id)])
+            main_product = ""
+            cost_amount = 0
             for fixed_budgt in prod_fixed_budget_lines:
-                fixed_budgt.amount= product_product_id.standard_price
+                fixed_budgt.amount = product_product_id.standard_price
+                main_product = fixed_budgt.prod_id
+            if main_product:
+                for fixed_budgt_prod in main_product.product_fixed_budget_line:
+                    cost_amount += fixed_budgt_prod.amount
+                    print(cost_amount, "DDDdd")
+                main_product.standard_price = cost_amount
 
 
             prod_inv_line = self.env['invoice.budget.line'].sudo().search([('product_id_budget','=',self.id)])
