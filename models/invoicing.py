@@ -2789,7 +2789,17 @@ class AccountMove(models.Model):
                 if not existing_vendor:
                     vendor_bucket_line = self.env['vendor.line'].sudo().create(
                         {'vendor_line_bucket_id': vendor_inv_bucket.id, 'vendor_id': final_vendor_id.id})
-
+        if self.move_type == 'in_invoice':
+            print("inside in invoice")
+            if self.partner_id:
+                if self.invoice_line_ids:
+                    for move_lines in self.invoice_line_ids:
+                        if move_lines.bucket_ids.bucket_type_id.is_vendor:
+                            existing_vendor = self.env['vendor.line.released'].sudo().search(
+                                [("vendor_id", '=', self.partner_id.id)])
+                            if not existing_vendor:
+                                vendor_bucket_line = self.env['vendor.line.released'].sudo().create(
+                                    {'vendor_line_released_bucket_id': move_lines.bucket_ids.id, 'vendor_id': self.partner_id.id})
         return res
 
 
@@ -4692,13 +4702,17 @@ class AccountMoveLine(models.Model):
         if self.bucket_ids:
             if self.bucket_ids.bucket_type_id.is_vendor:
                 vendor_lines = self.env['vendor.line.released'].sudo().search([('vendor_line_released_bucket_id','=',self.bucket_ids.id)])
+                for rec in vendor_lines:
+                    rec.fetch_ven_bill_details()
             else:
                 vendor_lines = self.env['vendor.line.released.inside.user'].sudo().search([('vendor_line_released_bucket_id','=',self.bucket_ids.id)])
+                for rec in vendor_lines:
+                    rec.fetch_ven_bills_details_inside_user()
             for rec in vendor_lines:
                 record_vals = dict(
                     name = rec.vendor_id.id,
                     bucket_id = self.bucket_ids.id,
-                    vendor_amount = rec.total_amount_released
+                    vendor_amount = rec.total_amount_released - rec.total_amount_billed
                 )
 
                 existing_vendor = self.env['show.vendors'].sudo().search([('name','=',rec.vendor_id.id),('bucket_id','=',self.bucket_ids.id)])
