@@ -38,7 +38,7 @@
                             <field name="bill_details_visibility_line" >
 								<tree string="Bill Details" create="false" edit="false" duplicate="false" delete="false">
 	                                	<field name="vendor_line_released_id" invisible="1"/>
-						                <field name="bill_name"/>
+						                <field name="bill_name" widget="many2onebutton"/>
 						                <field name="bill_paid" invisible="1"/>
 						                <field name="vendor_amount_bill" sum="Total"/>
 						                <field name="vendor_amount_paid" sum="Total"/>
