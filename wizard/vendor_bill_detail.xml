@@ -14,6 +14,7 @@
                 <field name="vendor_line_released_id" invisible="1"/>
                 <field name="vendor_line_released_from_user_bucket_id" invisible="1"/>
                 <field name="bill_name" widget="many2onebutton"/>
+                
                 <field name="refund_bill_name"/>
                 <field name="bill_paid" invisible="1"/>
                 <field name="vendor_amount_bill" sum="Total"/>
