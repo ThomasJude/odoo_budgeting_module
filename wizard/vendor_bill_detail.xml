@@ -10,7 +10,7 @@
 		<field name="arch" type="xml">
 
 			<tree string="Vendor Bill Detail" create="false" edit="false" duplicate="false">
-				
+
                 <field name="vendor_line_released_id" invisible="1"/>
                 <field name="vendor_line_released_from_user_bucket_id" invisible="1"/>
                 <field name="bill_name" widget="many2onebutton"/>
@@ -25,10 +25,23 @@
                 <field name="debit" />
                 <field name="bucket_type_id" />
 
+                <button name="see_payments" type="object" icon="fa-dollar" string="Show Payments" class="btn btn-primary"/>
                 <button name="show_billed_items" type="object" class="btn btn-primary" string="show billed items"/>
 
             </tree>
         </field>
+        </record>
+
+<!--        //////////////////////////////////////////////////////////////////////////////////-->
+
+        <record id="action_show_custom_payments" model="ir.actions.act_window">
+            <field name="name">Payments</field>
+            <field name="res_model">account.payment</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="account.view_account_payment_tree"/>
+            <field name="domain">[]</field>
+<!--            <field name="context">{'default_move_type': 'entry', 'search_default_posted':1,'search_default_paid':1, 'view_no_maturity': True}</field>-->
+            <!--            <field name="target">current</field>-->
         </record>
 
 

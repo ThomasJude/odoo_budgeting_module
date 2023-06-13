@@ -22,7 +22,6 @@ class VendorBillDetail(models.TransientModel):
 
 
     def show_billed_items(self):
-        print("SVVVVVVVVVVBBBBBBBBBB")
         for record in self:
             fetch_bills = self.env['account.move'].sudo().search([('id', '=', record.bill_name.id)])
             if fetch_bills.state == 'posted' and fetch_bills.invoice_line_ids:
@@ -35,7 +34,6 @@ class VendorBillDetail(models.TransientModel):
                         vendor_id = self.vendor_id
                     existing_bill_item = self.env['vendor.bill.items'].sudo().search([('bill_id','=',record.bill_name.id),('vendor_id','=',record.vendor_id.id),('bucket_type_id','=',record.bucket_type_id.id),('name','=',move_line_product.product_id.product_tmpl_id.id)])
                     # vendor_line_released_id = self.search([('vendor_id','=',vendor_id.partner_id.id)
-                    print("XXXXXXXXXXXXXXXXXXXXXXXX",record.vendor_id.id,vendor_id.id,existing_bill_item)
                     if not existing_bill_item and record.vendor_id.id == vendor_id.id:
                         if move_line_product.product_id:
                             record_vals = dict(
@@ -53,14 +51,12 @@ class VendorBillDetail(models.TransientModel):
                                 description=move_line_product.name,
                                 amount=move_line_product.price_subtotal
                             )
-                        print("inside create")
                         self.env['vendor.bill.items'].sudo().create(record_vals)
                     elif existing_bill_item and record.vendor_id.id == vendor_id.id:
                         total = 0
                         for product in fetch_bills.invoice_line_ids:
                             if product.product_id.product_tmpl_id.id == move_line_product.product_id.product_tmpl_id.id:
                                 total += product.price_subtotal
-                            print("SCXCCCCC",total)
                         existing_bill_item.write({'amount':total})
             domain = [('vendor_id', '=', record.vendor_id.id), ('bucket_type_id', '=', record.bucket_type_id.id),
                       ('bill_id', '=', record.bill_name.id)]
@@ -75,3 +71,12 @@ class VendorBillDetail(models.TransientModel):
                 'res_model': 'vendor.bill.items',
             }
             return vals
+
+
+
+    def see_payments(self):
+        for record in self:
+            action = self.env.ref('odoo_budgeting_module.action_show_custom_payments').read()[0]
+            domain = [('ref', '=',record.bill_name.name)]  # Replace 'field_name' with the actual field name and self.field_value with your dynamic value
+            action.update({'domain': domain})
+            return action

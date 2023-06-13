@@ -24,7 +24,7 @@ class Bucket(models.Model):
     def name_get(self):
         result = []
         for record in self:
-            result.append((record.id, "{} ({})".format(record.name, record.bucket_amount)))
+            result.append((record.id, "{} ({})".format(record.name, round(record.bucket_amount,2))))
         return result
 
     def unlink(self):
@@ -110,6 +110,9 @@ class Bucket(models.Model):
 
         if self.vendor_line_released:
             for rec in self.vendor_line_released:
+                if rec.vendor_line_released_bucket_id.bucket_amount == 0.0 or rec.vendor_line_released_bucket_id.bucket_amount == -0.0:
+                    rec.vendor_line_released_bucket_id.bucket_amount = 0.0
+
 
                 all_vendor_invoice_lines = self.env['invoice.budget.line'].sudo().search(
                     [('budget_inv_vendor_id.id', '=', rec.vendor_id.id)])
@@ -278,7 +281,8 @@ class Bucket(models.Model):
 
         if self.user_line_released:
             for rec in self.user_line_released:
-
+                if rec.user_line_released_bucket_id.bucket_amount == 0.0 or rec.user_line_released_bucket_id.bucket_amount == -0.0:
+                    rec.user_line_released_bucket_id.bucket_amount = 0.0
                 all_user_invoice_lines = self.env['product.budget.remaining'].sudo().search(
                     [('budget_remaining_user_id.id', '=', rec.user_id.id)])
 
@@ -371,7 +375,10 @@ class Bucket(models.Model):
                 # ////////////////////////////////////////////////////////////////////////
 
         if self.vendor_line_released_inside_user:
+
             for rec in self.vendor_line_released_inside_user:
+                if rec.vendor_line_released_bucket_id.bucket_amount == 0.0 or rec.vendor_line_released_bucket_id.bucket_amount == -0.0:
+                    rec.vendor_line_released_bucket_id.bucket_amount = 0.0
                 all_bill_lines = self.env['account.move'].sudo().search(
                     [('partner_id', '=', rec.vendor_id.id),('move_type','=','in_invoice')])
 
