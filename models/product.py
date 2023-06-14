@@ -52,41 +52,10 @@ class ProductTemplate(models.Model):
                                         'allocate_percent': remaining_allocation.allocate_percent,
                                         'allocation_temp_id':self.remaining_allocation_temp.id
                                     }])
-        print('lst',lst)
         self.product_allocate_budget_line = False
         self.write({'product_allocate_budget_line' : lst})
         return 
     
-    
-    # @api.onchange('remaining_allocation_temp')
-    # def remaining_allocation_temp_data_val(self):
-    #     print ("aaaaaaaaaaaaaaaaaaaaa",self.remaining_allocation_temp.name)
-    #
-    #     if self.remaining_allocation_temp:
-    #         if self.remaining_allocation_temp.allocation_temp_line:
-    #             for remaining_allocation in self.remaining_allocation_temp.allocation_temp_line:
-    #                 remaining_budget_data = self.env['product.budget.allocate'].sudo().create({
-    #                                 'product_id': remaining_allocation.product_id.id,
-    #                                 'name': remaining_allocation.desc,
-    #                                 'bucket_type_id': remaining_allocation.bucket_type.id,
-    #                                 'assignable_status': remaining_allocation.assignable_status,
-    #                                 'is_vendor': remaining_allocation.is_vendor,
-    #                                 'prod_allocate_id': self.id,
-    #                                 'prod_remaining_budget_assigned_user_id': remaining_allocation.allocate_user_id.id,
-    #                                 'allocate_percent': remaining_allocation.allocate_percent,
-    #                                 'allocation_temp_id':self.remaining_allocation_temp.id
-    #                             })
-    #
-    #     lst=[]
-    #     if self.product_allocate_budget_line:
-    #         for all in self.product_allocate_budget_line:
-    #             if all.allocation_temp_id.id != self.remaining_allocation_temp.id:
-    #                 lst.append(all)
-    #
-    #
-    #         self.product_allocate_budget_line.remove(lst)
-            
-                    
     
     @api.onchange('product_fixed_budget_line')
     def calculate_remaining_check(self):
@@ -115,15 +84,12 @@ class ProductTemplate(models.Model):
                 
                 product.amount= self.standard_price
                 invoices_lines = self.env['account.move.line'].sudo().search([('product_id', '=', product_product_id.id)])
-                # print("NNNNNNNNNNNNNNNNNNN",invoices_lines.move_id.state)
                 for invoice in invoices_lines:
                     if invoice.move_id.state == 'draft':
                         for inv_budget_line in invoice.move_id.inv_budget_line:
-                            # print('SAADDDDD',inv_budget_line.account_move_line_id,invoice.id)
                             if inv_budget_line.account_move_line_id.id == invoice.id:
                                 inv_budget_line.unlink()
                         for remain_budget_line in invoice.move_id.product_remaining_budget_line:
-                            # print('SAADDDDD',remain_budget_line.account_move_line_id,invoice.id)
                             if remain_budget_line.account_move_line_id.id == invoice.id:
                                 remain_budget_line.unlink()
                         if invoice.product_id and invoice.product_id.product_tmpl_id and invoice.product_id.product_fixed_budget_line:
@@ -177,13 +143,10 @@ class ProductTemplate(models.Model):
             if main_product:
                 for fixed_budgt_prod in main_product.product_fixed_budget_line:
                     cost_amount += fixed_budgt_prod.amount
-                    print(cost_amount, "DDDdd")
                 main_product.standard_price = cost_amount
 
 
             prod_inv_line = self.env['invoice.budget.line'].sudo().search([('product_id_budget','=',self.id)])
-            # for all_invoices in prod_inv_line:
-            # print("product in fixed inv lines",prod_inv_line)
             if prod_fixed_budget_lines:
                 for inv_product in prod_fixed_budget_lines:
                     moveline_product_id = self.env['product.product'].sudo().search(
@@ -191,14 +154,11 @@ class ProductTemplate(models.Model):
 
                     invoices_lines = self.env['account.move.line'].sudo().search([('product_id', '=', moveline_product_id.id)])
                     for invoice in invoices_lines:
-                        print("jjjjjjjjjjjjj", invoice.id)
                         if invoice.move_id.state == 'draft':
                             for inv_budget_line in invoice.move_id.inv_budget_line:
-                                # print('SAADDDDD',inv_budget_line.account_move_line_id,invoice.id)
                                 if inv_budget_line.account_move_line_id.id == invoice.id:
                                     inv_budget_line.unlink()
                             for remain_budget_line in invoice.move_id.product_remaining_budget_line:
-                                # print('SAADDDDD',remain_budget_line.account_move_line_id,invoice.id)
                                 if remain_budget_line.account_move_line_id.id == invoice.id:
                                     remain_budget_line.unlink()
                             if invoice.product_id and invoice.product_id.product_tmpl_id and invoice.product_id.product_fixed_budget_line:
@@ -212,13 +172,11 @@ class ProductTemplate(models.Model):
                                         'assignable_status': fix_budget_line.assignable_status,
                                         'amount': fix_budget_line.amount * invoice.quantity,
                                         'is_vendor': fix_budget_line.is_vendor,
-                                        # 'bucket_user': fix_budget_line.bucket_user,
                                         # 'budget_inv_vendor_ids': [(6,0, fix_budget_line.prod_fix_vendor_ids.ids)] or [],
                                         'budget_inv_vendor_id': fix_budget_line.prod_fix_vendor_id.id,
                                         # 'budget_user_ids':[(6,0, fix_budget_line.prod_fix_assigned_user_ids.ids)] or [],
                                         'budget_user_id': fix_budget_line.prod_fix_assigned_user_id.id,
                                         'prod_priority': fix_budget_line.prod_priority,
-                                        # 'fixed_budget_line_id': fix_budget_line.id
                                     })
                             if invoice.product_id and invoice.product_id.product_tmpl_id and invoice.product_id.product_allocate_budget_line:
                                 for allocate_budget_line in inv_product.prod_id.product_allocate_budget_line:
@@ -227,10 +185,8 @@ class ProductTemplate(models.Model):
                                         'name': allocate_budget_line.name,
                                         'prod_remaining_id': invoice.move_id.id,
                                         'account_move_line_id': invoice.id,
-
                                         'bucket_type_id': allocate_budget_line.bucket_type_id.id,
                                         'assignable_status': allocate_budget_line.assignable_status,
-                                        # 'bucket_user': allocate_budget_line.bucket_user,
                                         'is_vendor': allocate_budget_line.is_vendor,
                                         # 'budget_inv_remaining_vendor_ids': [(6,0, allocate_budget_line.prod_remaining_budget_vendor_ids.ids)] or [],
                                         'budget_inv_remaining_vendor_id': allocate_budget_line.prod_remaining_budget_vendor_id.id,
@@ -264,30 +220,21 @@ class ProductTemplate(models.Model):
                                 'assignable_status': fix_budget_line.assignable_status,
                                 'amount': fix_budget_line.amount * invoice.quantity,
                                 'is_vendor':fix_budget_line.is_vendor,
-                                # 'bucket_user': fix_budget_line.bucket_user,
-                                # 'budget_inv_vendor_ids': [(6,0, fix_budget_line.prod_fix_vendor_ids.ids)] or [],
                                 'budget_inv_vendor_id': fix_budget_line.prod_fix_vendor_id.id,
-                                # 'budget_user_ids':[(6,0, fix_budget_line.prod_fix_assigned_user_ids.ids)] or [],
                                 'budget_user_id': fix_budget_line.prod_fix_assigned_user_id.id,
                                 'prod_priority': fix_budget_line.prod_priority,
-                                # 'fixed_budget_line_id': fix_budget_line.id
                             })
                     if invoice.product_id and invoice.product_id.product_tmpl_id and invoice.product_id.product_allocate_budget_line:
                         for allocate_budget_line in self.product_allocate_budget_line:
-                            print("XXXXXXCCCCCCC",allocate_budget_line.name,allocate_budget_line.amount)
                             remaining_budget_data = self.env['product.budget.remaining'].sudo().create({
                                 'product_id_budget': allocate_budget_line.product_id.id,
                                 'name': allocate_budget_line.name,
                                 'prod_remaining_id': invoice.move_id.id,
                                 'account_move_line_id': invoice.id,
-
                                 'bucket_type_id': allocate_budget_line.bucket_type_id.id,
                                 'assignable_status': allocate_budget_line.assignable_status,
-                                # 'bucket_user': allocate_budget_line.bucket_user,
                                 'is_vendor':allocate_budget_line.is_vendor,
-                                # 'budget_inv_remaining_vendor_ids': [(6,0, allocate_budget_line.prod_remaining_budget_vendor_ids.ids)] or [],
                                 'budget_inv_remaining_vendor_id': allocate_budget_line.prod_remaining_budget_vendor_id.id,
-                                # 'budget_remaining_user_ids':[(6,0, allocate_budget_line.prod_remaining_budget_assigned_user_ids.ids)] or [],
                                 'budget_remaining_user_id': allocate_budget_line.prod_remaining_budget_assigned_user_id.id,
                                 'allocate_percent': allocate_budget_line.allocate_percent,
                                 'amount': allocate_budget_line.amount * invoice.quantity
@@ -295,27 +242,6 @@ class ProductTemplate(models.Model):
 
         return res
     
-    
-    # @api.constrains('product_fixed_budget_line,product_fixed_budget_line.prod_priority')
-    # def prod_priority_val(self):
-    #     print ("2222222222222222")
-    #     lst = []
-    #     for rec in self:
-    #         if self.product_fixed_budget_line:
-    #             for fixed_item in self.product_fixed_budget_line:
-    #                 if fixed_item.prod_priority not in lst:
-    #                     lst.append(fixed_item.prod_priority)
-    #                 else:
-    #                     raise UserError(_('Product priority should be unique in Fixed Reduction budgeting tab'))
-    
-    
-    # @api.constrains('product_fixed_budget_line,product_fixed_budget_line.prod_priority')
-    # def prod_priority_val(self):
-    #     total = 0
-    #     for rec in self:
-    #         obj = self.env['product.budget.fixed'].search([('id','!=',rec.id),('prod_priority','=',rec.prod_priority)])
-    #         if obj:
-    #             raise UserError(_('Product priority should be unique in Fixed Reduction budgeting tab'))
     
     @api.constrains('product_fixed_budget_line',"list_price")
     def selling_amount_check(self):
@@ -362,23 +288,6 @@ class ProductTemplate(models.Model):
                     if not rem_budg.prod_remaining_budget_assigned_user_id:
                         raise UserError(_("Please add User for assigned status Remaining Allocation budgeting tab "))
 
-    # @api.constrains('product_fixed_budget_line','product_fixed_budget_line.bucket_type_id',
-    #                 )
-    # def only_vendor_in_fixed_allocation(self):
-    #     if self.product_fixed_budget_line:
-    #         for fixed_budg in self.product_fixed_budget_line:
-    #             if not fixed_budg.bucket_type_id.is_vendor:
-    #                 raise UserError(_("Please Select Bucket Type to Vendor in fixed reduction budgeting tab"))
-
-    # @api.constrains('product_fixed_budget_line','product_fixed_budget_line.bucket_type_id')
-    # def bucket_type_allocation(self):
-    #     if self.product_fixed_budget_line:
-    #         for fixed_budg in self.product_fixed_budget_line:
-    #             if not fixed_budg.bucket_type_id:
-    #                 raise UserError(_("Please add bucket type in fixed reduction budgeting tab"))
-                    
-    
-    
     
     @api.constrains('product_allocate_budget_line')
     def total_percentage(self):
@@ -405,15 +314,12 @@ class ProductBudgetFixed(models.Model):
         selection=[
             ('line_section', "Section"),
             ('line_note', "Note"),
-        ],
-        default=False)
-    
+        ],default=False)
+        
     bucket_type_id = fields.Many2one('bucket.type','Bucket Type')
     is_vendor = fields.Boolean(string='Is Vendor')
-    # bucket_user= fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
     prod_fix_vendor_id = fields.Many2one('res.partner', string='Name', copy=False)
     
-    # prod_fix_assigned_user_ids = fields.Many2many('res.users', 'prod_fix_budget_user', 'prod_fix_budget_usr_id', 'usr_id',string="Users Name",copy=False)
     prod_fix_assigned_user_id = fields.Many2one('res.users', string="User Name", copy=False)
 
 
@@ -494,6 +400,8 @@ class ProductBudgetFixed(models.Model):
                         if self.bucket_type_id.is_vendor:
                             self.prod_fix_vendor_id = fetch_product_vendor.partner_id.id
                         self.assignable_status = 'assigned'
+                        
+                        
 
     @api.onchange('bucket_type_id')
     def _onchange_bucket_type(self):
@@ -502,11 +410,6 @@ class ProductBudgetFixed(models.Model):
             self.prod_fix_assigned_user_id = False or None
             self.assignable_status = False
             
-    # @api.onchange('prod_fix_vendor_ids')
-    # def _onchange_prod_fix_vendor_ids(self):
-    #     if self.prod_fix_vendor_ids:
-    #         if not self.assignable_status:
-    #             raise UserError(_('1st select the Assignable status'))
 
     @api.onchange('prod_fix_vendor_id')
     def _onchange_prod_fix_vendor_id(self):
@@ -514,11 +417,6 @@ class ProductBudgetFixed(models.Model):
             if not self.assignable_status:
                 raise UserError(_('1st select the Assignable status'))
             
-    # @api.onchange('prod_fix_assigned_user_ids')
-    # def _onchange_prod_fix_assigned_user_ids(self):
-    #     if self.prod_fix_assigned_user_ids:
-    #         if not self.assignable_status:
-    #             raise UserError(_('1st select the Assignable status'))
 
     @api.onchange('prod_fix_assigned_user_id')
     def _onchange_prod_fix_assigned_user_id(self):
@@ -541,16 +439,11 @@ class ProductBudgetAllocate(models.Model):
     
     bucket_type_id = fields.Many2one('bucket.type','Bucket Type')
     is_vendor = fields.Boolean(string='Is Vendor')
-    # bucket_user= fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
-    # vendor_ids= fields.Many2many('res.partner',string="Bucket Item")
-    # prod_remaining_budget_vendor_ids = fields.Many2many(
-    #     'res.partner', 'prod_remaining_budget_budget_vendor', 'prod_remaining_budget_budget_id', 'vendor_id',
-    #     string='Vendors Name', copy=False)
     prod_remaining_budget_vendor_id = fields.Many2one('res.partner', string="Vendors Name", copy=False)
-    # prod_remaining_budget_assigned_user_ids= fields.Many2many('res.users', 'prod_remaining_budget_budget_user', 'prod_remaining_budget_budget_usr_id', 'usr_id',string="Users Name",copy=False)
     amount = fields.Float("amount")
     allocation_temp_id= fields.Many2one('allocation.template', string="Template", copy=False)
     prod_remaining_budget_assigned_user_id = fields.Many2one('res.users', string="Name", copy=False)
+    
     
     @api.onchange('product_id')
     def fetch_vendors(self):
@@ -590,14 +483,12 @@ class ProductBudgetAllocate(models.Model):
                 self.is_vendor = True
                 self.prod_remaining_budget_vendor_id = False or None
                 self.prod_remaining_budget_assigned_user_id = False or None
-                # self.assignable_status = False
                 fetch_product_vendor = self.env['product.supplierinfo'].sudo().search(
                     [('product_tmpl_id', '=', self.product_id.id)], limit=1, order="id desc", )
 
                 if not fetch_product_vendor:
                     self.assignable_status = 'assignable_at_inv'
                 else:
-                    print("else fetch_product_vendor",fetch_product_vendor.partner_id.name)
                     self.prod_remaining_budget_vendor_id = fetch_product_vendor.partner_id.id
                     self.assignable_status = 'assigned'
             else:
@@ -631,8 +522,6 @@ class ProductBudgetAllocate(models.Model):
                     if self.bucket_type_id.is_vendor:
                         self.prod_remaining_budget_vendor_id = fetch_product_vendor.partner_id.id
                     self.assignable_status = 'assigned'
-            
-            
             
             
     @api.onchange('prod_remaining_budget_vendor_id')
@@ -674,7 +563,6 @@ class ProductSupplierinfo(models.Model):
             for allocate_lines in product_in_all_allocate_line:
                 allocate_lines.prod_remaining_budget_vendor_id = seller_id.partner_id.id
         else:
-            print("inside delete all vendors in supplier")
             product_in_all_fixed_line = self.env['product.budget.fixed'].sudo().search(
                 [('product_id', '=', product_template_id.id), ('is_vendor', '=', True),
                  ('assignable_status', '=', 'assigned')])
@@ -698,7 +586,6 @@ class ProductSupplierinfo(models.Model):
     def write(self, vals):
         res = super(ProductSupplierinfo,self).write(vals)
         all_lines = self.env['product.supplierinfo'].sudo().search([('product_tmpl_id','=',self.product_tmpl_id._origin.id)],order='id desc',limit=1)
-        print("RRRRRRRRRRRR",all_lines)
         if all_lines.partner_id:
             product_in_all_fixed_line = self.env['product.budget.fixed'].sudo().search(
                 [('product_id', '=', self.product_tmpl_id._origin.id), ('is_vendor', '=', True),

@@ -7,10 +7,7 @@ class BucketType(models.Model):
     _name = "bucket.type"
     
     name = fields.Char(string='Name')
-    # bucket_amount = fields.Float(string='Bucket Amount')
     is_vendor = fields.Boolean(string='Is Vendor')
-    # user_type = fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
-    # bucket_status = fields.Selection([('invoiced','Invoiced'),('released','Released')], "Bucket Status")
 
     def unlink(self):
         if not self.env.user.has_group('odoo_budgeting_module.bucket_delete_group'):

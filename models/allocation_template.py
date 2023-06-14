@@ -19,6 +19,8 @@ class AllocationTemplate(models.Model):
             if obj:
                 if record.is_default_temp:
                     raise UserError(_('There is already a Default allocation template exist'))
+                
+                
     
     @api.constrains('allocation_temp_line')
     def total_percentage_val(self):
@@ -29,8 +31,6 @@ class AllocationTemplate(models.Model):
                     total += lines.allocate_percent
             if total!=100:
                 raise UserError(_("Total Percentage should be 100"))
-    
-    
     
     
 class AllocationTemplateLine(models.Model): 
@@ -76,19 +76,5 @@ class AllocationTemplateLine(models.Model):
             if not self.assignable_status:
                 raise UserError(_('1st select the Assignable status'))
     
-    # @api.onchange('product_id')
-    # def fetch_vendors_data(self):
-    #     if self.product_id :
-    #         fetch_product_vendor = self.env['product.supplierinfo'].sudo().search(
-    #             [('product_tmpl_id', '=', self.product_id.id)], limit=1,order = "id desc",)
-    #         vendor_bucket_type = self.env['bucket.type'].sudo().search([('is_vendor', '=', True)])
-    #         if fetch_product_vendor:
-    #             self.bucket_type_id = vendor_bucket_type.id
-    #             # self.prod_remaining_budget_vendor_id = fetch_product_vendor.partner_id.id
-    #             self.assignable_status = 'assigned'
-    #         else:
-    #             self.bucket_type_id = vendor_bucket_type.id
-    #             self.assignable_status = 'assignable_at_inv'
-
 
     

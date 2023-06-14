@@ -117,6 +117,7 @@ class Bucket(models.Model):
                     total_invoiced_amount += total_amount_inv
                 rec.write(
                     {'total_amount_released': total_released_amount, "total_amount_invoiced": total_invoiced_amount})
+                
 
 
     def _get_vendor_line_released_amount(self):
@@ -204,6 +205,8 @@ class Bucket(models.Model):
                 {'total_amount_released': total_released_amount, 'total_amount_billed': total_released_bill_amount,
                  "total_amount_billed_due": total_bill_due_amount,
                  "final_amount": total_released_amount - total_released_bill_amount})
+            
+            
 
     def _get_user_line_amount(self):
         for rec in self.user_line:
@@ -256,6 +259,8 @@ class Bucket(models.Model):
                     total_invoiced_amount += total_amount_inv
             rec.write(
                 {'total_amount_released': total_released_amount, "total_amount_invoiced": total_invoiced_amount})
+            
+            
 
     def _get_user_line_released_amount(self):
         for rec in self.user_line_released:
@@ -321,6 +326,8 @@ class Bucket(models.Model):
                     rec.write(
                         {"total_amount_refunded": total_refunded_amount, 'total_amount_released': total_released_amount,
                          "total_amount_invoiced": total_invoiced_amount})
+                    
+                    
 
 
     def _get_vendor_line_released_inside_user(self):
@@ -383,6 +390,8 @@ class Bucket(models.Model):
                                 total_ref_bill_amount += move_line_product.price_subtotal - move_line_product.refund_residual_amount
             rec.write({'total_amount_refunded': total_ref_bill_amount,
                        })
+            
+            
 
 class VendorLine(models.Model):
     _name = "vendor.line"
@@ -393,6 +402,7 @@ class VendorLine(models.Model):
     total_amount_invoiced = fields.Float('Amount Due')
     total_amount_billed = fields.Float('Amount Billed')
     total_amount_billed_due = fields.Float('Billed Due')
+    
 
     def fetch_vendor_unpaid_invoice_details(self,final_invoice_no):
         for invoices in final_invoice_no:
@@ -458,11 +468,11 @@ class VendorLine(models.Model):
                             create_record = self.env['vendor.invoice.detail'].sudo().create({"vendor_id":self.vendor_id.id,'invoice_name':invoices.id,"bucket_type_id":self.vendor_line_bucket_id.bucket_type_id.id,'vendor_amount_invoiced':total_vendor_amount_per_invoice})
 
 
+
+
     def fetch_vendor_paid_invoice_details(self,final_paid_invoice_no):
         for paid_invoices in final_paid_invoice_no:
             if paid_invoices.state == 'posted':
-
-                # vendor paid Invoices
                 if paid_invoices.payment_state == 'partial':
                     total_vendor_amount = 0.0
                     total_amount_inv = 0.0
@@ -545,6 +555,8 @@ class VendorLine(models.Model):
                     else:
                         existing_record.write({'vendor_amount_released': total_vendor_amount_per_invoice,
                              'vendor_amount_invoiced': 0.0,'released':True})
+                        
+                        
 
     def fetch_vendor_invoice_details(self):
         all_vendor_invoice_lines = self.env['invoice.budget.line'].sudo().search(
@@ -560,7 +572,6 @@ class VendorLine(models.Model):
         rem_duplicate_invoice_no_set = set(all_invoices)
         final_invoice_no = list(rem_duplicate_invoice_no_set)
         self.fetch_vendor_unpaid_invoice_details(final_invoice_no)
-
         all_vendor_invoice_lines = self.env['invoice.budget.line'].sudo().search(
             [('budget_inv_vendor_id.id', '=', self.vendor_id.id), ('released', '=', True)])
         all_vendor_remaining_lines = self.env['product.budget.remaining'].sudo().search(
@@ -576,9 +587,6 @@ class VendorLine(models.Model):
         rem_duplicate_paid_invoice_no_set = set(all_paid_invoices)
         final_paid_invoice_no = list(rem_duplicate_paid_invoice_no_set)
         self.fetch_vendor_paid_invoice_details(final_paid_invoice_no)
-
-
-
         return {
             'name': _('Show In Detail'),
             'domain': [('vendor_id', '=', self.vendor_id.id),('released','=',False),('vendor_amount_invoiced','>',0.0)],
@@ -588,6 +596,7 @@ class VendorLine(models.Model):
             'target':'new',
             'res_model': 'vendor.invoice.detail',
         }
+        
 
 
 class VendorLineReleased(models.Model):
@@ -603,10 +612,7 @@ class VendorLineReleased(models.Model):
     final_amount = fields.Float("Final Amount")
 
 
-
-
     def fetch_vendor_paid_bills(self,fetch_bills):
-
         for record in fetch_bills:
             if record.partner_id.id == self.vendor_id.id:
                 if record.state == 'posted' and record.payment_state in ("paid", "in_payment"):
@@ -614,7 +620,6 @@ class VendorLineReleased(models.Model):
                         visited_move_line_product = set()
                         for move_line_product in record.invoice_line_ids:
                             visited_move_line_product.add(move_line_product.product_id.id)
-
                             if move_line_product.product_id:
                                 vendor_id = self.env["product.supplierinfo"].sudo().search(
                                     [('product_tmpl_id', '=', move_line_product.product_id.product_tmpl_id.id)],
@@ -653,7 +658,6 @@ class VendorLineReleased(models.Model):
                         remaining_bill_amount = 0
                         for move_line_product in record.invoice_line_ids:
                             visited_move_line_product.add(move_line_product.product_id.id)
-
                             if move_line_product.bill_residual_amount != 0.0:
                                 if not move_line_product.is_bill_paid:
                                     if move_line_product.product_id:
@@ -707,17 +711,15 @@ class VendorLineReleased(models.Model):
                                         vendor_id = self.vendor_id
                                     existing_bill_rec = self.env['vendor.bill.detail'].sudo().search(
                                         [('bill_name', '=', record.id), ('vendor_id', '=', vendor_id.id),
-                                         (
-                                         'bucket_type_id', '=', self.vendor_line_released_bucket_id.bucket_type_id.id)])
+                                         ('bucket_type_id', '=', self.vendor_line_released_bucket_id.bucket_type_id.id)])
+                                         
                                     vendor_line_released_id = self.search([('vendor_id', '=', vendor_id.id)])
                                     total_amount_paid = 0
                                     if move_line_product.product_id.id in visited_move_line_product and move_line_product.is_partial:
                                         total_amount_paid += move_line_product.price_subtotal
                                     elif move_line_product.is_partial and not move_line_product.is_bill_paid:
                                         total_amount_paid += move_line_product.price_subtotal - move_line_product.bill_residual_amount
-
                                     if not existing_bill_rec:
-
                                         self.env['vendor.bill.detail'].sudo().create({
                                             'bill_name': record.id,
                                             'vendor_id': vendor_id.id,
@@ -728,9 +730,7 @@ class VendorLineReleased(models.Model):
                                             'bucket_type_id': self.vendor_line_released_bucket_id.bucket_type_id.id
                                         })
                                     else:
-
-                                        existing_bill_rec.write({'vendor_amount_paid': total_amount_paid,
-                                                                 'bill_paid': move_line_product.is_bill_paid})
+                                        existing_bill_rec.write({'vendor_amount_paid': total_amount_paid,'bill_paid': move_line_product.is_bill_paid})
                             else:
                                 if move_line_product.is_bill_paid:
                                     if move_line_product.product_id:
@@ -757,11 +757,12 @@ class VendorLineReleased(models.Model):
                                             'bucket_type_id': self.vendor_line_released_bucket_id.bucket_type_id.id
                                         })
                                     else:
-
                                         existing_bill_rec.write({
                                                                     'vendor_amount_paid': move_line_product.price_subtotal - move_line_product.bill_residual_amount,
                                                                     'vendor_amount_bill': 0.0,
                                                                     'bill_paid': move_line_product.is_bill_paid, })
+                                        
+                                        
 
     def fetch_vendor_refunded_bills(self,fetch_refunded_bills):
         for record in fetch_refunded_bills:
@@ -810,7 +811,6 @@ class VendorLineReleased(models.Model):
                         total_refund = 0
                         for move_line_product in record.reversed_entry_id.invoice_line_ids:
                             visited_move_line_product.add(move_line_product.product_id.id)
-
                             if move_line_product.bill_residual_amount != 0.0:
                                 if not move_line_product.is_bill_paid:
                                     if move_line_product.product_id:
@@ -838,10 +838,7 @@ class VendorLineReleased(models.Model):
                                     elif not move_line_product.product_id.id in visited_move_line_product and move_line_product.refund_residual_amount != move_line_product.price_subtotal:
                                         total_amount_paid += move_line_product.price_subtotal - move_line_product.refund_residual_amount
                                         remaining_bill_amount += move_line_product.refund_residual_amount
-
-
                                     if not existing_bill_rec:
-
                                         self.env['vendor.bill.detail'].sudo().create({
                                             'bill_name': record.id,
                                             'vendor_id': vendor_id.id,
@@ -872,9 +869,7 @@ class VendorLineReleased(models.Model):
                                         total_amount_paid += move_line_product.price_subtotal
                                     elif move_line_product.is_partial and not move_line_product.is_bill_paid:
                                         total_amount_paid += move_line_product.price_subtotal - move_line_product.bill_residual_amount
-
                                     if not existing_bill_rec:
-
                                         self.env['vendor.bill.detail'].sudo().create({
                                             'bill_name': record.id,
                                             'vendor_id': vendor_id.id,
@@ -885,7 +880,6 @@ class VendorLineReleased(models.Model):
                                             'bucket_type_id': self.vendor_line_released_bucket_id.bucket_type_id.id
                                         })
                                     else:
-
                                         existing_bill_rec.write({'vendor_amount_paid': total_amount_paid,
                                                                  'bill_paid': move_line_product.is_bill_paid})
                             else:
@@ -913,7 +907,6 @@ class VendorLineReleased(models.Model):
                                             'bucket_type_id': self.vendor_line_released_bucket_id.bucket_type_id.id
                                         })
                                     else:
-
                                         existing_bill_rec.write({
                                                                     'vendor_amount_paid': move_line_product.price_subtotal - move_line_product.bill_residual_amount,
                                                                     'vendor_amount_bill': 0.0,
@@ -950,6 +943,8 @@ class VendorLineReleased(models.Model):
                                             'vendor_amount_bill': 0.0,
                                             'vendor_bill_amount_refunded': total_refund,
                                             'bill_paid': move_line_product.is_bill_paid, })
+                                        
+                                        
 
 
     def fetch_ven_bill_details(self):
@@ -957,7 +952,6 @@ class VendorLineReleased(models.Model):
         fetch_refunded_bills = self.env['account.move'].sudo().search([('move_type','=',"in_refund")])
         self.fetch_vendor_paid_bills(fetch_bills)
         self.fetch_vendor_refunded_bills(fetch_refunded_bills)
-
         domain = [('vendor_id','=',self.vendor_id.id),("debit",'=',False),('bucket_type_id', '=', self.vendor_line_released_bucket_id.bucket_type_id.id)]
 
         vals = {
@@ -970,12 +964,12 @@ class VendorLineReleased(models.Model):
             'res_model': 'vendor.bill.detail',
         }
         return vals
+    
 
 
     def fetch_vendor_unpaid_invoice_details_rel(self,final_invoice_no):
         for invoices in final_invoice_no:
             refund_invoice_id = self.env["account.move"].sudo().search([('reversed_entry_id', '=', invoices.id)])
-
             if invoices.state == 'posted' and invoices.move_type == "out_invoice" and not refund_invoice_id:
                 if invoices.payment_state == 'partial':
                     total_vendor_amount = 0.0
@@ -1015,7 +1009,6 @@ class VendorLineReleased(models.Model):
                                  'vendor_amount_invoiced':total_vendor_amount_part_paid_per_invoice,'vendor_amount_released':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice,'partial_due_amount':total_vendor_amount_part_paid_per_invoice,'partial_paid_amount':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice}
                             create_record = self.env['vendor.invoice.detail'].sudo().create(vals)
                     else:
-
                         if existing_record_2:
                             existing_record_2.write({'released':True,'vendor_amount_invoiced':0.0,'partial_due_amount':0.0,'partial_paid_amount':0.0,'vendor_amount_released':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice})
                         else:
@@ -1037,11 +1030,12 @@ class VendorLineReleased(models.Model):
                     if not existing_record:
                         create_record = self.env['vendor.invoice.detail'].sudo().create({"vendor_id":self.vendor_id.id,'invoice_name':invoices.id,"bucket_type_id":self.vendor_line_released_bucket_id.bucket_type_id.id,'vendor_amount_invoiced':total_vendor_amount_per_invoice})
 
+    
+    
     def fetch_vendor_paid_invoice_details_rel(self,final_paid_invoice_no):
         for paid_invoices in final_paid_invoice_no:
             refunded_invoice_id = self.env["account.move"].sudo().search([('reversed_entry_id', '=', paid_invoices.id)])
             if paid_invoices.state == 'posted' and paid_invoices.move_type == 'out_invoice' and not refunded_invoice_id:
-                # vendor paid Invoices
                 if paid_invoices.payment_state == 'partial':
                     total_vendor_amount = 0.0
                     total_amount_inv = 0.0
@@ -1235,6 +1229,8 @@ class VendorLineReleased(models.Model):
                                 {'vendor_amount_released': 0.0, 'released': True,
                                  'refunded_invoice_name': paid_invoices.id,
                                  'vendor_amount_invoiced': 0.0, 'refunded_amount': total_vendor_amount_per_invoice})
+                            
+                            
 
     def fetch_vendor_invoice_details_rel(self):
 
@@ -1376,6 +1372,8 @@ class UserLine(models.Model):
                         create_record = self.env['user.invoice.detail'].sudo().create({"user_id":self.user_id.id,"bucket_type_id":self.user_line_bucket_id.bucket_type_id.id,'invoice_name':invoices.id,'user_amount_invoiced':total_vendor_amount_per_invoice})
 
 
+    
+    
     def fetch_user_paid_invoice_details(self,final_paid_invoice_no):
         for paid_invoices in final_paid_invoice_no:
             if paid_invoices.state == 'posted':
@@ -1472,6 +1470,8 @@ class UserLine(models.Model):
                                                })
 
 
+    
+    
     def fetch_user_invoice_details(self):
         all_user_invoice_lines = self.env['invoice.budget.line'].sudo().search(
             [('budget_user_id.id', '=', self.user_id.id), ('released', '=', False)])
@@ -1616,6 +1616,7 @@ class UserLineReleased(models.Model):
                         create_record = self.env['user.invoice.detail'].sudo().create({"user_id":self.user_id.id,"bucket_type_id":self.user_line_released_bucket_id.bucket_type_id.id,'invoice_name':invoices.id,'user_amount_invoiced':total_vendor_amount_per_invoice})
 
 
+    
     def fetch_user_paid_invoice_details_rel(self,final_paid_invoice_no):
         for paid_invoices in final_paid_invoice_no:
             refunded_invoice_id = self.env["account.move"].sudo().search([('reversed_entry_id', '=', paid_invoices.id)])
@@ -1823,6 +1824,8 @@ class UserLineReleased(models.Model):
                                  'user_amount_released': 0.0, 'refunded_amount': total_vendor_amount_per_invoice, })
 
 
+    
+    
     def fetch_user_invoice_details_rel(self):
         all_user_invoice_lines = self.env['invoice.budget.line'].sudo().search(
             [('budget_user_id.id', '=', self.user_id.id), ('released', '=', False)])
@@ -1870,6 +1873,7 @@ class UserLineReleased(models.Model):
             'target': 'new',
             'res_model': 'user.invoice.detail',
         }
+        
 
 
 class VendorLineReleasedByUser(models.Model):
@@ -1992,6 +1996,7 @@ class VendorLineReleasedByUser(models.Model):
                                                                 'bill_paid': move_line_product.is_bill_paid, })
 
 
+    
     def fetch_vendor_refunded_bills(self,fetch_refunded_bills):
         for record in fetch_refunded_bills:
             if record.state == 'posted' and record.payment_state in ("paid", "in_payment"):
@@ -2101,14 +2106,13 @@ class VendorLineReleasedByUser(models.Model):
                                 })
 
 
+   
     def fetch_ven_bills_details_inside_user(self):
         fetch_bills = self.env['account.move'].sudo().search([('move_type', '=', "in_invoice")])
         fetch_refunded_bills = self.env['account.move'].sudo().search([('move_type', '=', "in_refund")])
         self.fetch_vendor_bills(fetch_bills)
         self.fetch_vendor_refunded_bills(fetch_refunded_bills)
-
         domain = [('vendor_id', '=', self.vendor_id.id),('bucket_type_id','=',self.vendor_line_released_bucket_id.bucket_type_id.id)]
-
         vals = {
             'name': _('Show Bill Detail'),
             'domain': domain,
@@ -2119,3 +2123,5 @@ class VendorLineReleasedByUser(models.Model):
             'res_model': 'vendor.bill.detail',
         }
         return vals
+    
+    
