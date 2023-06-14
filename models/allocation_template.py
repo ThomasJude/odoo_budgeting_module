@@ -64,7 +64,6 @@ class AllocationTemplateLine(models.Model):
     
     @api.constrains('allocate_percent')
     def _constrains_allocate_percent(self):
-        print ("1111111111111111111111")
         for record in self:
             if record.allocate_percent>100:
                 raise UserError(_("Percentage should be smaller than 100"))

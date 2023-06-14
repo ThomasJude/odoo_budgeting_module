@@ -14,29 +14,21 @@ class AccountMove(models.Model):
     bill_bucket_amount = fields.Float(string='Bill Bucket Amount', compute='_compute_bill_bucket_amount')
 
     def js_assign_outstanding_line(self, line_id):
-        print("INSIDE JS ADD OUTSTANDING",self.id)
         res = super(AccountMove, self).js_assign_outstanding_line(line_id)
         self.payment_edit_remove_from_released()
         self.payment_edit_add_to_invoiced()
         all_payments = self.env['account.payment'].sudo().search([("ref", '=', self.name)])
         all_payments_1 = self.env['account.payment'].sudo().search([("ref", '=', self.id)])
         edited_payment = self.env["account.move.line"].sudo().search([('id', '=', line_id)])
-        print("SSSSSSSSSS", all_payments,all_payments_1,line_id, edited_payment.amount_residual)
         amount_paid = 0
         for payments in all_payments:
             if payments.is_reconciled:
                 amount_paid += payments.amount
-                print("name", payments.amount)
 
-        print("SXCCCCCCCC", amount_paid, line_id)
-        # yu
         invoice_amount = self.env['account.move'].sudo().search([('id', '=', self.id)])
-        # hkjlh
         if invoice_amount.move_type == 'out_invoice':
             total_released_amount = amount_paid
             if invoice_amount.amount_total == amount_paid and invoice_amount.payment_state in ("paid", "in_payment"):
-                print("if")
-
                 if invoice_amount.inv_budget_line:
                     priority_list = []
                     for inv_fix_budget in invoice_amount.inv_budget_line:
@@ -108,22 +100,17 @@ class AccountMove(models.Model):
                                          'user_line_released_bucket_id': vendor_released_bucket.id})
 
             elif invoice_amount.amount_total > amount_paid and invoice_amount.payment_state == "partial":
-                print("elif")
-
                 if invoice_amount.inv_budget_line:
                     priority_list = []
                     for inv_fix_budget in invoice_amount.inv_budget_line:
                         priority_list.append(inv_fix_budget.prod_priority)
                     final_priority_list = sorted(set(priority_list))
 
-                    print("EGGGGGGGG", final_priority_list)
                     for priority in final_priority_list:
                         for buget_inv_line in invoice_amount.inv_budget_line:
 
                             if priority == buget_inv_line.prod_priority and total_released_amount != 0.0 and not buget_inv_line.released:
                                 if buget_inv_line.amount_residual == 0.0:
-                                    print("111111 line amount residual == 0", total_released_amount,
-                                          buget_inv_line.amount, buget_inv_line.amount_residual)
 
                                     if total_released_amount >= buget_inv_line.amount:
                                         total_released_amount = total_released_amount - buget_inv_line.amount
@@ -161,7 +148,6 @@ class AccountMove(models.Model):
 
                                         ##############################################################3
                                     else:
-                                        print("WQQQQQQQQQQQQQQQQQQQQQ 1111")
                                         buget_inv_line.amount_residual = buget_inv_line.amount - total_released_amount
                                         invoices_bucket = self.env['bucket'].sudo().search(
                                             [('bucket_type_id', '=', buget_inv_line.bucket_type_id.id),
@@ -173,7 +159,6 @@ class AccountMove(models.Model):
                                              ('bucket_status', '=', 'released')])
                                         released_bucket.bucket_amount += total_released_amount
                                         total_released_amount = buget_inv_line.amount - total_released_amount
-                                        print("WWWWWQQQQQQQQQ1111", buget_inv_line.amount_residual)
                                         ############################################################
 
                                         vendor_released_bucket = self.env['bucket'].sudo().search(
@@ -198,11 +183,7 @@ class AccountMove(models.Model):
                                         ##############################################################3
                                         if buget_inv_line.amount_residual != 0.0:
                                             total_released_amount = 0
-                                    print("222222222222222222222", total_released_amount)
                                 else:
-                                    print("3333333333333333 line amount residual != 0", total_released_amount,
-                                          buget_inv_line.amount, buget_inv_line.amount_residual)
-
                                     if total_released_amount >= buget_inv_line.amount_residual:
 
                                         total_released_amount = total_released_amount - buget_inv_line.amount_residual
@@ -279,7 +260,6 @@ class AccountMove(models.Model):
                                         if buget_inv_line.amount_residual != 0.0:
                                             total_released_amount = 0
 
-                                    print("444444444444444", total_released_amount)
                             elif priority == buget_inv_line.prod_priority and total_released_amount == 0 and not buget_inv_line.released:
                                 buget_inv_line.amount_residual = buget_inv_line.amount
                 line_amount_released = []
@@ -293,9 +273,6 @@ class AccountMove(models.Model):
                         if total_released_amount != 0 and not budget_remaining_line.released:
 
                             if budget_remaining_line.amount_residual == 0.0:
-                                print("55555555555555 aloocate line amount residual == 0", total_released_amount,
-                                      buget_inv_line.amount,
-                                      buget_inv_line.amount_residual)
                                 if total_released_amount >= budget_remaining_line.amount:
                                     total_released_amount = total_released_amount - budget_remaining_line.amount
                                     budget_remaining_line.released = True
@@ -369,11 +346,7 @@ class AccountMove(models.Model):
                                     if budget_remaining_line.amount_residual != 0.0:
                                         total_released_amount = 0
 
-                                print("66666666666666666666", total_released_amount)
                             else:
-                                print("777777777777777777 aloocate line amount residual != 0", total_released_amount,
-                                      buget_inv_line.amount,
-                                      buget_inv_line.amount_residual)
                                 if total_released_amount >= budget_remaining_line.amount_residual:
                                     total_released_amount = total_released_amount - budget_remaining_line.amount_residual
                                     invoiced_bucket = self.env['bucket'].sudo().search(
@@ -451,11 +424,9 @@ class AccountMove(models.Model):
 
                                     if budget_remaining_line.amount_residual != 0.0:
                                         total_released_amount = 0
-                                print("888888888888888888888", total_released_amount)
                         elif total_released_amount == 0.0 and not budget_remaining_line.released:
                             budget_remaining_line.amount_residual = budget_remaining_line.amount
             else:
-                print("else")
                 if invoice_amount.inv_budget_line:
 
                     for inv_budget_line in invoice_amount.inv_budget_line:
@@ -496,7 +467,6 @@ class AccountMove(models.Model):
                             ##############################################################3
 
                 if invoice_amount.product_remaining_budget_line and invoice_amount.amount_residual != 0.0:
-                    print("inside if amount residual is great than 0")
                     for budget_remaining_line in self.product_remaining_budget_line:
                         if not budget_remaining_line.released:
                             invoiced_bucket = self.env['bucket'].sudo().search(
@@ -540,7 +510,6 @@ class AccountMove(models.Model):
 
                     for budget_remaining_line in invoice_amount.product_remaining_budget_line:
                         if not budget_remaining_line.released and budget_remaining_line.amount_residual != 0.0:
-                            print("inside else of amount residual is great than 0 11", invoice_amount.amount_residual)
 
                             invoiced_bucket = self.env['bucket'].sudo().search(
                                 [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
@@ -576,10 +545,7 @@ class AccountMove(models.Model):
                                          'user_line_released_bucket_id': vendor_released_bucket.id})
 
                             #############################################################3
-                            # reeee
                         elif not budget_remaining_line.released and budget_remaining_line.amount_residual == 0.0:
-                            print("inside else of amount residual is great than 0 22", invoice_amount.amount_residual)
-                            # devvv
                             invoiced_bucket = self.env['bucket'].sudo().search(
                                 [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
                                  ('bucket_status', '=', 'invoiced')])
@@ -620,172 +586,6 @@ class AccountMove(models.Model):
             if invoice_amount.amount_total > amount_paid and invoice_amount.payment_state == "partial":
                 if invoice_amount.invoice_line_ids:
                     for bill_line in invoice_amount.invoice_line_ids:
-                        # if len(bill_line.bucket_ids) > 1:
-                        #     if not bill_line.is_partial and not bill_line.is_bill_paid:
-                        #         # ergeg
-                        #         if total_released_amount > bill_line.price_subtotal:
-                        #             for bucket_id in bill_line.bucket_ids:
-                        #                 bucket_id.bucket_amount -= bill_line.price_subtotal / len(bill_line.bucket_ids)
-                        #             if total_released_amount != 0.0 and not bill_line.is_bill_paid:
-                        #                 if bill_line.bill_residual_amount == 0.0:
-                        #                     print("IF", total_released_amount, amount_paid)
-                        #                     if total_released_amount >= bill_line.price_subtotal:
-                        #                         print("sub if")
-                        #                         total_released_amount = total_released_amount - bill_line.price_subtotal
-                        #                         bill_line.is_bill_paid = True
-                        #                         bill_line.is_partial = True
-                        #                     else:
-                        #                         print("sub ELSE", bill_line.price_subtotal - total_released_amount)
-                        #
-                        #                         bill_line.bill_residual_amount = bill_line.price_subtotal - total_released_amount
-                        #                         bill_line.is_partial = True
-                        #                         # total_released_amount = bill_line.price_subtotal - total_released_amount
-                        #                         if bill_line.bill_residual_amount != 0.0:
-                        #                             total_released_amount = 0
-                        #                 else:
-                        #                     print("ELSE", total_released_amount, bill_line.bill_residual_amount)
-                        #                     if total_released_amount >= bill_line.bill_residual_amount:
-                        #                         total_released_amount = total_released_amount - bill_line.bill_residual_amount
-                        #                         bill_line.is_bill_paid = True
-                        #                         bill_line.bill_residual_amount = 0.0
-                        #
-                        #                     else:
-                        #                         bill_line.bill_residual_amount = bill_line.bill_residual_amount - total_released_amount
-                        #                         bill_line.is_partial = True
-                        #                         if bill_line.bill_residual_amount != 0.0:
-                        #                             total_released_amount = 0
-                        #             elif total_released_amount == 0 and not bill_line.is_bill_paid:
-                        #                 print("ELIF")
-                        #                 bill_line.bill_residual_amount = bill_line.bill_residual_amount
-                        #
-                        #         else:
-                        #             for bucket_id in bill_line.bucket_ids:
-                        #                 bucket_id.bucket_amount -= total_released_amount / len(bill_line.bucket_ids)
-                        #
-                        #             if total_released_amount != 0.0 and not bill_line.is_bill_paid:
-                        #                 if bill_line.bill_residual_amount == 0.0:
-                        #                     print("IF", total_released_amount, amount_paid)
-                        #                     if total_released_amount >= bill_line.price_subtotal:
-                        #                         print("sub if")
-                        #                         total_released_amount = total_released_amount - bill_line.price_subtotal
-                        #                         bill_line.is_bill_paid = True
-                        #                         bill_line.is_partial = True
-                        #                     else:
-                        #                         print("sub ELSE", bill_line.price_subtotal - total_released_amount)
-                        #
-                        #                         bill_line.bill_residual_amount = bill_line.price_subtotal - total_released_amount
-                        #                         bill_line.is_partial = True
-                        #                         # total_released_amount = bill_line.price_subtotal - total_released_amount
-                        #                         if bill_line.bill_residual_amount != 0.0:
-                        #                             total_released_amount = 0
-                        #                 else:
-                        #                     print("ELSE", total_released_amount, bill_line.bill_residual_amount)
-                        #                     if total_released_amount >= bill_line.bill_residual_amount:
-                        #                         total_released_amount = total_released_amount - bill_line.bill_residual_amount
-                        #                         bill_line.is_bill_paid = True
-                        #                         bill_line.bill_residual_amount = 0.0
-                        #
-                        #                     else:
-                        #                         bill_line.bill_residual_amount = bill_line.bill_residual_amount - total_released_amount
-                        #                         bill_line.is_partial = True
-                        #                         if bill_line.bill_residual_amount != 0.0:
-                        #                             total_released_amount = 0
-                        #             elif total_released_amount == 0 and not bill_line.is_bill_paid:
-                        #                 print("ELIF")
-                        #                 bill_line.bill_residual_amount = bill_line.bill_residual_amount
-                        #
-                        #         if not bucket_id.bucket_type_id.is_vendor:
-                        #             vendor = self.env["vendor.line.released.inside.user"].sudo().search(
-                        #                 [('vendor_id', '=', self.line_ids.move_id.partner_id.id),
-                        #                  ('vendor_line_released_bucket_id', "=", bucket_id.id)])
-                        #             if not vendor:
-                        #                 vendor_line_released = self.env[
-                        #                     "vendor.line.released.inside.user"].sudo().create(
-                        #                     {"vendor_id": self.line_ids.move_id.partner_id.id,
-                        #                      "vendor_line_released_bucket_id": bucket_id.id})
-                        #
-                        #     elif bill_line.is_partial and not bill_line.is_bill_paid:
-                        #         if bill_line.bill_residual_amount >= total_released_amount:
-                        #             for bucket_id in bill_line.bucket_ids:
-                        #                 bucket_id.bucket_amount -= total_released_amount / len(bill_line.bucket_ids)
-                        #             if total_released_amount != 0.0 and not bill_line.is_bill_paid:
-                        #                 if bill_line.bill_residual_amount == 0.0:
-                        #                     print("IF", total_released_amount, amount_paid)
-                        #                     if total_released_amount >= bill_line.price_subtotal:
-                        #                         print("sub if")
-                        #                         total_released_amount = total_released_amount - bill_line.price_subtotal
-                        #                         bill_line.is_bill_paid = True
-                        #                         bill_line.is_partial = True
-                        #                     else:
-                        #                         print("sub ELSE", bill_line.price_subtotal - total_released_amount)
-                        #
-                        #                         bill_line.bill_residual_amount = bill_line.price_subtotal - total_released_amount
-                        #                         bill_line.is_partial = True
-                        #                         # total_released_amount = bill_line.price_subtotal - total_released_amount
-                        #                         if bill_line.bill_residual_amount != 0.0:
-                        #                             total_released_amount = 0
-                        #                 else:
-                        #                     print("ELSE", total_released_amount, bill_line.bill_residual_amount)
-                        #                     if total_released_amount >= bill_line.bill_residual_amount:
-                        #                         total_released_amount = total_released_amount - bill_line.bill_residual_amount
-                        #                         bill_line.is_bill_paid = True
-                        #                         bill_line.bill_residual_amount = 0.0
-                        #
-                        #                     else:
-                        #                         bill_line.bill_residual_amount = bill_line.bill_residual_amount - total_released_amount
-                        #                         bill_line.is_partial = True
-                        #                         if bill_line.bill_residual_amount != 0.0:
-                        #                             total_released_amount = 0
-                        #             elif total_released_amount == 0 and not bill_line.is_bill_paid:
-                        #                 print("ELIF")
-                        #                 bill_line.bill_residual_amount = bill_line.bill_residual_amount
-                        #         else:
-                        #             # partial_pay = total_released_amount
-                        #             for bucket_id in bill_line.bucket_ids:
-                        #                 print(bucket_id.bucket_amount, "RRRRRRRRRR",
-                        #                       total_released_amount - bill_line.bill_residual_amount)
-                        #                 next_line_amount = total_released_amount - bill_line.bill_residual_amount
-                        #                 print("NEXT LINE AMOUNT", next_line_amount)
-                        #                 bucket_id.bucket_amount -= (total_released_amount - next_line_amount) / len(
-                        #                     bill_line.bucket_ids)
-                        #                 print(bucket_id.bucket_amount, "FFFFFFf",
-                        #                       total_released_amount - bill_line.bill_residual_amount)
-                        #
-                        #             if total_released_amount != 0.0 and not bill_line.is_bill_paid:
-                        #                 if bill_line.bill_residual_amount == 0.0:
-                        #                     print("IF", total_released_amount, amount_paid)
-                        #                     if total_released_amount >= bill_line.price_subtotal:
-                        #                         print("sub if")
-                        #                         total_released_amount = total_released_amount - bill_line.price_subtotal
-                        #                         bill_line.is_bill_paid = True
-                        #                         bill_line.is_partial = True
-                        #                     else:
-                        #                         print("sub ELSE", bill_line.price_subtotal - total_released_amount)
-                        #
-                        #                         bill_line.bill_residual_amount = bill_line.price_subtotal - total_released_amount
-                        #                         bill_line.is_partial = True
-                        #                         # total_released_amount = bill_line.price_subtotal - total_released_amount
-                        #                         if bill_line.bill_residual_amount != 0.0:
-                        #                             total_released_amount = 0
-                        #                 else:
-                        #                     print("ELSE", total_released_amount, bill_line.bill_residual_amount)
-                        #                     if total_released_amount >= bill_line.bill_residual_amount:
-                        #                         total_released_amount = total_released_amount - bill_line.bill_residual_amount
-                        #                         bill_line.is_bill_paid = True
-                        #                         bill_line.bill_residual_amount = 0.0
-                        #
-                        #                     else:
-                        #                         bill_line.bill_residual_amount = bill_line.bill_residual_amount - total_released_amount
-                        #                         bill_line.is_partial = True
-                        #                         if bill_line.bill_residual_amount != 0.0:
-                        #                             total_released_amount = 0
-                        #             elif total_released_amount == 0 and not bill_line.is_bill_paid:
-                        #                 print("ELIF")
-                        #                 bill_line.bill_residual_amount = bill_line.bill_residual_amount
-                        #
-                        #             total_released_amount = total_released_amount - bill_line.bill_residual_amount
-                        #
-                        # else:
 
                         if not bill_line.is_partial and not bill_line.is_bill_paid:
                             if total_released_amount > bill_line.price_subtotal:
@@ -4186,180 +3986,10 @@ class AccountPaymentRegister(models.TransientModel):
 
         if invoice_amount.move_type == "in_refund":
 
-            print("inside in invoice refund",invoice_amount.payment_state,invoice_amount.name)
             total_released_amount = self.amount
             if invoice_amount.amount_total > self.amount and invoice_amount.payment_state == "partial":
                 if invoice_amount.reversed_entry_id.invoice_line_ids:
                     for bill_line in invoice_amount.reversed_entry_id.invoice_line_ids:
-                        # if len(bill_line.bucket_ids) > 1:
-                        #     if not bill_line.is_refund_partial and not bill_line.is_bill_refunded:
-                        #         # ergeg
-                        #         if total_released_amount > bill_line.price_subtotal:
-                        #             for bucket_id in bill_line.bucket_ids:
-                        #                 bucket_id.bucket_amount += bill_line.price_subtotal / len(bill_line.bucket_ids)
-                        #                 if not bucket_id.bucket_type_id.is_vendor:
-                        #                     vendor = self.env["vendor.line.released.inside.user"].sudo().search(
-                        #                         [('vendor_id', '=', self.line_ids.move_id.partner_id.id),
-                        #                          ('vendor_line_released_bucket_id', "=", bucket_id.id)])
-                        #                     if not vendor:
-                        #                         vendor_line_released = self.env[
-                        #                             "vendor.line.released.inside.user"].sudo().create(
-                        #                             {"vendor_id": self.line_ids.move_id.partner_id.id,
-                        #                              "vendor_line_released_bucket_id": bucket_id.id})
-                        #
-                        #             if total_released_amount != 0.0 and not bill_line.is_bill_refunded:
-                        #                 if bill_line.refund_residual_amount == 0.0:
-                        #                     if total_released_amount >= bill_line.price_subtotal:
-                        #                         total_released_amount = total_released_amount - bill_line.price_subtotal
-                        #                         bill_line.is_bill_refunded = True
-                        #                         bill_line.is_refund_partial = True
-                        #                     else:
-                        #
-                        #                         bill_line.refund_residual_amount = bill_line.price_subtotal - total_released_amount
-                        #                         bill_line.is_refund_partial = True
-                        #                         # total_released_amount = bill_line.price_subtotal - total_released_amount
-                        #                         if bill_line.refund_residual_amount != 0.0:
-                        #                             total_released_amount = 0
-                        #                 else:
-                        #                     if total_released_amount >= bill_line.refund_residual_amount:
-                        #                         total_released_amount = total_released_amount - bill_line.refund_residual_amount
-                        #                         bill_line.is_refund_partial = True
-                        #                         bill_line.refund_residual_amount = 0.0
-                        #
-                        #                     else:
-                        #                         bill_line.refund_residual_amount = bill_line.refund_residual_amount - total_released_amount
-                        #                         bill_line.is_refund_partial = True
-                        #                         if bill_line.refund_residual_amount != 0.0:
-                        #                             total_released_amount = 0
-                        #             elif total_released_amount == 0 and not bill_line.is_bill_refunded:
-                        #                 bill_line.refund_residual_amount = bill_line.refund_residual_amount
-                        #
-                        #         else:
-                        #             for bucket_id in bill_line.bucket_ids:
-                        #                 bucket_id.bucket_amount += total_released_amount / len(bill_line.bucket_ids)
-                        #                 if not bucket_id.bucket_type_id.is_vendor:
-                        #                     vendor = self.env["vendor.line.released.inside.user"].sudo().search(
-                        #                         [('vendor_id', '=', self.line_ids.move_id.partner_id.id),
-                        #                          ('vendor_line_released_bucket_id', "=", bucket_id.id)])
-                        #                     if not vendor:
-                        #                         vendor_line_released = self.env[
-                        #                             "vendor.line.released.inside.user"].sudo().create(
-                        #                             {"vendor_id": self.line_ids.move_id.partner_id.id,
-                        #                              "vendor_line_released_bucket_id": bucket_id.id})
-                        #
-                        #             if total_released_amount != 0.0 and not bill_line.is_bill_refunded:
-                        #                 if bill_line.refund_residual_amount == 0.0:
-                        #                     if total_released_amount >= bill_line.price_subtotal:
-                        #                         total_released_amount = total_released_amount - bill_line.price_subtotal
-                        #                         bill_line.is_bill_refunded = True
-                        #                         bill_line.is_refund_partial = True
-                        #                     else:
-                        #
-                        #                         bill_line.refund_residual_amount = bill_line.price_subtotal - total_released_amount
-                        #                         bill_line.is_refund_partial = True
-                        #                         if bill_line.refund_residual_amount != 0.0:
-                        #                             total_released_amount = 0
-                        #                 else:
-                        #                     if total_released_amount >= bill_line.refund_residual_amount:
-                        #                         total_released_amount = total_released_amount - bill_line.refund_residual_amount
-                        #                         bill_line.is_bill_refunded = True
-                        #                         bill_line.refund_residual_amount = 0.0
-                        #
-                        #                     else:
-                        #                         bill_line.refund_residual_amount = bill_line.refund_residual_amount - total_released_amount
-                        #                         bill_line.is_refund_partial = True
-                        #                         if bill_line.refund_residual_amount != 0.0:
-                        #                             total_released_amount = 0
-                        #             elif total_released_amount == 0 and not bill_line.is_bill_refunded:
-                        #                 bill_line.refund_residual_amount = bill_line.refund_residual_amount
-                        #
-                        #
-                        #
-                        #     elif bill_line.is_refund_partial and not bill_line.is_bill_refunded:
-                        #         if bill_line.refund_residual_amount >= total_released_amount:
-                        #             for bucket_id in bill_line.bucket_ids:
-                        #                 bucket_id.bucket_amount += total_released_amount / len(bill_line.bucket_ids)
-                        #                 if not bucket_id.bucket_type_id.is_vendor:
-                        #                     vendor = self.env["vendor.line.released.inside.user"].sudo().search(
-                        #                         [('vendor_id', '=', self.line_ids.move_id.partner_id.id),
-                        #                          ('vendor_line_released_bucket_id', "=", bucket_id.id)])
-                        #                     if not vendor:
-                        #                         vendor_line_released = self.env[
-                        #                             "vendor.line.released.inside.user"].sudo().create(
-                        #                             {"vendor_id": self.line_ids.move_id.partner_id.id,
-                        #                              "vendor_line_released_bucket_id": bucket_id.id})
-                        #
-                        #             if total_released_amount != 0.0 and not bill_line.is_bill_refunded:
-                        #                 if bill_line.refund_residual_amount == 0.0:
-                        #                     if total_released_amount >= bill_line.price_subtotal:
-                        #                         total_released_amount = total_released_amount - bill_line.price_subtotal
-                        #                         bill_line.is_bill_refunded = True
-                        #                         bill_line.is_refund_partial = True
-                        #                     else:
-                        #
-                        #                         bill_line.refund_residual_amount = bill_line.price_subtotal - total_released_amount
-                        #                         bill_line.is_refund_partial = True
-                        #                         if bill_line.refund_residual_amount != 0.0:
-                        #                             total_released_amount = 0
-                        #                 else:
-                        #                     if total_released_amount >= bill_line.refund_residual_amount:
-                        #                         total_released_amount = total_released_amount - bill_line.refund_residual_amount
-                        #                         bill_line.is_bill_refunded = True
-                        #                         bill_line.refund_residual_amount = 0.0
-                        #
-                        #                     else:
-                        #                         bill_line.refund_residual_amount = bill_line.refund_residual_amount - total_released_amount
-                        #                         bill_line.is_refund_partial = True
-                        #                         if bill_line.refund_residual_amount != 0.0:
-                        #                             total_released_amount = 0
-                        #             elif total_released_amount == 0 and not bill_line.is_bill_refunded:
-                        #                 bill_line.refund_residual_amount = bill_line.refund_residual_amount
-                        #         else:
-                        #             for bucket_id in bill_line.bucket_ids:
-                        #
-                        #                 next_line_amount = total_released_amount - bill_line.refund_residual_amount
-                        #                 bucket_id.bucket_amount += (total_released_amount - next_line_amount) / len(
-                        #                     bill_line.bucket_ids)
-                        #
-                        #                 if not bucket_id.bucket_type_id.is_vendor:
-                        #                     vendor = self.env["vendor.line.released.inside.user"].sudo().search(
-                        #                         [('vendor_id', '=', self.line_ids.move_id.partner_id.id),
-                        #                          ('vendor_line_released_bucket_id', "=", bucket_id.id)])
-                        #                     if not vendor:
-                        #                         vendor_line_released = self.env[
-                        #                             "vendor.line.released.inside.user"].sudo().create(
-                        #                             {"vendor_id": self.line_ids.move_id.partner_id.id,
-                        #                              "vendor_line_released_bucket_id": bucket_id.id})
-                        #
-                        #             if total_released_amount != 0.0 and not bill_line.is_bill_refunded:
-                        #                 if bill_line.refund_residual_amount == 0.0:
-                        #                     if total_released_amount >= bill_line.price_subtotal:
-                        #                         total_released_amount = total_released_amount - bill_line.price_subtotal
-                        #                         bill_line.is_bill_refunded = True
-                        #                         bill_line.is_refund_partial = True
-                        #                     else:
-                        #
-                        #                         bill_line.refund_residual_amount = bill_line.price_subtotal - total_released_amount
-                        #                         bill_line.is_refund_partial = True
-                        #                         if bill_line.refund_residual_amount != 0.0:
-                        #                             total_released_amount = 0
-                        #                 else:
-                        #                     if total_released_amount >= bill_line.refund_residual_amount:
-                        #                         total_released_amount = total_released_amount - bill_line.refund_residual_amount
-                        #                         bill_line.is_bill_refunded = True
-                        #                         bill_line.refund_residual_amount = 0.0
-                        #
-                        #                     else:
-                        #                         bill_line.refund_residual_amount = bill_line.refund_residual_amount - total_released_amount
-                        #                         bill_line.is_refund_partial = True
-                        #                         if bill_line.refund_residual_amount != 0.0:
-                        #                             total_released_amount = 0
-                        #             elif total_released_amount == 0 and not bill_line.is_bill_refunded:
-                        #                 bill_line.refund_residual_amount = bill_line.refund_residual_amount
-                        #
-                        #             total_released_amount = total_released_amount - bill_line.refund_residual_amount
-                        #
-                        # else:
 
                         if not bill_line.is_refund_partial and not bill_line.is_bill_refunded:
                             if total_released_amount > bill_line.price_subtotal:
@@ -4402,7 +4032,6 @@ class AccountPaymentRegister(models.TransientModel):
                                                 total_released_amount = 0
                                 elif total_released_amount == 0 and not bill_line.is_bill_refunded:
                                     bill_line.refund_residual_amount = bill_line.price_subtotal
-                                print("ERTTTTTTTTTtttt", total_released_amount)
                                 total_released_amount -= bill_line.price_subtotal
                             else:
                                 bill_line.bucket_ids.bucket_amount += total_released_amount
@@ -4487,7 +4116,6 @@ class AccountPaymentRegister(models.TransientModel):
                                     bill_line.refund_residual_amount = bill_line.price_subtotal
 
                             else:
-                                print("DRRRR", total_released_amount, bill_line.refund_residual_amount)
                                 bill_line.bucket_ids.bucket_amount += bill_line.refund_residual_amount
                                 if not bill_line.bucket_ids.bucket_type_id.is_vendor:
                                     vendor = self.env["vendor.line.released.inside.user"].sudo().search(
@@ -4528,66 +4156,15 @@ class AccountPaymentRegister(models.TransientModel):
                                     bill_line.refund_residual_amount = bill_line.price_subtotal
 
                                 total_released_amount = total_released_amount - bill_line.refund_residual_amount
-                                print(total_released_amount, "RTTVBBB")
-
 
             else:
 
-                print("yes 12353", invoice_amount.payment_state, )
                 if invoice_amount.reversed_entry_id.invoice_line_ids:
                     for bill_line in invoice_amount.reversed_entry_id.invoice_line_ids:
-                        # print("SVGGGGG", bill_line.refund_residual_amount, bill_line.is_bill_paid, bill_line.is_partial)
 
                         if bill_line.refund_residual_amount == 0.0:
 
-                            print("yes 555")
                             if not bill_line.is_bill_refunded:
-                                # print('bill resid', bill_line.refund_residual_amount)
-                                # if len(bill_line.bucket_ids) > 1:
-                                #     half_amount = bill_line.price_subtotal / len(bill_line.bucket_ids)
-                                #     print(bill_line.price_subtotal, half_amount)
-                                #     for bucket_id in bill_line.bucket_ids:
-                                #         print("before amount",bucket_id.bucket_amount)
-                                #         bucket_id.bucket_amount += half_amount
-                                #         print("After amount",bucket_id.bucket_amount)
-                                #
-                                #         if not bucket_id.bucket_type_id.is_vendor:
-                                #             vendor = self.env["vendor.line.released.inside.user"].sudo().search(
-                                #                 [('vendor_id', '=', self.line_ids.move_id.partner_id.id),
-                                #                  ('vendor_line_released_bucket_id', "=", bucket_id.id)])
-                                #             if not vendor:
-                                #                 vendor_line_released = self.env[
-                                #                     "vendor.line.released.inside.user"].sudo().create(
-                                #                     {"vendor_id": self.line_ids.move_id.partner_id.id,
-                                #                      "vendor_line_released_bucket_id": bucket_id.id})
-                                #
-                                #         if total_released_amount != 0.0 and not bill_line.is_bill_refunded:
-                                #             if bill_line.refund_residual_amount == 0.0:
-                                #                 if total_released_amount >= bill_line.price_subtotal:
-                                #                     total_released_amount = total_released_amount - bill_line.refund_residual_amount
-                                #                     bill_line.is_bill_refunded = True
-                                #                     bill_line.is_refund_partial = True
-                                #
-                                #                 else:
-                                #                     bill_line.refund_residual_amount = bill_line.price_subtotal - total_released_amount
-                                #                     total_released_amount = bill_line.price_subtotal - total_released_amount
-                                #                     bill_line.is_refund_partial = True
-                                #                     if bill_line.refund_residual_amount != 0.0:
-                                #                         total_released_amount = 0
-                                #             else:
-                                #                 if total_released_amount >= bill_line.refund_residual_amount:
-                                #                     total_released_amount = total_released_amount - bill_line.refund_residual_amount
-                                #                     bill_line.is_bill_refunded = True
-                                #                     bill_line.refund_residual_amount = 0.0
-                                #                 else:
-                                #                     bill_line.refund_residual_amount = bill_line.refund_residual_amount - total_released_amount
-                                #                     bill_line.is_refund_partial = True
-                                #                     if bill_line.refund_residual_amount != 0.0:
-                                #                         total_released_amount = 0
-                                #         elif total_released_amount == 0 and not bill_line.is_bill_refunded:
-                                #             bill_line.refund_residual_amount = bill_line.price_subtotal
-                                #
-                                # else:
                                 if bill_line.refund_residual_amount != 0.0:
                                     bill_line.bucket_ids.bucket_amount += bill_line.refund_residual_amount
                                 else:
@@ -4615,47 +4192,7 @@ class AccountPaymentRegister(models.TransientModel):
                                              "vendor_line_released_bucket_id": bill_line.bucket_ids.id})
 
                         else:
-                            print("yes 123")
                             if not bill_line.is_bill_refunded:
-                                # /////////////////////////////////////////
-                                # if len(bill_line.bucket_ids) > 1:
-                                #     half_amount = bill_line.refund_residual_amount / len(bill_line.bucket_ids)
-                                #     # print(bill_line.price_subtotal, half_amount)
-                                #     for bucket_id in bill_line.bucket_ids:
-                                #         bucket_id.bucket_amount += half_amount
-                                #         if not bucket_id.bucket_type_id.is_vendor:
-                                #             vendor = self.env["vendor.line.released.inside.user"].sudo().search(
-                                #                 [('vendor_id', '=', self.line_ids.move_id.partner_id.id),
-                                #                  ('vendor_line_released_bucket_id', "=", bucket_id.id)])
-                                #             if not vendor:
-                                #                 vendor_line_released = self.env[
-                                #                     "vendor.line.released.inside.user"].sudo().create(
-                                #                     {"vendor_id": self.line_ids.move_id.partner_id.id,
-                                #                      "vendor_line_released_bucket_id": bucket_id.id})
-                                #
-                                #         if total_released_amount != 0.0 and not bill_line.is_bill_refunded:
-                                #             if bill_line.refund_residual_amount == 0.0:
-                                #                 if total_released_amount >= bill_line.price_subtotal:
-                                #                     total_released_amount = total_released_amount - bill_line.refund_residual_amount
-                                #                     bill_line.is_bill_refunded = True
-                                #                 else:
-                                #                     bill_line.refund_residual_amount = bill_line.price_subtotal - total_released_amount
-                                #                     total_released_amount = bill_line.price_subtotal - total_released_amount
-                                #                     if bill_line.refund_residual_amount != 0.0:
-                                #                         total_released_amount = 0
-                                #             else:
-                                #                 if total_released_amount >= bill_line.refund_residual_amount:
-                                #                     total_released_amount = total_released_amount - bill_line.refund_residual_amount
-                                #                     bill_line.is_bill_refunded = True
-                                #                     bill_line.refund_residual_amount = 0.0
-                                #                 else:
-                                #                     bill_line.refund_residual_amount = bill_line.refund_residual_amount - total_released_amount
-                                #                     if bill_line.refund_residual_amount != 0.0:
-                                #                         total_released_amount = 0
-                                #         elif total_released_amount == 0 and not bill_line.is_bill_refunded:
-                                #             bill_line.refund_residual_amount = bill_line.price_subtotal
-                                #
-                                # else:
                                 if bill_line.refund_residual_amount != 0.0:
                                     bill_line.bucket_ids.bucket_amount += bill_line.refund_residual_amount
                                 else:
