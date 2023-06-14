@@ -8,7 +8,6 @@ class Bucket(models.Model):
 
     name = fields.Char(string='Name')
     bucket_amount = fields.Float(string='Bucket Amount',)
-    # user_type = fields.Selection([('vendor','Vendor'),('sales_rep','Sales Rep'),('workers','Workers'),('excess','Excess'),('etc','Etc')], "User Type")
     bucket_status = fields.Selection([('invoiced','Invoiced'),('released','Released')], "Bucket Status")
     bucket_type_id = fields.Many2one('bucket.type','Bucket Type')
     vendor_line = fields.One2many('vendor.line', 'vendor_line_bucket_id', 'Vendor Details')
@@ -376,16 +375,12 @@ class Bucket(models.Model):
                         if move_line_product.bucket_ids.bucket_type_id.id == self.bucket_type_id.id:
                             if move_line_product.product_id.id in visited_ref_move_line_product and move_line_product.refund_residual_amount == move_line_product.price_subtotal:
                                 total_ref_bill_amount += move_line_product.price_subtotal - move_line_product.refund_residual_amount
-                                # total_bill_due_amount += move_line_product.price_subtotal
                             elif move_line_product.product_id.id in visited_ref_move_line_product and move_line_product.refund_residual_amount != move_line_product.price_subtotal:
                                 total_ref_bill_amount += move_line_product.price_subtotal - move_line_product.refund_residual_amount
-                                # total_bill_due_amount += move_line_product.refund_residual_amount
                             elif not move_line_product.product_id.id in visited_ref_move_line_product and move_line_product.refund_residual_amount == move_line_product.price_subtotal:
                                 total_ref_bill_amount += move_line_product.price_subtotal
-                                # total_bill_due_amount += move_line_product.price_subtotal
                             elif not move_line_product.product_id.id in visited_ref_move_line_product and move_line_product.refund_residual_amount != move_line_product.price_subtotal:
                                 total_ref_bill_amount += move_line_product.price_subtotal - move_line_product.refund_residual_amount
-                                # total_bill_due_amount += move_line_product.refund_residual_amount
             rec.write({'total_amount_refunded': total_ref_bill_amount,
                        })
 
@@ -419,13 +414,11 @@ class VendorLine(models.Model):
                             all_fixed_amount_released.append(inv_budget_line.id)
                     if len(all_fixed_amount_released) == len(invoices.inv_budget_line):
                         for product_remaining_budget_line in invoices.product_remaining_budget_line:
-                            # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                             if product_remaining_budget_line.budget_inv_remaining_vendor_id in self.vendor_id:
                                 total_paid_amount_rel += product_remaining_budget_line.amount_residual
                                 total_amount_rel += product_remaining_budget_line.amount
                     else:
                         for product_remaining_budget_line in invoices.product_remaining_budget_line:
-                            # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                             if product_remaining_budget_line.budget_inv_remaining_vendor_id in self.vendor_id:
                                 total_paid_amount_rel += product_remaining_budget_line.amount
                                 total_amount_rel += product_remaining_budget_line.amount
@@ -453,11 +446,9 @@ class VendorLine(models.Model):
                         total_amount_inv = 0.0
                         total_amount_rel = 0.0
                         for inv_budget_line in invoices.inv_budget_line:
-                            # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
                             if inv_budget_line.budget_inv_vendor_id in self.vendor_id:
                                 total_amount_inv += inv_budget_line.amount
                         for product_remaining_budget_line in invoices.product_remaining_budget_line:
-                            # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                             if product_remaining_budget_line.budget_inv_remaining_vendor_id in self.vendor_id:
                                 total_amount_rel += product_remaining_budget_line.amount
 
@@ -465,8 +456,7 @@ class VendorLine(models.Model):
                         existing_record = self.env['vendor.invoice.detail'].sudo().search([('invoice_name','=',invoices.id),('vendor_id','=',self.vendor_id.id),('bucket_type_id','=',self.vendor_line_bucket_id.bucket_type_id.id)])
                         if not existing_record:
                             create_record = self.env['vendor.invoice.detail'].sudo().create({"vendor_id":self.vendor_id.id,'invoice_name':invoices.id,"bucket_type_id":self.vendor_line_bucket_id.bucket_type_id.id,'vendor_amount_invoiced':total_vendor_amount_per_invoice})
-                    # else:
-                    #     existing_record.write({'released': True})
+
 
     def fetch_vendor_paid_invoice_details(self,final_paid_invoice_no):
         for paid_invoices in final_paid_invoice_no:
@@ -480,7 +470,6 @@ class VendorLine(models.Model):
                     total_paid_amount_inv = 0.0
                     total_paid_amount_rel = 0.0
                     for inv_budget_line in paid_invoices.inv_budget_line:
-                        # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
                         if inv_budget_line.budget_inv_vendor_id in self.vendor_id:
                             total_paid_amount_inv += inv_budget_line.amount_residual
                             total_amount_inv += inv_budget_line.amount
@@ -490,13 +479,11 @@ class VendorLine(models.Model):
                             all_fixed_amount_released_paid.append(inv_budget_line.id)
                     if len(all_fixed_amount_released_paid) == len(paid_invoices.inv_budget_line):
                         for product_remaining_budget_line in paid_invoices.product_remaining_budget_line:
-                            # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                             if product_remaining_budget_line.budget_inv_remaining_vendor_id in self.vendor_id:
                                 total_paid_amount_rel += product_remaining_budget_line.amount_residual
                                 total_amount_rel += product_remaining_budget_line.amount
                     else:
                         for product_remaining_budget_line in paid_invoices.product_remaining_budget_line:
-                            # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                             if product_remaining_budget_line.budget_inv_remaining_vendor_id in self.vendor_id:
                                 total_paid_amount_rel += product_remaining_budget_line.amount
                                 total_amount_rel += product_remaining_budget_line.amount
@@ -538,11 +525,9 @@ class VendorLine(models.Model):
                     total_amount_inv = 0.0
                     total_amount_rel = 0.0
                     for inv_budget_line in paid_invoices.inv_budget_line:
-                        # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
                         if inv_budget_line.budget_inv_vendor_id in self.vendor_id:
                             total_amount_inv += inv_budget_line.amount
                     for product_remaining_budget_line in paid_invoices.product_remaining_budget_line:
-                        # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                         if product_remaining_budget_line.budget_inv_remaining_vendor_id in self.vendor_id:
                             total_amount_rel += product_remaining_budget_line.amount
 
@@ -640,7 +625,6 @@ class VendorLineReleased(models.Model):
                             existing_bill_rec = self.env['vendor.bill.detail'].sudo().search(
                                 [('bill_name', '=', record.id), ('vendor_id', '=', vendor_id.id),
                                  ('bucket_type_id', '=', self.vendor_line_released_bucket_id.bucket_type_id.id)])
-                            # vendor_line_released_id = self.search([('vendor_id','=',vendor_id.id),('vendor_line_released_bucket_id','=',self.vendor_line_released_bucket_id.id)])
                             total_amount_paid = 0
                             for move_line_product in record.invoice_line_ids:
                                 if move_line_product.product_id.id in visited_move_line_product:
@@ -729,7 +713,6 @@ class VendorLineReleased(models.Model):
                                     total_amount_paid = 0
                                     if move_line_product.product_id.id in visited_move_line_product and move_line_product.is_partial:
                                         total_amount_paid += move_line_product.price_subtotal
-                                        # total_bill_due_amount += move_line_product.bill_residual_amount
                                     elif move_line_product.is_partial and not move_line_product.is_bill_paid:
                                         total_amount_paid += move_line_product.price_subtotal - move_line_product.bill_residual_amount
 
@@ -887,7 +870,6 @@ class VendorLineReleased(models.Model):
                                     total_amount_paid = 0
                                     if move_line_product.product_id.id in visited_move_line_product and move_line_product.is_partial:
                                         total_amount_paid += move_line_product.price_subtotal
-                                        # total_bill_due_amount += move_line_product.bill_residual_amount
                                     elif move_line_product.is_partial and not move_line_product.is_bill_paid:
                                         total_amount_paid += move_line_product.price_subtotal - move_line_product.bill_residual_amount
 
@@ -1002,7 +984,6 @@ class VendorLineReleased(models.Model):
                     total_paid_amount_inv = 0.0
                     total_paid_amount_rel = 0.0
                     for inv_budget_line in invoices.inv_budget_line:
-                        # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
                         if inv_budget_line.budget_inv_vendor_id in self.vendor_id:
                             total_paid_amount_inv += inv_budget_line.amount_residual
                             total_amount_inv += inv_budget_line.amount
@@ -1012,13 +993,11 @@ class VendorLineReleased(models.Model):
                             all_fixed_amount_released.append(inv_budget_line.id)
                     if len(all_fixed_amount_released) == len(invoices.inv_budget_line):
                         for product_remaining_budget_line in invoices.product_remaining_budget_line:
-                            # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                             if product_remaining_budget_line.budget_inv_remaining_vendor_id in self.vendor_id:
                                 total_paid_amount_rel += product_remaining_budget_line.amount_residual
                                 total_amount_rel += product_remaining_budget_line.amount
                     else:
                         for product_remaining_budget_line in invoices.product_remaining_budget_line:
-                            # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                             if product_remaining_budget_line.budget_inv_remaining_vendor_id in self.vendor_id:
                                 total_paid_amount_rel += product_remaining_budget_line.amount
                                 total_amount_rel += product_remaining_budget_line.amount
@@ -1047,11 +1026,9 @@ class VendorLineReleased(models.Model):
                     total_amount_inv = 0.0
                     total_amount_rel = 0.0
                     for inv_budget_line in invoices.inv_budget_line:
-                        # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
                         if inv_budget_line.budget_inv_vendor_id in self.vendor_id:
                             total_amount_inv += inv_budget_line.amount
                     for product_remaining_budget_line in invoices.product_remaining_budget_line:
-                        # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                         if product_remaining_budget_line.budget_inv_remaining_vendor_id in self.vendor_id:
                             total_amount_rel += product_remaining_budget_line.amount
 
@@ -1072,7 +1049,6 @@ class VendorLineReleased(models.Model):
                     total_paid_amount_inv = 0.0
                     total_paid_amount_rel = 0.0
                     for inv_budget_line in paid_invoices.inv_budget_line:
-                        # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
                         if inv_budget_line.budget_inv_vendor_id in self.vendor_id:
                             total_paid_amount_inv += inv_budget_line.amount_residual
                             total_amount_inv += inv_budget_line.amount
@@ -1082,13 +1058,11 @@ class VendorLineReleased(models.Model):
                             all_fixed_amount_released_paid.append(inv_budget_line.id)
                     if len(all_fixed_amount_released_paid) == len(paid_invoices.inv_budget_line):
                         for product_remaining_budget_line in paid_invoices.product_remaining_budget_line:
-                            # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                             if product_remaining_budget_line.budget_inv_remaining_vendor_id in self.vendor_id:
                                 total_paid_amount_rel += product_remaining_budget_line.amount_residual
                                 total_amount_rel += product_remaining_budget_line.amount
                     else:
                         for product_remaining_budget_line in paid_invoices.product_remaining_budget_line:
-                            # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                             if product_remaining_budget_line.budget_inv_remaining_vendor_id in self.vendor_id:
                                 total_paid_amount_rel += product_remaining_budget_line.amount
                                 total_amount_rel += product_remaining_budget_line.amount
@@ -1132,11 +1106,9 @@ class VendorLineReleased(models.Model):
                     total_amount_inv = 0.0
                     total_amount_rel = 0.0
                     for inv_budget_line in paid_invoices.inv_budget_line:
-                        # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
                         if inv_budget_line.budget_inv_vendor_id in self.vendor_id:
                             total_amount_inv += inv_budget_line.amount
                     for product_remaining_budget_line in paid_invoices.product_remaining_budget_line:
-                        # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                         if product_remaining_budget_line.budget_inv_remaining_vendor_id in self.vendor_id:
                             total_amount_rel += product_remaining_budget_line.amount
 
@@ -1164,7 +1136,6 @@ class VendorLineReleased(models.Model):
                     total_paid_amount_rel = 0.0
                     vendor_id_check = False
                     for inv_budget_line in paid_invoices.reversed_entry_id.inv_budget_line:
-                        # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
                         if inv_budget_line.budget_inv_vendor_id in self.vendor_id:
                             vendor_id_check = True
                             total_paid_amount_inv += inv_budget_line.refund_residual
@@ -1237,7 +1208,6 @@ class VendorLineReleased(models.Model):
                     total_amount_rel = 0.0
                     vendor_id_check = False
                     for inv_budget_line in paid_invoices.reversed_entry_id.inv_budget_line:
-                        # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
                         if inv_budget_line.budget_inv_vendor_id in self.vendor_id:
                             vendor_id_check = True
                             total_amount_inv += inv_budget_line.amount
@@ -1337,7 +1307,6 @@ class UserLine(models.Model):
                     total_paid_amount_inv = 0.0
                     total_paid_amount_rel = 0.0
                     for inv_budget_line in invoices.inv_budget_line:
-                        # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
                         if inv_budget_line.budget_user_id.id == self.user_id.id and inv_budget_line.bucket_type_id.id == self.user_line_bucket_id.bucket_type_id.id:
                             total_amount_inv += inv_budget_line.amount
                             total_paid_amount_inv += inv_budget_line.amount_residual
@@ -1349,13 +1318,11 @@ class UserLine(models.Model):
                     if len(all_fixed_amount_released) == len(invoices.inv_budget_line):
 
                         for product_remaining_budget_line in invoices.product_remaining_budget_line:
-                            # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                             if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_bucket_id.bucket_type_id.id:
                                 total_amount_rel += product_remaining_budget_line.amount
                                 total_paid_amount_rel += product_remaining_budget_line.amount_residual
                     else:
                         for product_remaining_budget_line in invoices.product_remaining_budget_line:
-                            # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                             if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_bucket_id.bucket_type_id.id:
                                 total_amount_rel += product_remaining_budget_line.amount
                                 total_paid_amount_rel += product_remaining_budget_line.amount
@@ -1397,11 +1364,9 @@ class UserLine(models.Model):
                     total_amount_inv = 0.0
                     total_amount_rel = 0.0
                     for inv_budget_line in invoices.inv_budget_line:
-                        # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
                         if inv_budget_line.budget_user_id.id == self.user_id.id and inv_budget_line.bucket_type_id.id == self.user_line_bucket_id.bucket_type_id.id:
                             total_amount_inv += inv_budget_line.amount
                     for product_remaining_budget_line in invoices.product_remaining_budget_line:
-                        # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                         if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_bucket_id.bucket_type_id.id:
                             total_amount_rel += product_remaining_budget_line.amount
 
@@ -1422,7 +1387,6 @@ class UserLine(models.Model):
                     total_paid_amount_inv = 0.0
                     total_paid_amount_rel = 0.0
                     for inv_budget_line in paid_invoices.inv_budget_line:
-                        # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
                         if inv_budget_line.budget_user_id.id == self.user_id.id and inv_budget_line.bucket_type_id.id == self.user_line_bucket_id.bucket_type_id.id:
                             total_amount_inv += inv_budget_line.amount
                             total_paid_amount_inv += inv_budget_line.amount_residual
@@ -1434,13 +1398,11 @@ class UserLine(models.Model):
                     if len(all_fixed_amount_released_paid) == len(paid_invoices.inv_budget_line):
 
                         for product_remaining_budget_line in paid_invoices.product_remaining_budget_line:
-                            # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                             if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_bucket_id.bucket_type_id.id:
                                 total_amount_rel += product_remaining_budget_line.amount
                                 total_paid_amount_rel += product_remaining_budget_line.amount_residual
                     else:
                         for product_remaining_budget_line in paid_invoices.product_remaining_budget_line:
-                            # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                             if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_bucket_id.bucket_type_id.id:
                                 total_amount_rel += product_remaining_budget_line.amount
                                 total_paid_amount_rel += product_remaining_budget_line.amount
@@ -1483,11 +1445,9 @@ class UserLine(models.Model):
                     total_amount_inv = 0.0
                     total_amount_rel = 0.0
                     for inv_budget_line in paid_invoices.inv_budget_line:
-                        # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
                         if inv_budget_line.budget_user_id.id == self.user_id.id and inv_budget_line.bucket_type_id.id == self.user_line_bucket_id.bucket_type_id.id:
                             total_amount_inv += inv_budget_line.amount
                     for product_remaining_budget_line in paid_invoices.product_remaining_budget_line:
-                        # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                         if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_bucket_id.bucket_type_id.id:
                             total_amount_rel += product_remaining_budget_line.amount
 
@@ -1578,7 +1538,6 @@ class UserLineReleased(models.Model):
                     total_paid_amount_inv = 0.0
                     total_paid_amount_rel = 0.0
                     for inv_budget_line in invoices.inv_budget_line:
-                        # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
                         if inv_budget_line.budget_user_id.id == self.user_id.id and inv_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
                             user_id_check = True
                             total_amount_inv += inv_budget_line.amount
@@ -1589,14 +1548,12 @@ class UserLineReleased(models.Model):
                             all_fixed_amount_released.append(inv_budget_line.id)
                     if len(all_fixed_amount_released) == len(invoices.inv_budget_line):
                         for product_remaining_budget_line in invoices.product_remaining_budget_line:
-                            # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                             if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
                                 user_id_check = True
                                 total_amount_rel += product_remaining_budget_line.amount
                                 total_paid_amount_rel += product_remaining_budget_line.amount_residual
                     else:
                         for product_remaining_budget_line in invoices.product_remaining_budget_line:
-                            # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                             if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
                                 user_id_check = True
                                 total_amount_rel += product_remaining_budget_line.amount
@@ -1644,12 +1601,10 @@ class UserLineReleased(models.Model):
                     total_amount_inv = 0.0
                     total_amount_rel = 0.0
                     for inv_budget_line in invoices.inv_budget_line:
-                        # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
                         if inv_budget_line.budget_user_id.id == self.user_id.id and inv_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
                             user_id_check = True
                             total_amount_inv += inv_budget_line.amount
                     for product_remaining_budget_line in invoices.product_remaining_budget_line:
-                        # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                         if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
                             user_id_check = True
                             total_amount_rel += product_remaining_budget_line.amount
@@ -1673,7 +1628,6 @@ class UserLineReleased(models.Model):
                     total_paid_amount_inv = 0.0
                     total_paid_amount_rel = 0.0
                     for inv_budget_line in paid_invoices.inv_budget_line:
-                        # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
                         if inv_budget_line.budget_user_id.id == self.user_id.id and inv_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
                             user_id_check = True
                             total_amount_inv += inv_budget_line.amount
@@ -1684,14 +1638,12 @@ class UserLineReleased(models.Model):
                             all_fixed_amount_released_paid.append(inv_budget_line.id)
                     if len(all_fixed_amount_released_paid) == len(paid_invoices.inv_budget_line):
                         for product_remaining_budget_line in paid_invoices.product_remaining_budget_line:
-                            # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                             if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
                                 user_id_check = True
                                 total_amount_rel += product_remaining_budget_line.amount
                                 total_paid_amount_rel += product_remaining_budget_line.amount_residual
                     else:
                         for product_remaining_budget_line in paid_invoices.product_remaining_budget_line:
-                            # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                             if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
                                 user_id_check = True
                                 total_amount_rel += product_remaining_budget_line.amount
@@ -1738,12 +1690,10 @@ class UserLineReleased(models.Model):
                     total_amount_inv = 0.0
                     total_amount_rel = 0.0
                     for inv_budget_line in paid_invoices.inv_budget_line:
-                        # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
                         if inv_budget_line.budget_user_id.id == self.user_id.id and inv_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
                             user_id_check = True
                             total_amount_inv += inv_budget_line.amount
                     for product_remaining_budget_line in paid_invoices.product_remaining_budget_line:
-                        # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                         if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
                             user_id_check = True
                             total_amount_rel += product_remaining_budget_line.amount
@@ -1781,7 +1731,6 @@ class UserLineReleased(models.Model):
                         if product_remaining_budget_line.item_refunded:
                             all_allocate_amount_released_paid.append(product_remaining_budget_line.id)
                     for inv_budget_line in paid_invoices.reversed_entry_id.inv_budget_line:
-                        # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
                         if len(all_allocate_amount_released_paid) == len(
                                 paid_invoices.reversed_entry_id.product_remaining_budget_line):
                             if inv_budget_line.budget_user_id.id == self.user_id.id and inv_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id and inv_budget_line.item_refunded:
@@ -1789,20 +1738,12 @@ class UserLineReleased(models.Model):
                                 total_amount_inv += inv_budget_line.amount
                                 total_paid_amount_inv += inv_budget_line.refund_residual
 
-                    # if len(all_fixed_amount_released_paid) == len(paid_invoices.reversed_entry_id.inv_budget_line):
                     for product_remaining_budget_line in paid_invoices.reversed_entry_id.product_remaining_budget_line:
-                        # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                         if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
                             user_id_check = True
                             total_amount_rel += product_remaining_budget_line.amount
                             total_paid_amount_rel += product_remaining_budget_line.refund_residual
-                    # else:
-                    #     for product_remaining_budget_line in paid_invoices.reversed_entry_id.product_remaining_budget_line:
-                    #         # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
-                    #         if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
-                    #             user_id_check = True
-                    #             total_amount_rel += product_remaining_budget_line.amount
-                    #             total_paid_amount_rel += product_remaining_budget_line.amount
+
 
                     total_vendor_paid_amount = total_amount_inv + total_amount_rel
                     total_user_amount_part_paid_per_invoice = total_paid_amount_inv + total_paid_amount_rel
@@ -1850,12 +1791,10 @@ class UserLineReleased(models.Model):
                     total_amount_inv = 0.0
                     total_amount_rel = 0.0
                     for inv_budget_line in paid_invoices.reversed_entry_id.inv_budget_line:
-                        # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
                         if inv_budget_line.budget_user_id.id == self.user_id.id and inv_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
                             user_id_check = True
                             total_amount_inv += inv_budget_line.amount
                     for product_remaining_budget_line in paid_invoices.reversed_entry_id.product_remaining_budget_line:
-                        # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
                         if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
                             user_id_check = True
                             total_amount_rel += product_remaining_budget_line.amount
@@ -1918,226 +1857,6 @@ class UserLineReleased(models.Model):
         rem_duplicate_paid_invoice_no_set = set(all_paid_invoices)
         final_paid_invoice_no = list(rem_duplicate_paid_invoice_no_set)
         self.fetch_user_paid_invoice_details_rel(final_paid_invoice_no)
-        # for paid_invoices in final_paid_invoice_no:
-        #     refunded_invoice_id = self.env["account.move"].sudo().search([('reversed_entry_id', '=', paid_invoices.id)])
-        #     if paid_invoices.state == 'posted' and paid_invoices.move_type == 'out_invoice' and not refunded_invoice_id:
-        #         user_id_check = False
-        #         if paid_invoices.payment_state == 'partial':
-        #             total_vendor_amount = 0.0
-        #             total_amount_inv = 0.0
-        #             total_amount_rel = 0.0
-        #             total_paid_amount_inv = 0.0
-        #             total_paid_amount_rel = 0.0
-        #             for inv_budget_line in paid_invoices.inv_budget_line:
-        #                 # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
-        #                 if inv_budget_line.budget_user_id.id == self.user_id.id and inv_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
-        #                     user_id_check = True
-        #                     total_amount_inv += inv_budget_line.amount
-        #                     total_paid_amount_inv += inv_budget_line.amount_residual
-        #             all_fixed_amount_released_paid = []
-        #             for inv_budget_line in paid_invoices.inv_budget_line:
-        #                 if inv_budget_line.released:
-        #                     all_fixed_amount_released_paid.append(inv_budget_line.id)
-        #             if len(all_fixed_amount_released_paid) == len(paid_invoices.inv_budget_line):
-        #                 for product_remaining_budget_line in paid_invoices.product_remaining_budget_line:
-        #                     # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
-        #                     if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
-        #                         user_id_check = True
-        #                         total_amount_rel += product_remaining_budget_line.amount
-        #                         total_paid_amount_rel += product_remaining_budget_line.amount_residual
-        #             else:
-        #                 for product_remaining_budget_line in paid_invoices.product_remaining_budget_line:
-        #                     # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
-        #                     if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
-        #                         user_id_check = True
-        #                         total_amount_rel += product_remaining_budget_line.amount
-        #                         total_paid_amount_rel += product_remaining_budget_line.amount
-        #
-        #             total_vendor_paid_amount = total_amount_inv + total_amount_rel
-        #             total_user_amount_part_paid_per_invoice = total_paid_amount_inv + total_paid_amount_rel
-        #             existing_record_1 = self.env['user.invoice.detail'].sudo().search(
-        #                 [('invoice_name', '=', paid_invoices.id), ('user_id', '=', self.user_id.id),
-        #                  ('bucket_type_id', '=', self.user_line_released_bucket_id.bucket_type_id.id)])
-        #             if total_user_amount_part_paid_per_invoice != 0.0:
-        #                 if user_id_check:
-        #                     if existing_record_1:
-        #                         existing_record_1.write(
-        #                             {'user_amount_invoiced': total_user_amount_part_paid_per_invoice,
-        #                              'user_amount_released': total_vendor_paid_amount - total_user_amount_part_paid_per_invoice,
-        #                              'partial_due_amount': total_user_amount_part_paid_per_invoice,
-        #                              'partial_paid_amount': total_vendor_paid_amount - total_user_amount_part_paid_per_invoice})
-        #                     else:
-        #                         create_record = self.env['user.invoice.detail'].sudo().create(
-        #                             {"user_id": self.user_id.id, 'invoice_name': paid_invoices.id,
-        #                              'bucket_type_id': self.user_line_released_bucket_id.bucket_type_id.id,
-        #                              'user_amount_invoiced': total_user_amount_part_paid_per_invoice,
-        #                              'user_amount_released': total_vendor_paid_amount - total_user_amount_part_paid_per_invoice,
-        #                              'partial_due_amount': total_user_amount_part_paid_per_invoice,
-        #                              'partial_paid_amount': total_vendor_paid_amount - total_user_amount_part_paid_per_invoice})
-        #
-        #             else:
-        #                 if user_id_check:
-        #                     if existing_record_1 :
-        #                         existing_record_1.write(
-        #                             {'released': True, 'user_amount_invoiced': 0.0, 'partial_due_amount': 0.0,
-        #                              'partial_paid_amount': 0.0,
-        #                              'user_amount_released': total_vendor_paid_amount - total_user_amount_part_paid_per_invoice})
-        #                     else:
-        #                         self.env['user.invoice.detail'].sudo().create(
-        #                             {"user_id": self.user_id.id, 'invoice_name': paid_invoices.id,
-        #                              'bucket_type_id': self.user_line_released_bucket_id.bucket_type_id.id, 'released': True,
-        #                              'user_amount_invoiced': 0.0, 'partial_due_amount': 0.0, 'partial_paid_amount': 0.0,
-        #                              'user_amount_released': total_vendor_paid_amount - total_user_amount_part_paid_per_invoice})
-        #
-        #         else:
-        #             total_vendor_amount = 0.0
-        #             total_amount_inv = 0.0
-        #             total_amount_rel = 0.0
-        #             for inv_budget_line in paid_invoices.inv_budget_line:
-        #                 # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
-        #                 if inv_budget_line.budget_user_id.id == self.user_id.id and inv_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
-        #                     user_id_check = True
-        #                     total_amount_inv += inv_budget_line.amount
-        #             for product_remaining_budget_line in paid_invoices.product_remaining_budget_line:
-        #                 # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
-        #                 if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
-        #                     user_id_check = True
-        #                     total_amount_rel += product_remaining_budget_line.amount
-        #
-        #             total_vendor_amount_per_invoice = total_amount_rel + total_amount_inv
-        #             existing_record = self.env['user.invoice.detail'].sudo().search(
-        #                 [('invoice_name', '=', paid_invoices.id), ('user_id', '=', self.user_id.id),
-        #                  ('bucket_type_id', '=', self.user_line_released_bucket_id.bucket_type_id.id)])
-        #             if not existing_record and user_id_check:
-        #                 create_record = self.env['user.invoice.detail'].sudo().create({"user_id": self.user_id.id,
-        #                                                                                "bucket_type_id": self.user_line_released_bucket_id.bucket_type_id.id,
-        #                                                                                'invoice_name': paid_invoices.id,
-        #                                                                                'released':True,
-        #                                                                                'user_amount_released': total_vendor_amount_per_invoice,
-        #                                                                                'user_amount_invoiced': 0.0,
-        #                                                                                })
-        #
-        #             else:
-        #                 if user_id_check:
-        #                     existing_record.write(
-        #                         {'released': True, 'user_amount_invoiced': 0.0, 'partial_due_amount': 0.0,
-        #                          'partial_paid_amount': 0.0,
-        #                          'user_amount_released': total_vendor_amount_per_invoice})
-        #     if paid_invoices.state == 'posted' and paid_invoices.move_type == 'out_refund':
-        #         user_id_check = False
-        #         if paid_invoices.payment_state == 'partial':
-        #             total_vendor_amount = 0.0
-        #             total_amount_inv = 0.0
-        #             total_amount_rel = 0.0
-        #             total_paid_amount_inv = 0.0
-        #             total_paid_amount_rel = 0.0
-        #             total_paid_amount_rel = 0.0
-        #             all_allocate_amount_released_paid = []
-        #             for product_remaining_budget_line in paid_invoices.reversed_entry_id.product_remaining_budget_line:
-        #                 if product_remaining_budget_line.item_refunded:
-        #                     all_allocate_amount_released_paid.append(product_remaining_budget_line.id)
-        #             for inv_budget_line in paid_invoices.reversed_entry_id.inv_budget_line:
-        #                 # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
-        #                 if len(all_allocate_amount_released_paid) == len(
-        #                         paid_invoices.reversed_entry_id.product_remaining_budget_line):
-        #                     if inv_budget_line.budget_user_id.id == self.user_id.id and inv_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id and inv_budget_line.item_refunded:
-        #                         user_id_check = True
-        #                         total_amount_inv += inv_budget_line.amount
-        #                         total_paid_amount_inv += inv_budget_line.refund_residual
-        #
-        #             # if len(all_fixed_amount_released_paid) == len(paid_invoices.reversed_entry_id.inv_budget_line):
-        #             for product_remaining_budget_line in paid_invoices.reversed_entry_id.product_remaining_budget_line:
-        #                 # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
-        #                 if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
-        #                     user_id_check = True
-        #                     total_amount_rel += product_remaining_budget_line.amount
-        #                     total_paid_amount_rel += product_remaining_budget_line.refund_residual
-        #             # else:
-        #             #     for product_remaining_budget_line in paid_invoices.reversed_entry_id.product_remaining_budget_line:
-        #             #         # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
-        #             #         if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
-        #             #             user_id_check = True
-        #             #             total_amount_rel += product_remaining_budget_line.amount
-        #             #             total_paid_amount_rel += product_remaining_budget_line.amount
-        #
-        #             total_vendor_paid_amount = total_amount_inv + total_amount_rel
-        #             total_user_amount_part_paid_per_invoice = total_paid_amount_inv + total_paid_amount_rel
-        #             existing_record_1 = self.env['user.invoice.detail'].sudo().search(
-        #                 [('invoice_name', '=', paid_invoices.reversed_entry_id.id), ('user_id', '=', self.user_id.id),
-        #                  ('bucket_type_id', '=', self.user_line_released_bucket_id.bucket_type_id.id)])
-        #
-        #             if total_user_amount_part_paid_per_invoice != 0.0:
-        #                 if existing_record_1 and user_id_check:
-        #                     existing_record_1.write(
-        #                         {'released': True,'invoice_name': paid_invoices.reversed_entry_id.id,
-        #                          'user_amount_released': total_user_amount_part_paid_per_invoice,
-        #                          'refunded_invoice_name': paid_invoices.id,
-        #                          'refunded_amount': total_vendor_paid_amount - total_user_amount_part_paid_per_invoice})
-        #                 else:
-        #                     if user_id_check:
-        #                         create_record = self.env['user.invoice.detail'].sudo().create(
-        #                             {"user_id": self.user_id.id, 'invoice_name': paid_invoices.reversed_entry_id.id,
-        #                              'refunded_invoice_name': paid_invoices.id,
-        #                              'bucket_type_id': self.user_line_released_bucket_id.bucket_type_id.id,
-        #                              'released': True,
-        #                              'user_amount_released': total_user_amount_part_paid_per_invoice,
-        #                              'refunded_amount': total_vendor_paid_amount - total_user_amount_part_paid_per_invoice})
-        #
-        #             else:
-        #                 if existing_record_1 and user_id_check:
-        #                     existing_record_1.write(
-        #                         {'released': True, 'user_amount_invoiced': 0.0, 'partial_due_amount': 0.0,
-        #                          'partial_paid_amount': 0.0, 'user_amount_released': 0.0,
-        #                          'refunded_invoice_name': paid_invoices.id,
-        #                          'refunded_amount': total_vendor_paid_amount - total_user_amount_part_paid_per_invoice})
-        #                 else:
-        #                     if user_id_check:
-        #                         self.env['user.invoice.detail'].sudo().create(
-        #                             {"user_id": self.user_id.id, 'invoice_name': paid_invoices.reversed_entry_id.id,
-        #                              'refunded_invoice_name': paid_invoices.id,
-        #                              'bucket_type_id': self.user_line_released_bucket_id.bucket_type_id.id,
-        #                              'released': True,
-        #                              'partial_due_amount': 0.0,
-        #                              'refunded_amount': total_vendor_paid_amount - total_user_amount_part_paid_per_invoice,
-        #                              'user_amount_released': 0.0})
-        #
-        #         else:
-        #             total_vendor_amount = 0.0
-        #             total_amount_inv = 0.0
-        #             total_amount_rel = 0.0
-        #             for inv_budget_line in paid_invoices.reversed_entry_id.inv_budget_line:
-        #                 # if inv_budget_line.budget_inv_vendor_ids in self.vendor_id:
-        #                 if inv_budget_line.budget_user_id.id == self.user_id.id and inv_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
-        #                     user_id_check = True
-        #                     total_amount_inv += inv_budget_line.amount
-        #             for product_remaining_budget_line in paid_invoices.reversed_entry_id.product_remaining_budget_line:
-        #                 # if product_remaining_budget_line.budget_inv_remaining_vendor_ids in self.vendor_id:
-        #                 if product_remaining_budget_line.budget_remaining_user_id.id == self.user_id.id and product_remaining_budget_line.bucket_type_id.id == self.user_line_released_bucket_id.bucket_type_id.id:
-        #                     user_id_check = True
-        #                     total_amount_rel += product_remaining_budget_line.amount
-        #
-        #             total_vendor_amount_per_invoice = total_amount_rel + total_amount_inv
-        #             existing_record = self.env['user.invoice.detail'].sudo().search(
-        #                 [('invoice_name', '=', paid_invoices.reversed_entry_id.id), ('user_id', '=', self.user_id.id),
-        #                  ('bucket_type_id', '=', self.user_line_released_bucket_id.bucket_type_id.id)])
-        #
-        #             if not existing_record and user_id_check:
-        #                 self.env['user.invoice.detail'].sudo().create({"user_id": self.user_id.id,
-        #                                                                                "bucket_type_id": self.user_line_released_bucket_id.bucket_type_id.id,
-        #                                                                                'invoice_name': paid_invoices.reversed_entry_id.id,
-        #                                                                                'refunded_invoice_name': paid_invoices.id,
-        #                                                                                'released': True,
-        #                                                                                'user_amount_released': 0.0,
-        #                                                                                'user_amount_invoiced': 0.0,
-        #                                                                                'refunded_amount': total_vendor_amount_per_invoice,
-        #                                                                                })
-        #
-        #             else:
-        #                 if user_id_check:
-        #                     existing_record.write(
-        #                         {'released': True, 'user_amount_invoiced': 0.0, 'partial_due_amount': 0.0,
-        #                          'partial_paid_amount': 0.0, 'refunded_invoice_name': paid_invoices.id,
-        #                          'user_amount_released': 0.0, 'refunded_amount': total_vendor_amount_per_invoice, })
         domain = ['|', ('released', '=', True), ('partial_due_amount', '>', 0.0),
                   ('user_id', '=', self.user_id.id), ('user_amount_released', '>=', 0.0),
                   ('bucket_type_id', '=', self.user_line_released_bucket_id.bucket_type_id.id)]
@@ -2297,7 +2016,6 @@ class VendorLineReleasedByUser(models.Model):
                                     'bill_name': record.reversed_entry_id.id,
                                     'vendor_id': vendor_id.id,
                                     "refund_bill_name": record.id,
-                                    # 'vendor_amount_bill':move_line_product.price_subtotal,
                                     'vendor_line_released_from_user_bucket_id': self.id,
                                     'vendor_bill_amount_refunded': move_line_product.price_subtotal,
                                     'bill_paid': True,
@@ -2314,12 +2032,7 @@ class VendorLineReleasedByUser(models.Model):
                                     'debit': True,
                                 })
 
-                        # existing_bill_rec = self.env['vendor.bill.detail'].sudo().search([('bill_name','=',record.id),('vendor_id','=',self.vendor_id.id),('bucket_type_id','=',self.vendor_line_released_bucket_id)])
-                        # if not existing_bill_rec:
-                        #     self.env['vendor.bill.detail'].sudo().create({
-                        #         'bill_name':record.id,
-                        #         'vendor_id':
-                        #     })
+
             if record.state == 'posted' and record.payment_state == 'partial':
                 if record.reversed_entry_id.invoice_line_ids:
                     amount_paid = 0
