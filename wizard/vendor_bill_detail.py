@@ -76,7 +76,7 @@ class VendorBillDetail(models.TransientModel):
 
     def see_payments(self):
         for record in self:
-            action = self.env.ref('odoo_budgeting_module.action_show_custom_payments').read()[0]
+            action = self.env.ref('odoo_budgeting_module.action_show_custom_payments').sudo().read()[0]
             domain = [('ref', '=',record.bill_name.name)]  # Replace 'field_name' with the actual field name and self.field_value with your dynamic value
             action.update({'domain': domain})
             return action
