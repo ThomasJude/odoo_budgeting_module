@@ -54,7 +54,7 @@
             <field name="view_mode">tree,form</field>
         </record>
 
-		<menuitem name="Budget Allocation template" id="allocation_template_menu" parent="sale.sale_menu_root"
+		<menuitem name="Budget Allocation template" id="allocation_template_menu" parent="budget_master_menu"
      		action="action_allocation_template_form"/>
      
     </data>

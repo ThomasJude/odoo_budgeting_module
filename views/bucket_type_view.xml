@@ -47,8 +47,11 @@
             <field name="res_model">bucket.type</field>
             <field name="view_mode">tree,form</field>
         </record>
+        
+        <menuitem name="Budget" id="budget_master_menu"/>
 
-		<menuitem name="Bucket Type" id="bucket_type_menu" parent="sale.sale_menu_root"
+
+		<menuitem name="Bucket Type" id="bucket_type_menu" parent="budget_master_menu"
      		action="action_bucket_type_form"/>
      
     </data>

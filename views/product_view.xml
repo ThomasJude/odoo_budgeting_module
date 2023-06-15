@@ -7,7 +7,8 @@
 			<field name="arch" type="xml">
             	<xpath expr="//notebook" position="inside">
 	                <page string="Budgeting Tab" name="budget_info">
-						<separator string="Fixed Reduction "/>
+						<!--<separator string="Fixed Reduction "/>-->
+						<separator string="Surplus"/>
 						<field name="product_fixed_budget_line" widget="section_and_note_one2many" mode="tree">
 						<tree string="Fixed Budget" editable="bottom">
                                 <field name="product_id" attrs="{'readonly': [('name', '!=', False)],}" options="{'no_edit': True, 'no_create': True}"/>

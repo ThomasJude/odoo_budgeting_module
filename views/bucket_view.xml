@@ -128,8 +128,11 @@
             <field name="view_mode">tree,form</field>
         </record>
 
-		<menuitem name="Bucket" id="bucket_menu" parent="sale.sale_menu_root"
+		<menuitem name="Bucket" id="bucket_menu" parent="budget_master_menu"
      		action="action_bucket_form"/>
+     		
+		<menuitem name="Product" id="budget_product_menu" parent="budget_master_menu"
+     		action="sale.product_template_action"/>
      
     </data>
 </odoo>
