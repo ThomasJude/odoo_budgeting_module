@@ -184,11 +184,8 @@ class Bucket(models.Model):
                 if bills.invoice_line_ids:
                     visited_move_line_product = set()
                     for move_line_product in bills.invoice_line_ids:
-                        print(move_line_product.move_id, move_line_product.bucket_ids.id, self.id, "FGGGGGGGGG")
                         if move_line_product.bucket_ids.id == self.id:
                             visited_move_line_product.add(move_line_product.product_id.id)
-                            print(move_line_product.is_partial, move_line_product.is_bill_paid,
-                                  move_line_product.bill_residual_amount, move_line_product.price_subtotal)
                             if move_line_product.product_id.id in visited_move_line_product and move_line_product.bill_residual_amount == move_line_product.price_subtotal:
                                 total_released_bill_amount += move_line_product.price_subtotal - move_line_product.bill_residual_amount
                                 total_bill_due_amount += move_line_product.price_subtotal
@@ -205,7 +202,34 @@ class Bucket(models.Model):
                 {'total_amount_released': total_released_amount, 'total_amount_billed': total_released_bill_amount,
                  "total_amount_billed_due": total_bill_due_amount,
                  "final_amount": total_released_amount - total_released_bill_amount})
-            
+
+            all_refund_bill_lines = self.env['account.move'].sudo().search(
+                [('partner_id', '=', rec.vendor_id.id), ('move_type', '=', 'in_refund')])
+
+            all_refunded_bills = [bill_refund_line for bill_refund_line in all_refund_bill_lines]
+            rem_duplicate_refund_bill_no_set = set(all_refunded_bills)
+            final_refund_bill_no = list(rem_duplicate_refund_bill_no_set)
+            total_bill_refund_amount = 0.0
+            for refund_bills in final_refund_bill_no:
+
+                if refund_bills.reversed_entry_id.invoice_line_ids:
+                    visited_move_line_product = set()
+                    for move_line_product_ref in refund_bills.reversed_entry_id.invoice_line_ids:
+                        if move_line_product_ref.bucket_ids.id == self.id:
+                            visited_move_line_product.add(move_line_product_ref.product_id.id)
+                            if move_line_product_ref.product_id.id in visited_move_line_product and move_line_product_ref.refund_residual_amount == 0.0:
+                                total_bill_refund_amount += move_line_product_ref.price_subtotal
+                            elif move_line_product_ref.product_id.id in visited_move_line_product and move_line_product_ref.refund_residual_amount != move_line_product_ref.price_subtotal:
+                                total_bill_refund_amount += move_line_product_ref.price_subtotal - move_line_product_ref.refund_residual_amount
+
+                            elif not move_line_product_ref.product_id.id in visited_move_line_product and move_line_product_ref.refund_residual_amount == 0.0:
+                                total_bill_refund_amount += move_line_product_ref.price_subtotal
+
+                            elif not move_line_product_ref.product_id.id in visited_move_line_product and move_line_product_ref.refund_residual_amount != move_line_product_ref.price_subtotal:
+                                total_bill_refund_amount += move_line_product_ref.price_subtotal - move_line_product_ref.refund_residual_amount
+            rec.write(
+                {"total_amount_billed_refund": total_bill_refund_amount,
+                 "final_amount": rec.final_amount + total_bill_refund_amount})
             
 
     def _get_user_line_amount(self):
@@ -609,6 +633,7 @@ class VendorLineReleased(models.Model):
     total_amount_invoiced = fields.Float('Amount Due')
     total_amount_billed = fields.Float('Amount Billed')
     total_amount_billed_due = fields.Float('Billed Due')
+    total_amount_billed_refund = fields.Float('Bill Refunded')
     final_amount = fields.Float("Final Amount")
 
 
