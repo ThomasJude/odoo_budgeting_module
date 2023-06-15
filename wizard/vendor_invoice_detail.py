@@ -31,7 +31,6 @@ class VendorInvoiceDetail(models.TransientModel):
             invoice = self.env['account.move'].sudo().search([('id','=',rec.invoice_name.id)])
             if invoice.state == 'posted' and invoice.inv_budget_line:
                 for inv_budget_line in invoice.inv_budget_line:
-                    # if not fixed_reduction_lines.released:
                     if inv_budget_line.budget_inv_vendor_id.id == rec.vendor_id.id and inv_budget_line.bucket_type_id.id == rec.bucket_type_id.id:
                         if inv_budget_line.product_id_budget:
                             record_vals = dict(
@@ -58,7 +57,6 @@ class VendorInvoiceDetail(models.TransientModel):
                                 existing_item.write({'amount': total})
                             else:
                                 self.env['detailed.items'].sudo().create(record_vals)
-                            # print("if product in inv budget line",record_vals)
                         else:
                             if inv_budget_line.name:
                                 record_vals = dict(
@@ -85,10 +83,8 @@ class VendorInvoiceDetail(models.TransientModel):
                                     existing_item.write({'amount': total})
                                 else:
                                     self.env['detailed.items'].sudo().create(record_vals)
-                            # print("if name in inv budget line",record_vals)
 
                 for product_remaining_budget_line in invoice.product_remaining_budget_line:
-                    # if not remaining_reduction_lines.released:
                     if product_remaining_budget_line.budget_inv_remaining_vendor_id.id == rec.vendor_id.id and product_remaining_budget_line.bucket_type_id.id == rec.bucket_type_id.id:
                         if product_remaining_budget_line.product_id_budget:
                             record_vals_rem = dict(
@@ -98,7 +94,6 @@ class VendorInvoiceDetail(models.TransientModel):
                                 item = product_remaining_budget_line.product_id_budget.id,
                                 amount = product_remaining_budget_line.amount
                             )
-                            # print("if product in remaining budget line",record_vals)
                             existing_item_rem = self.env['detailed.items'].sudo().search(
                                 [('invoice_id', '=', rec.invoice_name.id), ('vendor_id', '=', rec.vendor_id.id),
                                  ('bucket_type_id', '=', product_remaining_budget_line.bucket_type_id.id),
@@ -142,15 +137,7 @@ class VendorInvoiceDetail(models.TransientModel):
                                 existing_item_rem.write({'amount': total})
                             else:
                                 self.env['detailed.items'].sudo().create(record_vals_rem)
-                            # print("if name in remaining budget line",record_vals)
 
-                    # else:
-                    #     record_vals = dict(
-                    #         invoice_id=rec.bucket_type_id.id,
-                    #         bucket_type_id=fixed_reduction_lines.bucket_type_id.id,
-                    #         userr_id=rec.vendor_id.id,
-                    #     )
-                    # self.env['detailed.items'].sudo().create()
                     domain = [('vendor_id','=',rec.vendor_id.id),('bucket_type_id','=',rec.bucket_type_id.id),('invoice_id','=',rec.invoice_name.id)]
 
             vals = {

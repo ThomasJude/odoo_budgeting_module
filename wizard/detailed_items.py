@@ -13,30 +13,4 @@ class DetailedItems(models.TransientModel):
     amount = fields.Float('Amount')
     main_product_name = fields.Char("Product Name")
     user_check = fields.Boolean("user_check")
-    # check_released=fields.Boolean(compute='_get_released_value')
-    # is_vendor = fields.Boolean('is_vendor')
-    # is_user = fields.Boolean('is_user')
 
-    # @api.constrains('vendor_id',"user_id")
-    # def check_user_type(self):
-    #     print("inside user check function")
-    #     for rec in self:
-    #         if rec.vendor_id:
-    #             rec.is_vendor = True
-    #             rec.is_user = False
-    #         elif rec.user_id:
-    #             rec.is_vendor = False
-    #             rec.is_user = True
-
-
-
-
-
-    # @api.depends('bucket_type_id')
-    # def _get_released_value(self):
-    #     for rec in self:
-    #         invoiced_bucket = self.env['bucket'].sudo().search(
-    #             [('bucket_type_id', '=', rec.bucket_type_id.id),
-    #              ('bucket_status', '=', 'released')])
-    #         if invoiced_bucket:
-    #             rec.check_released = True
