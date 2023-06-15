@@ -36,7 +36,7 @@ class AllocationTemplate(models.Model):
 class AllocationTemplateLine(models.Model): 
     _name = "allocation.template.line"   
 
-    bucket_type = fields.Many2one('bucket.type',string='Bucket TYpe')
+    bucket_type = fields.Many2one('bucket.type',string='Bucket Type')
     allocate_percent = fields.Integer("%",default=0 )
     assignable_status = fields.Selection([('assigned','Assigned'),
                                           ('unassigned','Unassigned'),
