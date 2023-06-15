@@ -9,8 +9,14 @@ class AllocationTemplate(models.Model):
     name = fields.Char(string='Name')
     allocation_temp_line = fields.One2many('allocation.template.line', 'allocation_temp_id', 'Allocation Template')
     is_default_temp= fields.Boolean(string='Default Template',default=False)
-    
-    
+
+
+    def write(self, vals):
+        get_products = self.env["product.template"].sudo().search([('remaining_allocation_temp','=',self.id)])
+        res = super(AllocationTemplate,self).write(vals)
+        for rec1 in get_products:
+            rec1.remaining_allocation_temp_data_val()
+        return res
     @api.constrains('is_default_temp')
     def allocation_temp_is_default_temp(self):
         total = 0
