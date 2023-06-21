@@ -5,6 +5,7 @@ from odoo.exceptions import UserError, ValidationError
 
 class ProductTemplate(models.Model):
     _inherit = "product.template"
+    _order = 'fixed_amount asc'
     
     def remaining_allocation_temp_default_val (self):
         defalt_val_id= False
@@ -22,7 +23,7 @@ class ProductTemplate(models.Model):
     remaining_allocation_temp = fields.Many2one('allocation.template',string='Remaining Allocation Template',default=remaining_allocation_temp_default_val)
     product_fixed_budget_line = fields.One2many('product.budget.fixed', 'prod_id', 'product Fixed Budget')
     product_allocate_budget_line = fields.One2many('product.budget.allocate', 'prod_allocate_id', 'Product Allocate Budget')
-    fixed_amount = fields.Float("Surplus",compute="_compute_fixed_amount")
+    fixed_amount = fields.Float("Surplus",compute="_compute_fixed_amount",store=True)
 
     @api.depends("product_fixed_budget_line")
     def _compute_fixed_amount(self):
