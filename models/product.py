@@ -35,9 +35,10 @@ class ProductTemplate(models.Model):
                     total_cost_val += fixed.amount
                 total_fixed_amount = rec.list_price - total_cost_val
             rec.fixed_amount = total_fixed_amount
+            
+            
     @api.onchange('remaining_allocation_temp')
     def remaining_allocation_temp_data_val (self):
-
         lst = []  
         if self.remaining_allocation_temp:
             if self.remaining_allocation_temp.allocation_temp_line:
@@ -133,7 +134,6 @@ class ProductTemplate(models.Model):
                                 })
         
         elif vals.get('standard_price') and not vals.get('product_fixed_budget_line') :
-
             product_product_id = self.env['product.product'].sudo().search([('product_tmpl_id', '=', self.id)])
             prod_fixed_budget_lines = self.env['product.budget.fixed'].sudo().search([('product_id', '=', self.id)])
             main_product = ""
@@ -145,7 +145,6 @@ class ProductTemplate(models.Model):
                 for fixed_budgt_prod in main_product.product_fixed_budget_line:
                     cost_amount += fixed_budgt_prod.amount
                 main_product.standard_price = cost_amount
-
 
             prod_inv_line = self.env['invoice.budget.line'].sudo().search([('product_id_budget','=',self.id)])
             if prod_fixed_budget_lines:
@@ -199,7 +198,6 @@ class ProductTemplate(models.Model):
 
         else:
             product_product_id = self.env['product.product'].sudo().search([('product_tmpl_id','=',self.id)])
-
             invoices_lines = self.env['account.move.line'].sudo().search([('product_id','=',product_product_id.id)])
 
             for invoice in invoices_lines:
@@ -240,7 +238,6 @@ class ProductTemplate(models.Model):
                                 'allocate_percent': allocate_budget_line.allocate_percent,
                                 'amount': allocate_budget_line.amount * invoice.quantity
                             })
-
         return res
     
     
@@ -497,8 +494,6 @@ class ProductBudgetAllocate(models.Model):
                 self.prod_remaining_budget_vendor_id = False or None
                 self.prod_remaining_budget_assigned_user_id = False or None
                 self.assignable_status = 'assignable_at_inv'
-
-
         else:
             self.is_vendor = False
             self.prod_remaining_budget_vendor_id = False or None
