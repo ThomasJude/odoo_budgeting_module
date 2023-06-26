@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from odoo import api, fields, models, _, tools
 from odoo.exceptions import UserError, ValidationError
-
+from odoo.http import request
+from odoo import http
 
 class ProductTemplate(models.Model):
     _inherit = "product.template"
@@ -250,7 +251,14 @@ class ProductTemplate(models.Model):
                     total += lines.amount
             self.product_allocate_budget_line._constrains_allocate_percent()
         if total > self.list_price:
-            raise UserError(_("Total of Fixed Reductions should not be Greater than Selling Price"))
+            base_url = self.env["ir.config_parameter"].sudo().get_param("web.base.url")
+            menu_id = self.env["ir.ui.menu"].search([('complete_name','=','Budget/Product'),('name','=','Product')],limit=1)
+            modelname='product.template'
+            actionid=self.env['ir.actions.act_window']._for_xml_id('sale.product_template_action')
+            action_id=actionid['id']
+            prod_link= base_url+'/web#id='+str(self.id)+'&action='+str(action_id)+'&model='+modelname+'&view_type=form&cids=&menu_id='+str(menu_id.id)
+            raise UserError(_('Total of Fixed Reductions should not be Greater than Selling Price,go to the link %s') % (prod_link))
+
 
     @api.constrains('list_price')
     def calculate_percentage_allocation(self):
