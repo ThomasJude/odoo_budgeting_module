@@ -56,12 +56,12 @@
                                 <field name="vendor_line_released" >
 									<tree string="Vendor Line Released" create="false" edit="false" duplicate="false" delete="false">
 		                                <field name="vendor_id" domain="[('supplier_rank', '>', 0)]" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
-		                                <field name="total_amount_refunded" readonly="1" invisible="0"/>
-		                                <field name="total_amount_released" readonly="1" invisible="0" sum="Total Amount Released"/>
-		                                <field name="total_amount_invoiced" readonly="1" invisible="0"/>
-		                                <field name="total_amount_billed" readonly="1" invisible="0" sum="Total Amount Billed"/>
-		                                <field name="total_amount_billed_due" readonly="1" invisible="0"/>
-		                                <field name="final_amount" readonly="1" invisible="0" decoration-danger="final_amount &lt; 0" decoration-bf="1"/>
+		                                <field name="total_amount_refunded" readonly="1" invisible="0" width="20%"/>
+		                                <field name="total_amount_released" readonly="1" invisible="0" sum="Total Amount Released" width="20%"/>
+		                                <field name="total_amount_invoiced" readonly="1" invisible="0" width="20%"/>
+		                                <field name="total_amount_billed" readonly="1" invisible="0" sum="Total Amount Billed" width="20%"/>
+		                                <field name="total_amount_billed_due" readonly="1" invisible="0" width="20%"/>
+		                                <field name="final_amount" readonly="1" invisible="0" decoration-danger="final_amount &lt; 0" decoration-bf="1" width="20%"/>
 <!--                                        <button name="fetch_vendor_bill_inv_show" type="object" class="btn btn-link" icon="fa-eye-slash"/>-->
                                         <button name="fetch_vendor_invoice_details_rel" type="object" class="btn btn-primary" string="Show Invoices" />
                                         <button name="fetch_ven_bill_details" type="object" class="btn btn-primary" string="Show Bills" />
@@ -74,7 +74,7 @@
 									<tree string="User Line Invoiced" create="false" edit="false" duplicate="false" delete="false">
 		                                <field name="user_id" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
 		                                <field name="total_amount_released" readonly="1" invisible="1"/>
-		                                <field name="total_amount_invoiced" readonly="1" invisible="0"/>
+		                                <field name="total_amount_invoiced" readonly="1" invisible="0" width="30%"/>
 		                                <field name="total_amount_billed" readonly="1" invisible="1"/>
 		                                <field name="total_amount_billed_due" readonly="1" invisible="1"/>
 <!--                                        <button name="fetch_user_invoiced_bill_inv_show" type="object" class="btn btn-link" icon="fa-eye-slash"/>-->
@@ -89,9 +89,9 @@
 								<field name="user_line_released" >
 									<tree string="User Line Released" create="false" edit="false" duplicate="false" delete="false">
 		                                <field name="user_id" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
-		                                <field name="total_amount_refunded" readonly="1" invisible="0"/>
-		                                <field name="total_amount_released" readonly="1" invisible="0" sum="Total Amount Released"/>
-		                                <field name="total_amount_invoiced" readonly="1" invisible="0"/>
+		                                <field name="total_amount_refunded" readonly="1" invisible="0" width="30%"/>
+		                                <field name="total_amount_released" readonly="1" invisible="0" sum="Total Amount Released" width="30%"/>
+		                                <field name="total_amount_invoiced" readonly="1" invisible="0" width="30%"/>
 		                                <field name="total_amount_billed" readonly="1" invisible="1"/>
 		                                <field name="total_amount_billed_due" readonly="1" invisible="1"/>
 <!--                                        <button name="fetch_user_released_bill_inv_show" type="object" class="btn btn-link" icon="fa-eye-slash"/>-->
@@ -107,10 +107,10 @@
 		                                <field name="vendor_id" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
 		                                <field name="total_amount_released" readonly="1" invisible="1"/>
 		                                <field name="total_amount_invoiced" readonly="1" invisible="1"/>
-										<field name="total_amount_refunded" readonly="1" invisible="0"/>
-										<field name="total_amount_billed" readonly="1" invisible="0"/>
-		                                <field name="total_amount_billed_due" readonly="1" invisible="0"/>
-		                                <field name="final_amount" readonly="1" invisible="0" decoration-danger="final_amount &lt; 0" decoration-bf="1"/>
+										<field name="total_amount_refunded" readonly="1" invisible="0" width="30%"/>
+										<field name="total_amount_billed" readonly="1" invisible="0" width="30%"/>
+		                                <field name="total_amount_billed_due" readonly="1" invisible="0" width="30%"/>
+		                                <field name="final_amount" readonly="1" invisible="0" decoration-danger="final_amount &lt; 0" decoration-bf="1" width="30%"/>
 <!--                                        <button name="fetch_user_released_bill_inv_show" type="object" class="btn btn-link" icon="fa-eye-slash"/>-->
                                         <button name="fetch_ven_bills_details_inside_user" type="object" class="btn btn-primary" string="Show Bills" />
                                     </tree>
