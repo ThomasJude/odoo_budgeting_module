@@ -401,11 +401,12 @@ class ProductBudgetFixed(models.Model):
 
                     if not fetch_product_vendor:
                         if self.bucket_type_id.is_vendor:
-                            self.assignable_status = 'assignable_at_inv'
+                            pass
+                            # self.assignable_status = 'assignable_at_inv'
                     else:
                         if self.bucket_type_id.is_vendor:
                             self.prod_fix_vendor_id = fetch_product_vendor.partner_id.id
-                        self.assignable_status = 'assigned'
+                            self.assignable_status = 'assigned'
                         
                         
 

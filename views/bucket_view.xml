@@ -133,6 +133,7 @@
      		
 		<menuitem name="Product" id="budget_product_menu" parent="budget_master_menu"
      		action="sale.product_template_action"/>
-     
+
+
     </data>
 </odoo>

@@ -55,7 +55,7 @@
         </record>
 
 		<menuitem name="Budget Allocation template" id="allocation_template_menu" parent="budget_master_menu"
-     		action="action_allocation_template_form"/>
+     		action="action_allocation_template_form" sequence="12"/>
      
     </data>
 </odoo>

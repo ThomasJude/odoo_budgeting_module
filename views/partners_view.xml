@@ -1,0 +1,51 @@
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="oodles_partnerlist">
+            <field name="name">Users</field>
+            <field name="model">res.users</field>
+            <field name="arch" type="xml">
+                <tree create="" edit="">
+                    <field name="name"/>
+                    <field name="login" string="Login/Email"/>
+                    <field name="lang"/>
+                    
+                </tree>
+            </field>
+        </record>
+        <record model="ir.ui.view" id="oodles_partnerform">
+            <field name="name">Users</field>
+            <field name="model">res.users</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+<!--                        <field name="image_1920" widget="image" class="oe_avatar" options="{"preview_image": "image_128"}"/>-->
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="1"/>
+                            </h1>
+                            <field name="email" invisible="1"/>
+                            <label for="login" class="oe_edit_only" string="Email Address"/>
+                            <h2>
+                                <field name="login"/>
+                            </h2>
+                            <group>
+                                <field name="partner_id" readonly="1" required="0" groups="base.group_no_one" attrs="{'invisible': [('id', '=', False)]}"/>
+                            </group>
+                        </div>
+
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record model="ir.actions.act_window" id="oodles_respartners_window">
+            <field name="name">Users</field>
+            <field name="res_model">res.users</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_ids" eval="[ (5, 0, 0), (0, 0, {'sequence':2 , 'view_mode': 'tree', 'view_id': ref('odoo_budgeting_module.oodles_partnerlist')}), (0, 0, {'sequence':3 , 'view_mode': 'form', 'view_id': ref('odoo_budgeting_module.oodles_partnerform')})]"/>
+        </record>
+
+        <menuitem name="Users" id="budget_partner_menu" parent="budget_master_menu" action="oodles_respartners_window" sequence="10"/>
+
+    </data>
+</odoo>
