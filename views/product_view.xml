@@ -10,7 +10,8 @@
 						<separator string="Fixed Reduction"/>
 						<field name="product_fixed_budget_line" widget="section_and_note_one2many" mode="tree">
 						<tree string="Fixed Budget" editable="bottom">
-                                <field name="product_id" attrs="{'readonly': [('name', '!=', False)],}" options="{'no_edit': True, 'no_create': True}"/>
+                                <field name="prod_id" invisible="1"/>
+                                <field name="product_id"  attrs="{'readonly': [('name', '!=', False)],}" options="{'no_edit': True, 'no_create': True}" force_save="1"/>
                                 <field name="name" attrs="{'readonly': [('product_id', '!=', False)],}"/>
                                 <field name="bucket_type_id" domain="[('is_vendor', '=', True)]" options="{'no_edit': True, 'no_create': True}" required="1"/>
                                 <!--<field name="bucket_user" invisible="1"/>-->
