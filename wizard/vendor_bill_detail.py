@@ -60,7 +60,7 @@ class VendorBillDetail(models.TransientModel):
                       ('bill_id', '=', record.bill_name.id)]
 
             vals = {
-                'name': _('Show Bill Items'),
+                'name': _('Bill Items'),
                 'type': 'ir.actions.act_window',
                 'domain': domain,
                 'view_type': 'form',

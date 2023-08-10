@@ -116,7 +116,7 @@ class UserInvoiceDetail(models.TransientModel):
         domain = [('user_id', '=', rec.user_id.id), ('bucket_type_id', '=', rec.bucket_type_id.id),('invoice_id', '=', rec.invoice_name.id)]
 
         vals = {
-            'name': _('Show Detailed Items'),
+            'name': _('Detailed Items'),
             'type': 'ir.actions.act_window',
             'domain':domain,
             'view_type': 'form',

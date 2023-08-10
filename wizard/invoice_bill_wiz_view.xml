@@ -46,7 +46,7 @@
 						                <field name="vendor_id" />
 						                <field name="bucket_type_id" />
 						
-						                <button name="show_billed_items" type="object" class="btn btn-primary" string="show billed items"/>
+						                <button name="show_billed_items" type="object" class="btn btn-primary" string="Billed Items"/>
 						
                                 </tree>
 	                        </field>

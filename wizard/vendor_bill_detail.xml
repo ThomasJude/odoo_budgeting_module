@@ -26,7 +26,7 @@
                 <field name="bucket_type_id" />
 
                 <button name="see_payments" type="object" icon="fa-dollar" string="Show Payments" class="btn btn-primary"/>
-                <button name="show_billed_items" type="object" class="btn btn-primary" string="show billed items"/>
+                <button name="show_billed_items" type="object" class="btn btn-primary" string="Billed Items"/>
 
             </tree>
         </field>

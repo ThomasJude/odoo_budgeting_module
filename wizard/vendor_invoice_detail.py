@@ -141,7 +141,7 @@ class VendorInvoiceDetail(models.TransientModel):
                     domain = [('vendor_id','=',rec.vendor_id.id),('bucket_type_id','=',rec.bucket_type_id.id),('invoice_id','=',rec.invoice_name.id)]
 
             vals = {
-                'name': _('Show Detailed Items'),
+                'name': _('Detailed Items'),
                 'type': 'ir.actions.act_window',
                 # "type": "ir.actions.client",
                 'domain':domain,

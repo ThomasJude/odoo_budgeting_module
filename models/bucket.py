@@ -422,10 +422,10 @@ class VendorLine(models.Model):
 
     vendor_id = fields.Many2one('res.partner','Vendors')
     vendor_line_bucket_id = fields.Many2one('bucket','bucket')
-    total_amount_released = fields.Float('Amount Released')
-    total_amount_invoiced = fields.Float('Amount Due')
-    total_amount_billed = fields.Float('Amount Billed')
-    total_amount_billed_due = fields.Float('Billed Due')
+    total_amount_released = fields.Float('Inv. Released')
+    total_amount_invoiced = fields.Float('Inv. Due')
+    total_amount_billed = fields.Float('Bill Released')
+    total_amount_billed_due = fields.Float('Bill Due')
     
 
     def fetch_vendor_unpaid_invoice_details(self,final_invoice_no):
@@ -612,7 +612,7 @@ class VendorLine(models.Model):
         final_paid_invoice_no = list(rem_duplicate_paid_invoice_no_set)
         self.fetch_vendor_paid_invoice_details(final_paid_invoice_no)
         return {
-            'name': _('Show In Detail'),
+            'name': _('Details'),
             'domain': [('vendor_id', '=', self.vendor_id.id),('released','=',False),('vendor_amount_invoiced','>',0.0)],
             'type': 'ir.actions.act_window',
             'view_type': 'form',
@@ -628,11 +628,11 @@ class VendorLineReleased(models.Model):
 
     vendor_id = fields.Many2one('res.partner', 'Vendors')
     vendor_line_released_bucket_id = fields.Many2one('bucket', 'bucket')
-    total_amount_refunded = fields.Float('Amount Refunded')
-    total_amount_released = fields.Float('Amount Released')
-    total_amount_invoiced = fields.Float('Amount Due')
-    total_amount_billed = fields.Float('Amount Billed')
-    total_amount_billed_due = fields.Float('Billed Due')
+    total_amount_refunded = fields.Float('Refunded')
+    total_amount_released = fields.Float('Inv. Released')
+    total_amount_invoiced = fields.Float('Inv. Due')
+    total_amount_billed = fields.Float('Bill Released')
+    total_amount_billed_due = fields.Float('Bill Due')
     total_amount_billed_refund = fields.Float('Bill Refunded')
     final_amount = fields.Float("Final Amount")
 
@@ -980,7 +980,7 @@ class VendorLineReleased(models.Model):
         domain = [('vendor_id','=',self.vendor_id.id),("debit",'=',False),('bucket_type_id', '=', self.vendor_line_released_bucket_id.bucket_type_id.id)]
 
         vals = {
-            'name': _('Show Bill Detail'),
+            'name': _('Bill Detail'),
             'domain': domain,
             'type': 'ir.actions.act_window',
             'view_type': 'form',
@@ -1293,7 +1293,7 @@ class VendorLineReleased(models.Model):
 
         domain = ['|',('released','=',True),('partial_due_amount','>',0.0),('vendor_id', '=', self.vendor_id.id),('vendor_amount_released','>=',0.0)]
         vals = {
-            'name': _('Show In Detail'),
+            'name': _('Details'),
             'domain': domain,
             'type': 'ir.actions.act_window',
             'view_type': 'form',
@@ -1311,10 +1311,10 @@ class UserLine(models.Model):
 
     user_id = fields.Many2one('res.users', 'Users')
     user_line_bucket_id = fields.Many2one('bucket', 'bucket')
-    total_amount_released = fields.Float('Amount Released')
-    total_amount_invoiced = fields.Float('Amount Due')
-    total_amount_billed = fields.Float('Amount Billed')
-    total_amount_billed_due = fields.Float('Billed Due')
+    total_amount_released = fields.Float('Inv. Released')
+    total_amount_invoiced = fields.Float('Inv. Due')
+    total_amount_billed = fields.Float('Bill Released')
+    total_amount_billed_due = fields.Float('Bill Due')
 
 
 
@@ -1529,7 +1529,7 @@ class UserLine(models.Model):
         final_paid_invoice_no = list(rem_duplicate_paid_invoice_no_set)
         self.fetch_user_paid_invoice_details(final_paid_invoice_no)
         return {
-                'name': _('Show In Detail'),
+                'name': _('Details'),
                 'domain': [('user_id', '=', self.user_id.id),('released','=',False),('bucket_type_id','=',self.user_line_bucket_id.bucket_type_id.id),('user_amount_invoiced','>',0.0)],
                 'type': 'ir.actions.act_window',
                 'view_type': 'form',
@@ -1545,11 +1545,11 @@ class UserLineReleased(models.Model):
 
     user_id = fields.Many2one('res.users', 'Users')
     user_line_released_bucket_id = fields.Many2one('bucket', 'bucket')
-    total_amount_refunded = fields.Float('Amount Refunded')
-    total_amount_released = fields.Float('Amount Released')
-    total_amount_invoiced = fields.Float('Amount Due')
-    total_amount_billed = fields.Float('Amount Billed')
-    total_amount_billed_due = fields.Float('Billed Due')
+    total_amount_refunded = fields.Float('Refunded')
+    total_amount_released = fields.Float('Inv. Released')
+    total_amount_invoiced = fields.Float('Inv. Due')
+    total_amount_billed = fields.Float('Bill Released')
+    total_amount_billed_due = fields.Float('Bill Due')
 
     def fetch_user_unpaid_invoice_details_rel(self,final_invoice_no):
         for invoices in final_invoice_no:
@@ -1890,7 +1890,7 @@ class UserLineReleased(models.Model):
                   ('bucket_type_id', '=', self.user_line_released_bucket_id.bucket_type_id.id)]
 
         return {
-            'name': _('Show In Detail'),
+            'name': _('Details'),
             'domain': domain,
             'type': 'ir.actions.act_window',
             'view_type': 'form',
@@ -1906,11 +1906,11 @@ class VendorLineReleasedByUser(models.Model):
 
     vendor_id = fields.Many2one('res.partner', 'Vendors')
     vendor_line_released_bucket_id = fields.Many2one('bucket', 'bucket')
-    total_amount_released = fields.Float('Amount Released')
-    total_amount_refunded = fields.Float('Amount Refunded')
-    total_amount_invoiced = fields.Float('Amount Due')
-    total_amount_billed = fields.Float('Amount Billed')
-    total_amount_billed_due = fields.Float('Billed Due')
+    total_amount_released = fields.Float('Inv. Released')
+    total_amount_refunded = fields.Float('Refunded')
+    total_amount_invoiced = fields.Float('Inv. Due')
+    total_amount_billed = fields.Float('Bill Released')
+    total_amount_billed_due = fields.Float('Bill Due')
     final_amount = fields.Float("Final Amount")
 
     def fetch_vendor_bills(self,fetch_bills):
@@ -2139,7 +2139,7 @@ class VendorLineReleasedByUser(models.Model):
         self.fetch_vendor_refunded_bills(fetch_refunded_bills)
         domain = [('vendor_id', '=', self.vendor_id.id),('bucket_type_id','=',self.vendor_line_released_bucket_id.bucket_type_id.id)]
         vals = {
-            'name': _('Show Bill Detail'),
+            'name': _('Bill Detail'),
             'domain': domain,
             'type': 'ir.actions.act_window',
             'view_type': 'form',

@@ -49,12 +49,12 @@
         </record>
 
         <record id="action_allocation_template_form" model="ir.actions.act_window">
-            <field name="name"> Budget Allocation template</field>
+            <field name="name">Templates</field>
             <field name="res_model">allocation.template</field>
             <field name="view_mode">tree,form</field>
         </record>
 
-		<menuitem name="Budget Allocation template" id="allocation_template_menu" parent="budget_master_menu"
+		<menuitem name="Templates" id="allocation_template_menu" parent="budget_master_menu"
      		action="action_allocation_template_form" sequence="12"/>
      
     </data>
