@@ -52,6 +52,7 @@ class ProductTemplate(models.Model):
                                         'is_vendor': remaining_allocation.is_vendor,
                                         'prod_allocate_id': self.id,
                                         'prod_remaining_budget_assigned_user_id': remaining_allocation.allocate_user_id.id,
+                                        'prod_remaining_budget_vendor_id': remaining_allocation.allocate_user_id.id,
                                         'allocate_percent': remaining_allocation.allocate_percent,
                                         'allocation_temp_id':self.remaining_allocation_temp.id
                                     }])
@@ -271,11 +272,11 @@ class ProductTemplate(models.Model):
         if self.product_fixed_budget_line:
             for fixed_budg in self.product_fixed_budget_line:
                 total_cost_Val= total_cost_Val+ fixed_budg.amount
-                if fixed_budg.bucket_type_id.is_vendor and fixed_budg.assignable_status == 'assigned':
+                if fixed_budg.bucket_type_id and fixed_budg.assignable_status == 'assigned':
                     if not fixed_budg.prod_fix_vendor_id:
                         raise UserError(_("Please add vendor for assigned status fixed reduction budgeting tab "))
                     
-                if not fixed_budg.bucket_type_id.is_vendor and fixed_budg.assignable_status == 'assigned':
+                if not fixed_budg.bucket_type_id and fixed_budg.assignable_status == 'assigned':
                     if not fixed_budg.prod_fix_assigned_user_id:
                         raise UserError(_("Please add User for assigned status fixed reduction budgeting tab "))
                     
@@ -286,11 +287,11 @@ class ProductTemplate(models.Model):
     def remaining_vendor_user_allocation_assigned_status(self):
         if self.product_allocate_budget_line:
             for rem_budg in self.product_allocate_budget_line:
-                if rem_budg.bucket_type_id.is_vendor and rem_budg.assignable_status == 'assigned':
+                if rem_budg.bucket_type_id and rem_budg.assignable_status == 'assigned':
                     if not rem_budg.prod_remaining_budget_vendor_id:
                         raise UserError(_("Please add vendor for assigned status Remaining Allocation budgeting tab "))
                     
-                if not rem_budg.bucket_type_id.is_vendor and rem_budg.assignable_status == 'assigned':
+                if not rem_budg.bucket_type_id and rem_budg.assignable_status == 'assigned':
                     if not rem_budg.prod_remaining_budget_assigned_user_id:
                         raise UserError(_("Please add User for assigned status Remaining Allocation budgeting tab "))
 
@@ -324,7 +325,7 @@ class ProductBudgetFixed(models.Model):
     bucket_type_id = fields.Many2one('bucket.type','Bucket Type')
     is_vendor = fields.Boolean(string='Is Vendor')
     prod_fix_vendor_id = fields.Many2one('res.partner', string='Name', copy=False)
-    
+
     prod_fix_assigned_user_id = fields.Many2one('res.users', string="User Name", copy=False)
 
     @api.onchange('product_id')
@@ -343,7 +344,7 @@ class ProductBudgetFixed(models.Model):
     @api.onchange('bucket_type_id')
     def _onchange_bucket_type_id(self):
         if self.bucket_type_id:
-            if self.bucket_type_id.is_vendor:
+            if self.bucket_type_id:
                 self.is_vendor = True
             else:
                 self.is_vendor=False
@@ -359,14 +360,19 @@ class ProductBudgetFixed(models.Model):
     @api.onchange('product_id')
     def fetch_vendors(self):
         if self.product_id:
+            result = {}
+            lst = []
             fetch_product_vendor = self.env['product.supplierinfo'].sudo().search([('product_tmpl_id','=',self.product_id.id)],limit=1,order = "id desc",)
-            vendor_bucket_type = self.env['bucket.type'].sudo().search([('is_vendor', '=', True)])
-            if fetch_product_vendor:
-                self.bucket_type_id = vendor_bucket_type.id
-                self.prod_fix_vendor_id = fetch_product_vendor.partner_id.id
-                self.assignable_status = 'assigned'
+            vendor_bucket_type = self.env['bucket.type'].sudo().search([])
+            if fetch_product_vendor and vendor_bucket_type:
+                for rec in vendor_bucket_type:
+                    lst.append(rec.id)
+                # result['domain'] = {'name':[('id','in',lst)]}
+                self.bucket_type_id = lst
+                # self.prod_fix_vendor_id = fetch_product_vendor.partner_id.id
+                # self.assignable_status = 'assigned'
             else:
-                self.bucket_type_id = vendor_bucket_type.id
+                self.bucket_type_id = lst
                 self.assignable_status = 'assignable_at_inv'
     
     
@@ -410,11 +416,11 @@ class ProductBudgetFixed(models.Model):
                         [('product_tmpl_id', '=', self.product_id.id)], limit=1, order="id desc", )
 
                     if not fetch_product_vendor:
-                        if self.bucket_type_id.is_vendor:
+                        if self.bucket_type_id:
                             pass
                             # self.assignable_status = 'assignable_at_inv'
                     else:
-                        if self.bucket_type_id.is_vendor:
+                        if self.bucket_type_id:
                             self.prod_fix_vendor_id = fetch_product_vendor.partner_id.id
                             self.assignable_status = 'assigned'
                         
@@ -459,7 +465,7 @@ class ProductBudgetAllocate(models.Model):
     prod_remaining_budget_vendor_id = fields.Many2one('res.partner', string="Vendors Name", copy=False)
     amount = fields.Float("amount")
     allocation_temp_id= fields.Many2one('allocation.template', string="Template", copy=False)
-    prod_remaining_budget_assigned_user_id = fields.Many2one('res.users', string="Name", copy=False)
+    prod_remaining_budget_assigned_user_id = fields.Many2one('res.partner', string="Name", copy=False)
     
     
     @api.onchange('product_id')
@@ -496,7 +502,7 @@ class ProductBudgetAllocate(models.Model):
     @api.onchange('bucket_type_id')
     def _onchange_bucket_type_id(self):
         if self.bucket_type_id:
-            if self.bucket_type_id.is_vendor:
+            if self.bucket_type_id:
                 self.is_vendor = True
                 self.prod_remaining_budget_vendor_id = False or None
                 self.prod_remaining_budget_assigned_user_id = False or None

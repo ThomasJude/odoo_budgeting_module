@@ -35,9 +35,9 @@
 									<tree string="Template Details" editable="bottom">
 										<field name="product_id" invisible="1" attrs="{'readonly': [('desc', '!=', False)],'required': [('desc', '=', False)]}" options="{'no_edit': True, 'no_create': True}" />
 										<field name="desc" invisible="1" attrs="{'readonly': [('product_id', '!=', False)],'required': [('product_id', '=', False)]}"/>
-		                                <field name="bucket_type" domain="[('is_vendor', '!=', True)]" options="{'no_edit': True, 'no_create': True}" required="1"/>
+		                                <field name="bucket_type" options="{'no_edit': True, 'no_create': True}" required="1"/>
 		                                <field name="assignable_status" required="1"/>
-		                                <field name="allocate_user_id" domain="[('share', '=', False)]" attrs="{'readonly': [('assignable_status', 'in', ('unassigned','assignable_at_inv'))],'required':[('assignable_status','=','assigned')]}" options="{'no_edit': True, 'no_create': True}" />
+		                                <field name="allocate_user_id" domain="[('supplier_rank', '>', 0)]" attrs="{'readonly': [('assignable_status', 'in', ('unassigned','assignable_at_inv'))],'required':[('assignable_status','=','assigned')]}" options="{'no_edit': True, 'no_create': True}" />
 		                                <field name="allocate_percent" />
                                     </tree>
 		                        </field>

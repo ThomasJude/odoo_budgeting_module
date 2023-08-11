@@ -112,27 +112,27 @@ class VendorInvoiceDetail(models.TransientModel):
                             else:
                                 self.env['detailed.items'].sudo().create(record_vals_rem)
                         else:
-                            if product_remaining_budget_line.name:
+                            if product_remaining_budget_line:
                                 record_vals_rem = dict(
                                     invoice_id=rec.invoice_name.id,
                                     bucket_type_id=product_remaining_budget_line.bucket_type_id.id,
                                     vendor_id=rec.vendor_id.id,
-                                    name=product_remaining_budget_line.name,
+                                    name=product_remaining_budget_line.prod_remaining_id.name,
                                     amount=product_remaining_budget_line.amount
                                 )
                             existing_item_rem = self.env['detailed.items'].sudo().search(
                                 [('invoice_id', '=', rec.invoice_name.id), ('vendor_id', '=', rec.vendor_id.id),
                                  ('bucket_type_id', '=', product_remaining_budget_line.bucket_type_id.id),
-                                 ('name', '=', product_remaining_budget_line.name)])
+                                 ])
                             if existing_item_rem:
                                 total = 0
                                 for inv_budget_line_items in invoice.inv_budget_line:
                                     if inv_budget_line_items.budget_inv_vendor_id.id == rec.vendor_id.id and inv_budget_line_items.bucket_type_id.id == rec.bucket_type_id.id:
-                                        if inv_budget_line_items.name == existing_item_rem.name:
+                                        if inv_budget_line_items == existing_item_rem:
                                             total += inv_budget_line_items.amount
                                 for product_remaining_budget_line in invoice.product_remaining_budget_line:
                                     if product_remaining_budget_line.budget_inv_remaining_vendor_id.id == rec.vendor_id.id and product_remaining_budget_line.bucket_type_id.id == rec.bucket_type_id.id:
-                                        if product_remaining_budget_line.name == existing_item_rem.name:
+                                        if product_remaining_budget_line.prod_remaining_id.id == existing_item_rem.invoice_id.id:
                                             total += product_remaining_budget_line.amount
                                 existing_item_rem.write({'amount': total})
                             else:

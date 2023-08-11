@@ -48,23 +48,23 @@ class AllocationTemplateLine(models.Model):
                                           ('unassigned','Unassigned'),
                                           ('assignable_at_inv','Assignable At Time of Invoice')
                                           ],"Assignable Status",default= "unassigned")
-    allocate_user_id = fields.Many2one('res.users',string='Name')
+    allocate_user_id = fields.Many2one('res.partner',string='Name')
     product_id = fields.Many2one('product.template',string='Product')
     desc = fields.Text(string='Description', readonly=False)
     allocation_temp_id= fields.Many2one('allocation.template',string='Allocation Template Id')
     is_vendor = fields.Boolean(string='Is Vendor')
     
     
-    @api.onchange('bucket_type')
-    def _onchange_bucket_type(self):
-        if self.bucket_type:
-            if self.bucket_type.is_vendor:
-                self.is_vendor = True
-            else:
-                self.is_vendor = False
-
-        else:
-            self.is_vendor = False
+    # @api.onchange('bucket_type')
+    # def _onchange_bucket_type(self):
+    #     if self.bucket_type:
+    #         if self.bucket_type.is_vendor:
+    #             self.is_vendor = True
+    #         else:
+    #             self.is_vendor = False
+    #
+    #     else:
+    #         self.is_vendor = False
             
     
     

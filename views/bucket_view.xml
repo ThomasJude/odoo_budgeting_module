@@ -69,7 +69,7 @@
 		                        </field>
 							</page>
 <!--                            ///////////////////-->
-                            <page string="User Details" name="user_info" attrs="{'invisible':['|',('check','!=',False),('check2','!=',True)]}">
+                            <page string="Details" name="user_info" attrs="{'invisible':['|',('check','!=',False),('check2','!=',True)]}">
 								<field name="user_line" >
 									<tree string="User Line Invoiced" create="false" edit="false" duplicate="false" delete="false">
 		                                <field name="user_id" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
@@ -85,7 +85,7 @@
 
 <!--                            ///////////////////////-->
 
-                            <page string="User Details" name="user_info" attrs="{'invisible':['|',('check','!=',False),('check2','!=',False)]}">
+                            <page string="Details" name="user_info" attrs="{'invisible':['|',('check','!=',False),('check2','!=',False)]}">
 								<field name="user_line_released" >
 									<tree string="User Line Released" create="false" edit="false" duplicate="false" delete="false">
 		                                <field name="user_id" readonly="1" options="{'no_edit': True, 'no_create': True}"/>

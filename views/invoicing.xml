@@ -29,7 +29,7 @@
                                 <field name="check_invoice_posted" invisible="1"/>
                                 <field name="assignable_status" readonly="1"/>
 <!--                                <field name="budget_inv_vendor_ids" attrs="{'readonly': ['|',('bucket_user', '!=', 'vendor'),('assignable_status', 'in', ('unassigned','assigned'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>-->
-                                <field name="budget_inv_vendor_id" domain="[('supplier_rank', '>', 0)]" attrs="{'readonly': ['|','|',('is_vendor', '!=', True),('assignable_status', 'in', ('unassigned','assigned')),('check_invoice_posted','!=',False)],}" options="{'no_edit': True, 'no_create': True}"/>
+                                <field name="budget_inv_vendor_id" domain="[('supplier_rank', '>', 0)]" attrs="{'readonly': ['|',('assignable_status', 'in', ('unassigned','assigned')),('check_invoice_posted','!=',False)],}" options="{'no_edit': True, 'no_create': True}"/>
 <!--                                <field name="budget_user_ids" attrs="{'readonly': ['|','|',('bucket_user', '=', 'vendor'),('assignable_status', 'in', ('unassigned','assigned')),('assignable_status', 'not in', ('unassigned','assigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>-->
                                 <field name="budget_user_id" invisible="1" attrs="{'readonly': ['|','|','|',('is_vendor', '=', True),('assignable_status', 'in', ('unassigned','assigned')),('assignable_status', 'not in', ('unassigned','assigned','assignable_at_inv')),('check_invoice_posted','!=',False)],}" options="{'no_edit': True, 'no_create': True}"/>
                                 <field name="prod_priority" readonly="1"/>
@@ -53,9 +53,9 @@
 								<field name="check_invoice_posted" invisible="1"/>
 								<field name="assignable_status" readonly="1"/>
 <!--								<field name="budget_inv_remaining_vendor_ids" attrs="{'readonly': ['|',('bucket_user', '!=', 'vendor'),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>-->
-								<field name="budget_inv_remaining_vendor_id" invisible="1" domain="[('supplier_rank', '>', 0)]" attrs="{'readonly': ['|','|',('is_vendor', '!=', True),('assignable_status', 'in', ('unassigned','assigned')),('check_invoice_posted','!=',False)],}" options="{'no_edit': True, 'no_create': True}"/>
+								<field name="budget_inv_remaining_vendor_id" invisible="0" domain="[('supplier_rank', '>', 0)]" attrs="{'readonly': ['|',('assignable_status', 'in', ('unassigned','assigned')),('check_invoice_posted','!=',False)],}" options="{'no_edit': True, 'no_create': True}"/>
 <!--                                <field name="budget_remaining_user_ids" attrs="{'readonly': ['|',('bucket_user', '=', 'vendor'),('assignable_status', 'in', ('unassigned','assignable_at_inv'))],}" options="{'no_edit': True, 'no_create': True}" widget="many2many_tags"/>-->
-                                <field name="budget_remaining_user_id" domain="[('share', '=', False)]" attrs="{'readonly': ['|','|',('is_vendor', '=', True),('assignable_status', 'in', ('unassigned','assigned')),('check_invoice_posted','!=',False)]}" options="{'no_edit': True, 'no_create': True}"/>
+                                <field name="budget_remaining_user_id" invisible="1" domain="[('supplier_rank', '>', 0)]" attrs="{'readonly': ['|',('assignable_status', 'in', ('unassigned','assigned')),('check_invoice_posted','!=',False)]}" options="{'no_edit': True, 'no_create': True}" />
 								<field name="allocate_percent" readonly="1"/>
 								<field name="amount" sum="Total of Remaining" readonly="1" force_save="1"/>
 								<field name="released" readonly="1" force_save="1"/>

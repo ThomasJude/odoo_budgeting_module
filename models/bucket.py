@@ -43,7 +43,7 @@ class Bucket(models.Model):
     @api.depends('bucket_type_id')
     def _get_value(self):
         for rec in self:
-            if rec.bucket_type_id.is_vendor:
+            if rec.bucket_type_id:
                 rec.check = True
                 rec._get_amount()
             else:
@@ -77,11 +77,20 @@ class Bucket(models.Model):
 
     def _get_vendor_line_amount(self):
         for rec in self.vendor_line:
-
+            all_invoices = []
             all_vendor_invoice_lines = self.env['invoice.budget.line'].sudo().search(
                 [('budget_inv_vendor_id.id', '=', rec.vendor_id.id)])
+            for vendor_inv_line in all_vendor_invoice_lines:
+                print(vendor_inv_line)
+                all_invoices.append(vendor_inv_line.prod_inv_id)
+            all_vendor_invoice_lines_remain = self.env['product.budget.remaining'].sudo().search(
+                [('budget_inv_remaining_vendor_id.id', '=', rec.vendor_id.id)])
+            for vendor_inv_remain in all_vendor_invoice_lines_remain:
+                print(vendor_inv_remain)
+                all_invoices.append(vendor_inv_remain.prod_remaining_id)
+            print(all_invoices)
 
-            all_invoices = [invoice_line.prod_inv_id for invoice_line in all_vendor_invoice_lines]
+            # all_invoices = [invoice_line.prod_inv_id for invoice_line in all_vendor_invoice_lines]
 
             rem_duplicate_invoice_no_set = set(all_invoices)
             final_invoice_no = list(rem_duplicate_invoice_no_set)
@@ -113,6 +122,26 @@ class Bucket(models.Model):
                                 amount_released += inv_budget_line.amount
                         total_released += amount_released
 
+                    for inv_budget_line in invoices.product_remaining_budget_line:
+                        amount_released = 0
+                        print(inv_budget_line.prod_remaining_id)
+
+                        if not inv_budget_line.released:
+                            if inv_budget_line.budget_inv_remaining_vendor_id.id == rec.vendor_id.id and inv_budget_line.bucket_type_id.id == rec.vendor_line_bucket_id.bucket_type_id.id:
+                                if inv_budget_line.amount_residual != inv_budget_line.amount and not inv_budget_line.amount_residual == 0.0:
+                                    total_amount_rel += inv_budget_line.amount - inv_budget_line.amount_residual
+                                    total_amount_inv += inv_budget_line.amount_residual
+                                elif inv_budget_line.amount_residual == 0.0:
+                                    total_amount_inv += inv_budget_line.amount - inv_budget_line.amount_residual
+                                    total_amount_rel += inv_budget_line.amount_residual
+                                else:
+                                    total_amount_inv += inv_budget_line.amount
+                        if inv_budget_line.released:
+
+                            if inv_budget_line.budget_inv_remaining_vendor_id.id == rec.vendor_id.id and inv_budget_line.bucket_type_id.id == rec.vendor_line_bucket_id.bucket_type_id.id:
+                                amount_released += inv_budget_line.amount
+                        total_released += amount_released
+
                     total_released_amount += total_amount_rel + total_released
                     total_invoiced_amount += total_amount_inv
                 rec.write(
@@ -125,10 +154,20 @@ class Bucket(models.Model):
             if rec.vendor_line_released_bucket_id.bucket_amount == 0.0 or rec.vendor_line_released_bucket_id.bucket_amount == -0.0:
                 rec.vendor_line_released_bucket_id.bucket_amount = 0.0
 
+            all_invoices = []
+
             all_vendor_invoice_lines = self.env['invoice.budget.line'].sudo().search(
                 [('budget_inv_vendor_id.id', '=', rec.vendor_id.id)])
+            for vendor_line_inv in all_vendor_invoice_lines:
+                all_invoices.append(vendor_line_inv.prod_inv_id)
+            all_vendor_invoice_lines_remain = self.env['product.budget.remaining'].sudo().search(
+                [('budget_inv_remaining_vendor_id.id', '=', rec.vendor_id.id)])
+            for vendor_inv_remain in all_vendor_invoice_lines_remain:
+                all_invoices.append(vendor_inv_remain.prod_remaining_id)
 
-            all_invoices = [invoice_line.prod_inv_id for invoice_line in all_vendor_invoice_lines]
+
+
+            # all_invoices = [invoice_line.prod_inv_id for invoice_line in all_vendor_invoice_lines]
 
             rem_duplicate_invoice_no_set = set(all_invoices)
             final_invoice_no = list(rem_duplicate_invoice_no_set)
@@ -158,6 +197,29 @@ class Bucket(models.Model):
                                     total_amount_ref += inv_budget_line.amount
                             else:
                                 if inv_budget_line.budget_inv_vendor_id.id == rec.vendor_id.id and inv_budget_line.bucket_type_id.id == rec.vendor_line_released_bucket_id.bucket_type_id.id:
+                                    if inv_budget_line.refund_residual != inv_budget_line.amount:
+                                        total_amount_ref += inv_budget_line.amount - inv_budget_line.refund_residual
+                                    else:
+                                        total_amount_ref += inv_budget_line.refund_residual
+
+                    for inv_budget_line in invoices.product_remaining_budget_line:
+                        if not inv_budget_line.item_refunded:
+                            if inv_budget_line.released:
+                                if inv_budget_line.budget_inv_remaining_vendor_id.id == rec.vendor_id.id and inv_budget_line.bucket_type_id.id == rec.vendor_line_released_bucket_id.bucket_type_id.id:
+                                    total_amount_rel += inv_budget_line.amount
+                            else:
+                                if inv_budget_line.budget_inv_remaining_vendor_id.id == rec.vendor_id.id and inv_budget_line.bucket_type_id.id == rec.vendor_line_released_bucket_id.bucket_type_id.id:
+                                    if inv_budget_line.amount_residual != inv_budget_line.amount:
+                                        total_amount_rel += inv_budget_line.amount - inv_budget_line.amount_residual
+                                        total_amount_inv += inv_budget_line.amount_residual
+                                    else:
+                                        total_amount_inv += inv_budget_line.amount_residual
+                        else:
+                            if inv_budget_line.released:
+                                if inv_budget_line.budget_inv_remaining_vendor_id.id == rec.vendor_id.id and inv_budget_line.bucket_type_id.id == rec.vendor_line_released_bucket_id.bucket_type_id.id:
+                                    total_amount_ref += inv_budget_line.amount
+                            else:
+                                if inv_budget_line.budget_inv_remaining_vendor_id.id == rec.vendor_id.id and inv_budget_line.bucket_type_id.id == rec.vendor_line_released_bucket_id.bucket_type_id.id:
                                     if inv_budget_line.refund_residual != inv_budget_line.amount:
                                         total_amount_ref += inv_budget_line.amount - inv_budget_line.refund_residual
                                     else:
@@ -613,7 +675,7 @@ class VendorLine(models.Model):
         self.fetch_vendor_paid_invoice_details(final_paid_invoice_no)
         return {
             'name': _('Details'),
-            'domain': [('vendor_id', '=', self.vendor_id.id),('released','=',False),('vendor_amount_invoiced','>',0.0)],
+            'domain': [('vendor_id', '=', self.vendor_id.id),('bucket_type_id','=',self.vendor_line_bucket_id.bucket_type_id.id),('released','=',False),('vendor_amount_invoiced','>',0.0)],
             'type': 'ir.actions.act_window',
             'view_type': 'form',
             'view_mode': 'tree',
@@ -1291,7 +1353,7 @@ class VendorLineReleased(models.Model):
         final_paid_invoice_no = list(rem_duplicate_paid_invoice_no_set)
         self.fetch_vendor_paid_invoice_details_rel(final_paid_invoice_no)
 
-        domain = ['|',('released','=',True),('partial_due_amount','>',0.0),('vendor_id', '=', self.vendor_id.id),('vendor_amount_released','>=',0.0)]
+        domain = ['|',('released','=',True),('partial_due_amount','>',0.0),('bucket_type_id','=',self.vendor_line_released_bucket_id.bucket_type_id.id),('vendor_id', '=', self.vendor_id.id),('vendor_amount_released','>=',0.0)]
         vals = {
             'name': _('Details'),
             'domain': domain,
@@ -1309,7 +1371,7 @@ class UserLine(models.Model):
     _name = "user.line"
 
 
-    user_id = fields.Many2one('res.users', 'Users')
+    user_id = fields.Many2one('res.partner', 'Name')
     user_line_bucket_id = fields.Many2one('bucket', 'bucket')
     total_amount_released = fields.Float('Inv. Released')
     total_amount_invoiced = fields.Float('Inv. Due')
