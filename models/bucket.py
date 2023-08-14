@@ -10,7 +10,7 @@ class Bucket(models.Model):
     bucket_amount = fields.Float(string='Bucket Amount',)
     bucket_status = fields.Selection([('invoiced','Invoiced'),('released','Released')], "Bucket Status")
     bucket_type_id = fields.Many2one('bucket.type','Bucket Type')
-    vendor_line = fields.One2many('vendor.line', 'vendor_line_bucket_id', 'Vendor Details')
+    vendor_line = fields.One2many('vendor.line', 'vendor_line_bucket_id', 'Vendor Details',compute='_get_vendor_invoice')
     user_line = fields.One2many('user.line', 'user_line_bucket_id', 'User Details')
     vendor_line_released = fields.One2many('vendor.line.released', 'vendor_line_released_bucket_id', 'Vendor Released Details')
     user_line_released = fields.One2many('user.line.released', 'user_line_released_bucket_id', 'User Released Details')
@@ -19,6 +19,9 @@ class Bucket(models.Model):
 
     check = fields.Boolean(compute='_get_value')
     check2 = fields.Boolean(compute='_get_status')
+
+    def _get_vendor_invoice(self):
+        self.vendor_line = self.env['vendor.line'].search([('total_amount_invoiced','>',0),('vendor_line_bucket_id','=',self.id)])
 
     def name_get(self):
         result = []
@@ -63,6 +66,7 @@ class Bucket(models.Model):
     def _get_amount(self):
         if self.vendor_line:
             self._get_vendor_line_amount()
+            # self._domain_data_filter()
 
         if self.vendor_line_released:
             self._get_vendor_line_released_amount()
@@ -74,6 +78,16 @@ class Bucket(models.Model):
 
         if self.vendor_line_released_inside_user:
             self._get_vendor_line_released_inside_user()
+
+    # def _domain_data_filter(self):
+    #     result = {}
+    #     lst = []
+    #     if self.vendor_line:
+    #         vendor_ids = self.env['vendor.line'].search([('total_amount_invoiced', '>', 0),('vendor_line_bucket_id','=',self.id)])
+    #     if vendor_ids:
+    #         for vendor in vendor_ids:
+    #             lst.append(vendor.id)
+    #     return result
 
     def _get_vendor_line_amount(self):
         for rec in self.vendor_line:
@@ -242,6 +256,7 @@ class Bucket(models.Model):
             final_bill_no = list(rem_duplicate_bill_no_set)
             total_released_bill_amount = 0.0
             total_bill_due_amount = 0.0
+            total_bill_amount = 0.0
             for bills in final_bill_no:
                 if bills.invoice_line_ids:
                     visited_move_line_product = set()
@@ -254,6 +269,11 @@ class Bucket(models.Model):
                             elif move_line_product.product_id.id in visited_move_line_product and move_line_product.bill_residual_amount != move_line_product.price_subtotal:
                                 total_released_bill_amount += move_line_product.price_subtotal - move_line_product.bill_residual_amount
                                 total_bill_due_amount += move_line_product.bill_residual_amount
+                                total_bill_amount += move_line_product.price_subtotal
+                                if bills.amount_residual == 0:
+                                    total_bill_amount = 0
+                                if total_released_bill_amount == bills.amount_residual and bills.payment_state != 'partial':
+                                    total_released_bill_amount = 0
                             elif not move_line_product.product_id.id in visited_move_line_product and move_line_product.bill_residual_amount == move_line_product.price_subtotal:
                                 total_released_bill_amount += move_line_product.price_subtotal
                                 total_bill_due_amount += move_line_product.price_subtotal
@@ -261,7 +281,7 @@ class Bucket(models.Model):
                                 total_released_bill_amount += move_line_product.price_subtotal - move_line_product.bill_residual_amount
                                 total_bill_due_amount += move_line_product.bill_residual_amount
             rec.write(
-                {'total_amount_released': total_released_amount, 'total_amount_billed': total_released_bill_amount,
+                {'total_amount_released': total_released_amount, 'total_amount_bill': total_bill_amount,'total_amount_billed': total_released_bill_amount,
                  "total_amount_billed_due": total_bill_due_amount,
                  "final_amount": total_released_amount - total_released_bill_amount})
 
@@ -488,7 +508,7 @@ class VendorLine(models.Model):
     total_amount_invoiced = fields.Float('Inv. Due')
     total_amount_billed = fields.Float('Bill Released')
     total_amount_billed_due = fields.Float('Bill Due')
-    
+
 
     def fetch_vendor_unpaid_invoice_details(self,final_invoice_no):
         for invoices in final_invoice_no:
@@ -694,6 +714,7 @@ class VendorLineReleased(models.Model):
     total_amount_released = fields.Float('Inv. Released')
     total_amount_invoiced = fields.Float('Inv. Due')
     total_amount_billed = fields.Float('Bill Released')
+    total_amount_bill = fields.Float('Bill')
     total_amount_billed_due = fields.Float('Bill Due')
     total_amount_billed_refund = fields.Float('Bill Refunded')
     final_amount = fields.Float("Final Amount")

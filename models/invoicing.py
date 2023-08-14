@@ -2054,7 +2054,8 @@ class AccountMove(models.Model):
                     for move_lines in self.invoice_line_ids:
                         if move_lines.bucket_ids.bucket_type_id:
                             existing_vendor = self.env['vendor.line.released'].sudo().search(
-                                [("vendor_id", '=', self.partner_id.id)])
+                                [("vendor_id", '=', self.partner_id.id),('vendor_line_released_bucket_id','=',move_lines.bucket_ids.id)])
+
                             if not existing_vendor:
                                 vendor_bucket_line = self.env['vendor.line.released'].sudo().create(
                                     {'vendor_line_released_bucket_id': move_lines.bucket_ids.id, 'vendor_id': self.partner_id.id})

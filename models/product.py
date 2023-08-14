@@ -26,6 +26,7 @@ class ProductTemplate(models.Model):
     product_allocate_budget_line = fields.One2many('product.budget.allocate', 'prod_allocate_id', 'Product Allocate Budget')
     fixed_amount = fields.Float("Surplus",compute="_compute_fixed_amount",store=True)
 
+
     @api.depends("product_fixed_budget_line")
     def _compute_fixed_amount(self):
         for rec in self:
@@ -76,7 +77,6 @@ class ProductTemplate(models.Model):
         res = super(ProductTemplate, self).write(vals)
         if vals.get("seller_ids"):
             fixed_budget_product = self.env['product.budget.fixed'].sudo().search([('product_id','=',self.id),('is_vendor','=',True)])
-
             inv_fixed_budget_liness= self.env['invoice.budget.line'].sudo().search([('product_id_budget','=',self.id)])
             for fixed_inv_budgtt in inv_fixed_budget_liness:
                 if fixed_inv_budgtt.prod_inv_id.state == 'draft':
@@ -135,7 +135,7 @@ class ProductTemplate(models.Model):
                                     'amount': allocate_budget_line.amount * invoice.quantity
                                 })
 
-        elif vals.get('standard_price') and not vals.get('product_fixed_budget_line') :
+        elif vals.get('standard_price') and not vals.get('product_fixed_budget_line'):
             product_product_id = self.env['product.product'].sudo().search([('product_tmpl_id', '=', self.id)])
             prod_fixed_budget_lines = self.env['product.budget.fixed'].sudo().search([('product_id', '=', self.id)])
             main_product = ""
@@ -145,8 +145,9 @@ class ProductTemplate(models.Model):
                 main_product = fixed_budgt.prod_id
             if main_product:
                 for fixed_budgt_prod in main_product.product_fixed_budget_line:
-                    cost_amount += fixed_budgt_prod.amount
-                main_product.standard_price = cost_amount
+                    if fixed_budgt_prod.prod_id.id != self.id:
+                        cost_amount += fixed_budgt_prod.amount
+                        main_product.standard_price = cost_amount
 
             prod_inv_line = self.env['invoice.budget.line'].sudo().search([('product_id_budget','=',self.id)])
             if prod_fixed_budget_lines:
@@ -328,18 +329,18 @@ class ProductBudgetFixed(models.Model):
 
     prod_fix_assigned_user_id = fields.Many2one('res.users', string="User Name", copy=False)
 
-    @api.onchange('product_id')
-    def onchange_search_product(self):
-        result = {}
-        lst = []
-        if self.prod_id:
-            print(self.prod_id._origin)
-            product_ids = self.env['product.template'].search([('id', '!=', self.prod_id._origin.id)])
-        if product_ids:
-            for product in product_ids:
-                lst.append(product.id)
-        result['domain'] = {'product_id': [('id', 'in', lst)]}
-        return result
+    # @api.onchange('product_id')
+    # def onchange_search_product(self):
+    #     result = {}
+    #     lst = []
+    #     if self.prod_id:
+    #         print(self.prod_id._origin)
+    #         product_ids = self.env['product.template'].search([('id', '!=', self.prod_id._origin.id)])
+    #     if product_ids:
+    #         for product in product_ids:
+    #             lst.append(product.id)
+    #     result['domain'] = {'product_id': [('id', 'in', lst)]}
+    #     return result
 
     @api.onchange('bucket_type_id')
     def _onchange_bucket_type_id(self):
