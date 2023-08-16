@@ -2515,7 +2515,7 @@ class AccountPaymentRegister(models.TransientModel):
         if self.line_ids.move_id.product_remaining_budget_line and len(
                 self.line_ids.move_id.inv_budget_line) == len(line_amount_released):
             for budget_remaining_line in self.line_ids.move_id.product_remaining_budget_line:
-                print(budget_remaining_line,"rema line")
+
                 if total_released_amount != 0 and not budget_remaining_line.released:
                     if budget_remaining_line.amount_residual == 0.0:
                         if total_released_amount >= budget_remaining_line.amount:
@@ -2535,9 +2535,9 @@ class AccountPaymentRegister(models.TransientModel):
                             vendor_released_bucket = self.env['bucket'].sudo().search(
                                 [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
                                  ('bucket_status', '=', 'released')])
-                            print(vendor_released_bucket,"vendor bucket")
+
                             if budget_remaining_line.budget_inv_remaining_vendor_id:
-                                print(budget_remaining_line.budget_inv_remaining_vendor_id,"tesingg")
+
                                 existing_vendor_rel_line = self.env['vendor.line.released'].sudo().search(
                                     [('vendor_id', '=',
                                       budget_remaining_line.budget_inv_remaining_vendor_id.id)])
@@ -2593,9 +2593,9 @@ class AccountPaymentRegister(models.TransientModel):
                             if budget_remaining_line.amount_residual != 0.0:
                                 total_released_amount = 0
                     else:
-                        print("elseee")
+
                         if total_released_amount >= budget_remaining_line.amount_residual:
-                            print("ifff")
+
                             total_released_amount = total_released_amount - budget_remaining_line.amount_residual
                             invoiced_bucket = self.env['bucket'].sudo().search(
                                 [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
@@ -2613,13 +2613,13 @@ class AccountPaymentRegister(models.TransientModel):
                             vendor_released_bucket = self.env['bucket'].sudo().search(
                                 [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
                                  ('bucket_status', '=', 'released')])
-                            print(vendor_released_bucket,"bucket relas")
+
                             if budget_remaining_line.budget_inv_remaining_vendor_id:
-                                print(budget_remaining_line.budget_inv_remaining_vendor_id,"remain222>>")
+
                                 existing_vendor_rel_line = self.env['vendor.line.released'].sudo().search(
                                     [('vendor_id', '=',
                                       budget_remaining_line.budget_inv_remaining_vendor_id.id)])
-                                print(existing_vendor_rel_line,"exitrell")
+                                
                                 if not existing_vendor_rel_line:
                                     self.env['vendor.line.released'].sudo().create(
                                         {'vendor_id': budget_remaining_line.budget_inv_remaining_vendor_id.id,

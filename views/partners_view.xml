@@ -63,7 +63,7 @@
             <field name="view_ids" eval="[ (5, 0, 0), (0, 0, {'sequence':2 , 'view_mode': 'tree', 'view_id': ref('odoo_budgeting_module.oodles_partnerlist')}), (0, 0, {'sequence':3 , 'view_mode': 'form', 'view_id': ref('odoo_budgeting_module.oodles_partnerform')})]"/>
         </record>
 
-        <menuitem name="Users" id="budget_partner_menu" parent="budget_master_menu" action="oodles_respartners_window" sequence="10"/>
+<!--        <menuitem name="Users" id="budget_partner_menu" parent="budget_master_menu" action="oodles_respartners_window" sequence="10"/>-->
 
     </data>
 </odoo>

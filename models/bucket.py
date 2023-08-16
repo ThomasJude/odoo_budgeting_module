@@ -10,7 +10,7 @@ class Bucket(models.Model):
     bucket_amount = fields.Float(string='Bucket Amount',)
     bucket_status = fields.Selection([('invoiced','Invoiced'),('released','Released')], "Bucket Status")
     bucket_type_id = fields.Many2one('bucket.type','Bucket Type')
-    vendor_line = fields.One2many('vendor.line', 'vendor_line_bucket_id', 'Vendor Details',compute='_get_vendor_invoice')
+    vendor_line = fields.One2many('vendor.line', 'vendor_line_bucket_id', 'Vendor Details')
     user_line = fields.One2many('user.line', 'user_line_bucket_id', 'User Details')
     vendor_line_released = fields.One2many('vendor.line.released', 'vendor_line_released_bucket_id', 'Vendor Released Details')
     user_line_released = fields.One2many('user.line.released', 'user_line_released_bucket_id', 'User Released Details')
@@ -19,9 +19,16 @@ class Bucket(models.Model):
 
     check = fields.Boolean(compute='_get_value')
     check2 = fields.Boolean(compute='_get_status')
+    # check3 = fields.Boolean(compute='_remove_vendor_line')
 
-    def _get_vendor_invoice(self):
-        self.vendor_line = self.env['vendor.line'].search([('total_amount_invoiced','>',0),('vendor_line_bucket_id','=',self.id)])
+
+    # def _get_vendor_invoice(self):
+    #     print(self.id,"selfid")
+    #     print(self.vendor_line,"vendor line")
+    #     self.vendor_line = self.env['vendor.line'].search([('total_amount_invoiced','>',0),('vendor_line_bucket_id','=',self.id)])
+        # for line in vendor_line:
+        #     self.vendor_line = line
+        #     print(self.vendor_line,"vendor lineee22")
 
     def name_get(self):
         result = []
@@ -53,6 +60,11 @@ class Bucket(models.Model):
                 rec.check = False
                 rec._get_amount()
 
+    # def _remove_vendor_line(self):
+    #     vendor_line = self.env['vendor.line'].sudo().search([('total_amount_invoiced','=',0),('vendor_line_bucket_id','=',self.id)])
+    #     for line in vendor_line:
+    #         print(line,"linee")
+    #         line.unlink()
 
     @api.depends('bucket_status')
     def _get_status(self):
@@ -66,7 +78,7 @@ class Bucket(models.Model):
     def _get_amount(self):
         if self.vendor_line:
             self._get_vendor_line_amount()
-            # self._domain_data_filter()
+            self._domain_data_filter()
 
         if self.vendor_line_released:
             self._get_vendor_line_released_amount()
@@ -79,15 +91,6 @@ class Bucket(models.Model):
         if self.vendor_line_released_inside_user:
             self._get_vendor_line_released_inside_user()
 
-    # def _domain_data_filter(self):
-    #     result = {}
-    #     lst = []
-    #     if self.vendor_line:
-    #         vendor_ids = self.env['vendor.line'].search([('total_amount_invoiced', '>', 0),('vendor_line_bucket_id','=',self.id)])
-    #     if vendor_ids:
-    #         for vendor in vendor_ids:
-    #             lst.append(vendor.id)
-    #     return result
 
     def _get_vendor_line_amount(self):
         for rec in self.vendor_line:
@@ -95,14 +98,11 @@ class Bucket(models.Model):
             all_vendor_invoice_lines = self.env['invoice.budget.line'].sudo().search(
                 [('budget_inv_vendor_id.id', '=', rec.vendor_id.id)])
             for vendor_inv_line in all_vendor_invoice_lines:
-                print(vendor_inv_line)
                 all_invoices.append(vendor_inv_line.prod_inv_id)
             all_vendor_invoice_lines_remain = self.env['product.budget.remaining'].sudo().search(
                 [('budget_inv_remaining_vendor_id.id', '=', rec.vendor_id.id)])
             for vendor_inv_remain in all_vendor_invoice_lines_remain:
-                print(vendor_inv_remain)
                 all_invoices.append(vendor_inv_remain.prod_remaining_id)
-            print(all_invoices)
 
             # all_invoices = [invoice_line.prod_inv_id for invoice_line in all_vendor_invoice_lines]
 
@@ -118,7 +118,6 @@ class Bucket(models.Model):
 
                     for inv_budget_line in invoices.inv_budget_line:
                         amount_released = 0
-                        print(inv_budget_line.prod_inv_id)
 
                         if not inv_budget_line.released:
                             if inv_budget_line.budget_inv_vendor_id.id == rec.vendor_id.id and inv_budget_line.bucket_type_id.id == rec.vendor_line_bucket_id.bucket_type_id.id:
@@ -138,7 +137,6 @@ class Bucket(models.Model):
 
                     for inv_budget_line in invoices.product_remaining_budget_line:
                         amount_released = 0
-                        print(inv_budget_line.prod_remaining_id)
 
                         if not inv_budget_line.released:
                             if inv_budget_line.budget_inv_remaining_vendor_id.id == rec.vendor_id.id and inv_budget_line.bucket_type_id.id == rec.vendor_line_bucket_id.bucket_type_id.id:
@@ -365,8 +363,6 @@ class Bucket(models.Model):
                     total_invoiced_amount += total_amount_inv
             rec.write(
                 {'total_amount_released': total_released_amount, "total_amount_invoiced": total_invoiced_amount})
-            
-            
 
     def _get_user_line_released_amount(self):
         for rec in self.user_line_released:
@@ -433,8 +429,6 @@ class Bucket(models.Model):
                         {"total_amount_refunded": total_refunded_amount, 'total_amount_released': total_released_amount,
                          "total_amount_invoiced": total_invoiced_amount})
                     
-                    
-
 
     def _get_vendor_line_released_inside_user(self):
         for rec in self.vendor_line_released_inside_user:
@@ -497,7 +491,13 @@ class Bucket(models.Model):
             rec.write({'total_amount_refunded': total_ref_bill_amount,
                        })
             
-            
+    def _domain_data_filter(self):
+        result = {}
+        lst = []
+        if self.id:
+            vendor_ids = self.env['vendor.line'].search([('total_amount_invoiced', '>', 0),('vendor_line_bucket_id','=',self.id)])
+            if vendor_ids:
+                self.vendor_line = vendor_ids
 
 class VendorLine(models.Model):
     _name = "vendor.line"
@@ -661,6 +661,8 @@ class VendorLine(models.Model):
                     else:
                         existing_record.write({'vendor_amount_released': total_vendor_amount_per_invoice,
                              'vendor_amount_invoiced': 0.0,'released':True})
+
+
                         
                         
 
