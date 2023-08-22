@@ -714,7 +714,7 @@ class VendorLineReleased(models.Model):
     vendor_line_released_bucket_id = fields.Many2one('bucket', 'bucket')
     total_amount_refunded = fields.Float('Refunded')
     total_amount_released = fields.Float('Inv. Released')
-    total_amount_invoiced = fields.Float('Amount')
+    total_amount_invoiced = fields.Float('Inv. Due')
     total_amount_billed = fields.Float('Bill Released')
     total_amount_bill = fields.Float('Billed')
     total_amount_billed_due = fields.Float('Bill Due')
