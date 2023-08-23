@@ -259,7 +259,8 @@ class ProductTemplate(models.Model):
             actionid=self.env['ir.actions.act_window']._for_xml_id('sale.product_template_action')
             action_id=actionid['id']
             prod_link= base_url+'/web#id='+str(self.id)+'&action='+str(action_id)+'&model='+modelname+'&view_type=form&cids=&menu_id='+str(menu_id.id)
-            raise UserError(_('Total of Fixed Reductions should not be Greater than Selling Price,go to the link %s') % (prod_link))
+            # raise UserError(_('Total of Fixed Reductions should not be Greater than Selling Price,go to the link %s') % (prod_link))
+            raise UserError(_('Total of Fixed Reductions should not be Greater than Selling Price'))
 
 
     @api.constrains('list_price')
@@ -328,6 +329,20 @@ class ProductBudgetFixed(models.Model):
     prod_fix_vendor_id = fields.Many2one('res.partner', string='Name', copy=False)
 
     prod_fix_assigned_user_id = fields.Many2one('res.users', string="User Name", copy=False)
+
+    def internal_link(self):
+        print("internal link")
+        base_url = self.env["ir.config_parameter"].sudo().get_param("web.base.url")
+        menu_id = self.env["ir.ui.menu"].search([('complete_name', '=', 'Budget/Product'), ('name', '=', 'Product')],
+                                                limit=1)
+        modelname = 'product.template'
+        actionid = self.env['ir.actions.act_window']._for_xml_id('sale.product_template_action')
+        action_id = actionid['id']
+        prod_link = base_url + '/web#id=' + str(self.prod_id.id) + '&action=' + str(action_id) + '&model=' + modelname + '&view_type=form&cids=&menu_id=' + str(menu_id.id)
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'reload',
+        }
 
     # @api.onchange('product_id')
     # def onchange_search_product(self):
