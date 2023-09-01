@@ -44,4 +44,5 @@ class BucketType(models.Model):
         for rec in res:
             inv_bucket_id= self.env['bucket'].sudo().create({"name": rec.name, 'bucket_status': 'invoiced','bucket_type_id':rec.id})
             rel_bucket_id= self.env['bucket'].sudo().create({"name": rec.name, 'bucket_status': 'released','bucket_type_id':rec.id})
+            bil_bucket_id= self.env['bucket'].sudo().create({"name": rec.name, 'bucket_status': 'billed','bucket_type_id':rec.id})
         return res

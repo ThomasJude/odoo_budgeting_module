@@ -1785,7 +1785,6 @@ class AccountMove(models.Model):
             if vals.get('invoice_line_ids'):
                 for new_inv in self.invoice_line_ids:
                     if new_inv.product_id and new_inv.product_id.product_tmpl_id and new_inv.product_id.product_tmpl_id.product_fixed_budget_line:
-                        print ("888888")
                         for fix_budget_line in new_inv.product_id.product_tmpl_id.product_fixed_budget_line:
                                 budget_data = self.env['invoice.budget.line'].sudo().create({
                                     'product_id_budget': fix_budget_line.product_id.id,
@@ -1956,7 +1955,6 @@ class AccountMove(models.Model):
 
             if self.product_remaining_budget_line:
                 for rem_budget in self.product_remaining_budget_line:
-                    print(rem_budget,"remmm")
                     if rem_budget.assignable_status == 'assignable_at_inv' and rem_budget != True and not rem_budget.budget_inv_remaining_vendor_id:
                         raise UserError(_("Please assign vendors in budgeting tab"))
                     if rem_budget.assignable_status == 'assignable_at_inv' and rem_budget == True and not rem_budget.budget_remaining_user_id:
@@ -2011,7 +2009,6 @@ class AccountMove(models.Model):
                         existing_bucket_dashboard.bucket_inv_ids = [(4, self.id, 0)]
 
             assigned_vendr_set = set(assigned_vendor_lst)
-            print(assigned_vendor_lst,"vendor lst")
             final_vendor_lst = list(assigned_vendr_set)
 
             assigned_user_set = set(assigned_user_lst)
@@ -2052,6 +2049,10 @@ class AccountMove(models.Model):
             if self.partner_id:
                 if self.invoice_line_ids:
                     for move_lines in self.invoice_line_ids:
+                        billed_bucket = self.env['bucket'].sudo().search(
+                            [('bucket_type_id', '=', move_lines.bucket_ids.bucket_type_id.id),
+                             ('bucket_status', '=', 'billed')])
+                        billed_bucket.bucket_amount += move_lines.price_subtotal
                         if move_lines.bucket_ids.bucket_type_id:
                             existing_vendor = self.env['vendor.line.released'].sudo().search(
                                 [("vendor_id", '=', self.partner_id.id),('vendor_line_released_bucket_id','=',move_lines.bucket_ids.id)])
@@ -2059,6 +2060,20 @@ class AccountMove(models.Model):
                             if not existing_vendor:
                                 vendor_bucket_line = self.env['vendor.line.released'].sudo().create(
                                     {'vendor_line_released_bucket_id': move_lines.bucket_ids.id, 'vendor_id': self.partner_id.id})
+
+                        if move_lines.bucket_ids.bucket_type_id:
+                            vendor_bill_bucket = self.env['bucket'].sudo().search(
+                                [('bucket_type_id', '=', move_lines.bucket_ids.bucket_type_id.id),
+                                 ('bucket_status', '=', 'billed')])
+                            existing_vendor = self.env['vendor.line'].sudo().search(
+                                [("vendor_id", '=', self.partner_id.id),
+                                 ('vendor_line_bucket_id', '=', vendor_bill_bucket.id)])
+
+                            if not existing_vendor:
+                                vendor_bucket_line = self.env['vendor.line'].sudo().create(
+                                    {'vendor_line_bucket_id': vendor_bill_bucket.id,
+                                     'vendor_id': self.partner_id.id})
+
         return res
 
 
@@ -2122,7 +2137,6 @@ class AccountPaymentRegister(models.TransientModel):
     def create_payment_in_invoice_partial(self,invoice_amount,total_released_amount):
         if invoice_amount.invoice_line_ids:
             for bill_line in invoice_amount.invoice_line_ids:
-
                 if not bill_line.is_partial and not bill_line.is_bill_paid:
                     if total_released_amount > bill_line.price_subtotal:
                         bill_line.bucket_ids.bucket_amount -= bill_line.price_subtotal
@@ -2166,7 +2180,12 @@ class AccountPaymentRegister(models.TransientModel):
                         total_released_amount -= bill_line.price_subtotal
                     else:
                         bill_line.bucket_ids.bucket_amount -= total_released_amount
-
+                        billed_bucket_type = self.env['bucket.type'].search(
+                            [('id', '=', bill_line.bucket_ids.bucket_type_id.id)])
+                        if billed_bucket_type:
+                            bill_bucket = self.env['bucket'].search(
+                                [('bucket_type_id', '=', billed_bucket_type.id), ('bucket_status', '=', 'billed')])
+                            bill_bucket.bucket_amount -= total_released_amount
                         if not bill_line.bucket_ids.bucket_type_id:
                             vendor = self.env["vendor.line.released.inside.user"].sudo().search(
                                 [('vendor_id', '=', self.line_ids.move_id.partner_id.id),
@@ -2206,8 +2225,13 @@ class AccountPaymentRegister(models.TransientModel):
                             bill_line.bill_residual_amount = bill_line.price_subtotal
                 elif bill_line.is_partial and not bill_line.is_bill_paid:
                     if bill_line.bill_residual_amount >= total_released_amount:
-
                         bill_line.bucket_ids.bucket_amount -= total_released_amount
+                        billed_bucket_type = self.env['bucket.type'].search(
+                            [('id', '=', bill_line.bucket_ids.bucket_type_id.id)])
+                        if billed_bucket_type:
+                            bill_bucket = self.env['bucket'].search(
+                                [('bucket_type_id', '=', billed_bucket_type.id), ('bucket_status', '=', 'billed')])
+                            bill_bucket.bucket_amount -= total_released_amount
                         if not bill_line.bucket_ids.bucket_type_id:
                             vendor = self.env["vendor.line.released.inside.user"].sudo().search(
                                 [('vendor_id', '=', self.line_ids.move_id.partner_id.id),
@@ -2248,6 +2272,12 @@ class AccountPaymentRegister(models.TransientModel):
 
                     else:
                         bill_line.bucket_ids.bucket_amount -= bill_line.bill_residual_amount
+                        billed_bucket_type = self.env['bucket.type'].search(
+                            [('id', '=', bill_line.bucket_ids.bucket_type_id.id)])
+                        if billed_bucket_type:
+                            bill_bucket = self.env['bucket'].search(
+                                [('bucket_type_id', '=', billed_bucket_type.id), ('bucket_status', '=', 'billed')])
+                            bill_bucket.bucket_amount -= bill_line.bill_residual_amount
                         if not bill_line.bucket_ids.bucket_type_id:
                             vendor = self.env["vendor.line.released.inside.user"].sudo().search(
                                 [('vendor_id', '=', self.line_ids.move_id.partner_id.id),
@@ -2292,12 +2322,20 @@ class AccountPaymentRegister(models.TransientModel):
         if invoice_amount.invoice_line_ids:
             for bill_line in invoice_amount.invoice_line_ids:
                 if not bill_line.bill_residual_amount:
-
                     if not bill_line.is_bill_paid:
                         if bill_line.bill_residual_amount != 0.0:
                             bill_line.bucket_ids.bucket_amount -= bill_line.bill_residual_amount
+                            billed_bucket_type = self.env['bucket.type'].search([('id','=',bill_line.bucket_ids.bucket_type_id.id)])
+                            if billed_bucket_type:
+                                bill_bucket = self.env['bucket'].search([('bucket_type_id','=',billed_bucket_type.id),('bucket_status','=','billed')])
+                                bill_bucket.bucket_amount -= bill_line.bill_residual_amount
                         else:
+                            billed_bucket_type = self.env['bucket.type'].search(
+                                [('id', '=', bill_line.bucket_ids.bucket_type_id.id)])
                             bill_line.bucket_ids.bucket_amount -= bill_line.price_subtotal
+                            if billed_bucket_type:
+                                bill_bucket = self.env['bucket'].search([('bucket_type_id','=',billed_bucket_type.id),('bucket_status','=','billed')])
+                                bill_bucket.bucket_amount -= bill_line.price_subtotal
                         if bill_line.bucket_ids.bucket_type_id:
                             if not bill_line.is_bill_paid:
                                 bill_line.is_bill_paid = True
@@ -2325,8 +2363,21 @@ class AccountPaymentRegister(models.TransientModel):
                     if not bill_line.is_bill_paid:
                         if bill_line.bill_residual_amount != 0.0:
                             bill_line.bucket_ids.bucket_amount -= bill_line.bill_residual_amount
+                            billed_bucket_type = self.env['bucket.type'].search(
+                                [('id', '=', bill_line.bucket_ids.bucket_type_id.id)])
+                            if billed_bucket_type:
+                                bill_bucket = self.env['bucket'].search(
+                                    [('bucket_type_id', '=', billed_bucket_type.id), ('bucket_status', '=', 'billed')])
+                                bill_bucket.bucket_amount -= bill_line.bill_residual_amount
+
                         else:
                             bill_line.bucket_ids.bucket_amount -= bill_line.price_unit
+                            billed_bucket_type = self.env['bucket.type'].search(
+                                [('id', '=', bill_line.bucket_ids.bucket_type_id.id)])
+                            if billed_bucket_type:
+                                bill_bucket = self.env['bucket'].search(
+                                    [('bucket_type_id', '=', billed_bucket_type.id), ('bucket_status', '=', 'billed')])
+                                bill_bucket.bucket_amount -= bill_line.price_unit
                         if bill_line.bucket_ids.bucket_type_id:
                             if not bill_line.is_bill_paid:
                                 bill_line.is_bill_paid = True
@@ -2651,14 +2702,10 @@ class AccountPaymentRegister(models.TransientModel):
                             vendor_released_bucket = self.env['bucket'].sudo().search(
                                 [('bucket_type_id', '=', budget_remaining_line.bucket_type_id.id),
                                  ('bucket_status', '=', 'released')])
-                            print(vendor_released_bucket,"bucketidd")
                             if budget_remaining_line.budget_inv_remaining_vendor_id:
-                                print(budget_remaining_line.budget_inv_remaining_vendor_id,">>>>>>>>>>>")
-
                                 existing_vendor_rel_line = self.env['vendor.line.released'].sudo().search(
                                     [('vendor_id', '=',
                                       budget_remaining_line.budget_inv_remaining_vendor_id.id),('vendor_line_released_bucket_id','=',vendor_released_bucket.id)])
-                                print(existing_vendor_rel_line,"exittt")
                                 if not existing_vendor_rel_line:
                                     self.env['vendor.line.released'].sudo().create(
                                         {'vendor_id': budget_remaining_line.budget_inv_remaining_vendor_id.id,
@@ -3068,10 +3115,10 @@ class AccountPaymentRegister(models.TransientModel):
     def create_payment_in_refund_partial(self,invoice_amount,total_released_amount):
         if invoice_amount.reversed_entry_id.invoice_line_ids:
             for bill_line in invoice_amount.reversed_entry_id.invoice_line_ids:
-
                 if not bill_line.is_refund_partial and not bill_line.is_bill_refunded:
                     if total_released_amount > bill_line.price_subtotal:
                         bill_line.bucket_ids.bucket_amount += bill_line.price_subtotal
+
                         if not bill_line.bucket_ids.bucket_type_id:
                             vendor = self.env["vendor.line.released.inside.user"].sudo().search(
                                 [('vendor_id', '=', self.line_ids.move_id.partner_id.id),
@@ -3152,8 +3199,9 @@ class AccountPaymentRegister(models.TransientModel):
                             bill_line.refund_residual_amount = bill_line.price_subtotal
                 elif bill_line.is_refund_partial and not bill_line.is_bill_refunded:
                     if bill_line.refund_residual_amount >= total_released_amount:
-
                         bill_line.bucket_ids.bucket_amount += total_released_amount
+                        #billed amount update for bucket status billed
+
                         if not bill_line.bucket_ids.bucket_type_id:
                             vendor = self.env["vendor.line.released.inside.user"].sudo().search(
                                 [('vendor_id', '=', self.line_ids.move_id.partner_id.id),
@@ -3238,9 +3286,7 @@ class AccountPaymentRegister(models.TransientModel):
     def create_payment_in_refund_paid(self,invoice_amount):
         if invoice_amount.reversed_entry_id.invoice_line_ids:
             for bill_line in invoice_amount.reversed_entry_id.invoice_line_ids:
-
                 if bill_line.refund_residual_amount == 0.0:
-
                     if not bill_line.is_bill_refunded:
                         if bill_line.refund_residual_amount != 0.0:
                             bill_line.bucket_ids.bucket_amount += bill_line.refund_residual_amount
@@ -3295,6 +3341,7 @@ class AccountPaymentRegister(models.TransientModel):
     def action_create_payments(self):
         res = super(AccountPaymentRegister, self).action_create_payments()
         invoice_amount = self.env['account.move'].sudo().search([('id', '=', self.line_ids.move_id.id)])
+        #bill
         if invoice_amount.move_type == 'in_invoice':
             total_released_amount = self.amount
             if invoice_amount.amount_total > self.amount and invoice_amount.payment_state == "partial":
@@ -3302,7 +3349,7 @@ class AccountPaymentRegister(models.TransientModel):
 
             else:
                 self.create_payment_in_invoice_paid(invoice_amount)
-
+        #invoice
         if invoice_amount.move_type == 'out_invoice':
             total_released_amount = self.amount
             self.line_ids.move_id.previous_released_amount += self.amount
@@ -3313,8 +3360,7 @@ class AccountPaymentRegister(models.TransientModel):
                 self.create_payment_out_invoice_partial(total_released_amount)
             else:
                 self.create_payment_out_invoice_paid(invoice_amount)
-
-
+        #credit note invoice
         if invoice_amount.move_type == 'out_refund':
             total_released_amount = self.amount
 
@@ -3324,14 +3370,11 @@ class AccountPaymentRegister(models.TransientModel):
 
                 else:
                     self.create_payment_out_refund_paid()
-
-
+        #credit note bill
         if invoice_amount.move_type == "in_refund":
-
             total_released_amount = self.amount
             if invoice_amount.amount_total > self.amount and invoice_amount.payment_state == "partial":
                 self.create_payment_in_refund_partial(invoice_amount, total_released_amount)
-
             else:
                 self.create_payment_in_refund_paid(invoice_amount)
 

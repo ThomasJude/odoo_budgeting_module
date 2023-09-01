@@ -24,6 +24,13 @@ class VendorInvoiceDetail(models.TransientModel):
     refunded_invoice_name = fields.Many2one('account.move',string="Refund Invoices",copy=False)
     inv_bill_wiz_id = fields.Many2one('invoice.bill.wiz',string="inv/bill wiz Id",copy=False)
     inv_visibility_wiz_id = fields.Many2one('invoice.visibility.wiz',string="inv wiz Id",copy=False)
+
+    def see_payments(self):
+        for record in self:
+            action = self.env.ref('odoo_budgeting_module.action_show_custom_payments').sudo().read()[0]
+            domain = [('move_id', '=',record.invoice_name.name)]  # Replace 'field_name' with the actual field name and self.field_value with your dynamic value
+            action.update({'domain': domain,'target':'new'})
+            return action
     
     
     def show_detailed_items(self):

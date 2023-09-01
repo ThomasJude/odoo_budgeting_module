@@ -12,6 +12,7 @@
 			<tree string="Vendor Bill Detail" create="false" edit="false" duplicate="false">
 
                 <field name="vendor_line_released_id" invisible="1"/>
+                <field name="vendor_line_billed_id" invisible="1"/>
                 <field name="vendor_line_released_from_user_bucket_id" invisible="1"/>
                 <field name="bill_name" widget="many2onebutton"/>
                 
@@ -31,6 +32,23 @@
             </tree>
         </field>
         </record>
+
+        <!--        //////////////////////////////////////////////////////////////////////////////////-->
+        <record id="view_account_payment_tree_custom" model="ir.ui.view">
+		<field name="name">account.payment.tree.custom</field>
+		<field name="model">account.payment</field>
+		<field name="inherit_id" ref="account.view_account_payment_tree"/>
+		<field name="arch" type="xml">
+            <xpath expr="//tree/field[@name='partner_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//tree" position="attributes">
+                <attribute name="create">0</attribute>
+            </xpath>
+        </field>
+        </record>
+
+<!--        //////////////////////////////////////////////////////////////////////////////////-->
 
 <!--        //////////////////////////////////////////////////////////////////////////////////-->
 

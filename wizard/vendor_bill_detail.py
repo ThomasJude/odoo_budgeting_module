@@ -13,6 +13,7 @@ class VendorBillDetail(models.TransientModel):
     vendor_amount_paid = fields.Float("Bill Paid Amount")
     vendor_bill_amount_refunded = fields.Float("Bill Refunded Amount")
     vendor_line_released_id = fields.Many2one('vendor.line.released', string='Vendor Released')
+    vendor_line_billed_id = fields.Many2one('vendor.line', string='Vendor Billed')
     bill_paid = fields.Boolean('Paid')
     bucket_type_id = fields.Many2one('bucket.type', 'Bucket Type')
     bill_bill_wiz_id = fields.Many2one('invoice.bill.wiz',string="inv/bill wiz Id",copy=False)
@@ -76,5 +77,5 @@ class VendorBillDetail(models.TransientModel):
         for record in self:
             action = self.env.ref('odoo_budgeting_module.action_show_custom_payments').sudo().read()[0]
             domain = [('ref', '=',record.bill_name.name)]  # Replace 'field_name' with the actual field name and self.field_value with your dynamic value
-            action.update({'domain': domain})
+            action.update({'domain': domain,'target':'new'})
             return action

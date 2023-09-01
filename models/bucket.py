@@ -8,7 +8,7 @@ class Bucket(models.Model):
 
     name = fields.Char(string='Name')
     bucket_amount = fields.Float(string='Bucket Amount',)
-    bucket_status = fields.Selection([('invoiced','Invoiced'),('released','Released')], "Bucket Status")
+    bucket_status = fields.Selection([('invoiced','Invoiced'),('released','Released'),('billed','Billed')], "Bucket Status")
     bucket_type_id = fields.Many2one('bucket.type','Bucket Type')
     vendor_line = fields.One2many('vendor.line', 'vendor_line_bucket_id', 'Vendor Details')
     user_line = fields.One2many('user.line', 'user_line_bucket_id', 'User Details')
@@ -69,7 +69,7 @@ class Bucket(models.Model):
     @api.depends('bucket_status')
     def _get_status(self):
         for rec in self:
-            if rec.bucket_status == "invoiced":
+            if rec.bucket_status == "invoiced" or rec.bucket_status == "billed":
                 rec.check2 = True
             else:
                 rec.check2 = False
@@ -78,7 +78,7 @@ class Bucket(models.Model):
     def _get_amount(self):
         if self.vendor_line:
             self._get_vendor_line_amount()
-            self._domain_data_filter()
+            # self._get_value_vendor_line()
 
         if self.vendor_line_released:
             self._get_vendor_line_released_amount()
@@ -94,72 +94,116 @@ class Bucket(models.Model):
 
     def _get_vendor_line_amount(self):
         for rec in self.vendor_line:
-            all_invoices = []
-            all_vendor_invoice_lines = self.env['invoice.budget.line'].sudo().search(
-                [('budget_inv_vendor_id.id', '=', rec.vendor_id.id)])
-            for vendor_inv_line in all_vendor_invoice_lines:
-                all_invoices.append(vendor_inv_line.prod_inv_id)
-            all_vendor_invoice_lines_remain = self.env['product.budget.remaining'].sudo().search(
-                [('budget_inv_remaining_vendor_id.id', '=', rec.vendor_id.id)])
-            for vendor_inv_remain in all_vendor_invoice_lines_remain:
-                all_invoices.append(vendor_inv_remain.prod_remaining_id)
+            if self.bucket_status == 'invoiced':
+                all_invoices = []
+                all_vendor_invoice_lines = self.env['invoice.budget.line'].sudo().search(
+                    [('budget_inv_vendor_id.id', '=', rec.vendor_id.id)])
+                for vendor_inv_line in all_vendor_invoice_lines:
+                    all_invoices.append(vendor_inv_line.prod_inv_id)
+                all_vendor_invoice_lines_remain = self.env['product.budget.remaining'].sudo().search(
+                    [('budget_inv_remaining_vendor_id.id', '=', rec.vendor_id.id)])
+                for vendor_inv_remain in all_vendor_invoice_lines_remain:
+                    all_invoices.append(vendor_inv_remain.prod_remaining_id)
 
-            # all_invoices = [invoice_line.prod_inv_id for invoice_line in all_vendor_invoice_lines]
+                # all_invoices = [invoice_line.prod_inv_id for invoice_line in all_vendor_invoice_lines]
+                rem_duplicate_invoice_no_set = set(all_invoices)
+                final_invoice_no = list(rem_duplicate_invoice_no_set)
+                total_released_amount = 0.0
+                total_invoiced_amount = 0.0
+                for invoices in final_invoice_no:
+                    if invoices.payment_state not in ("paid", "in_payment"):
+                        total_amount_inv = 0.0
+                        total_amount_rel = 0.0
+                        total_released = 0.0
 
-            rem_duplicate_invoice_no_set = set(all_invoices)
-            final_invoice_no = list(rem_duplicate_invoice_no_set)
-            total_released_amount = 0.0
-            total_invoiced_amount = 0.0
-            for invoices in final_invoice_no:
-                if invoices.payment_state not in ("paid", "in_payment"):
-                    total_amount_inv = 0.0
-                    total_amount_rel = 0.0
-                    total_released = 0.0
+                        for inv_budget_line in invoices.inv_budget_line:
+                            amount_released = 0
 
-                    for inv_budget_line in invoices.inv_budget_line:
-                        amount_released = 0
+                            if not inv_budget_line.released:
+                                if inv_budget_line.budget_inv_vendor_id.id == rec.vendor_id.id and inv_budget_line.bucket_type_id.id == rec.vendor_line_bucket_id.bucket_type_id.id:
+                                    if inv_budget_line.amount_residual != inv_budget_line.amount and not inv_budget_line.amount_residual == 0.0:
+                                        total_amount_rel += inv_budget_line.amount - inv_budget_line.amount_residual
+                                        total_amount_inv += inv_budget_line.amount_residual
+                                    elif inv_budget_line.amount_residual == 0.0:
+                                        total_amount_inv += inv_budget_line.amount - inv_budget_line.amount_residual
+                                        total_amount_rel += inv_budget_line.amount_residual
+                                    else:
+                                        total_amount_inv += inv_budget_line.amount
+                            if inv_budget_line.released:
 
-                        if not inv_budget_line.released:
-                            if inv_budget_line.budget_inv_vendor_id.id == rec.vendor_id.id and inv_budget_line.bucket_type_id.id == rec.vendor_line_bucket_id.bucket_type_id.id:
-                                if inv_budget_line.amount_residual != inv_budget_line.amount and not inv_budget_line.amount_residual == 0.0:
-                                    total_amount_rel += inv_budget_line.amount - inv_budget_line.amount_residual
-                                    total_amount_inv += inv_budget_line.amount_residual
-                                elif inv_budget_line.amount_residual == 0.0:
-                                    total_amount_inv += inv_budget_line.amount - inv_budget_line.amount_residual
-                                    total_amount_rel += inv_budget_line.amount_residual
-                                else:
-                                    total_amount_inv += inv_budget_line.amount
-                        if inv_budget_line.released:
+                                if inv_budget_line.budget_inv_vendor_id.id == rec.vendor_id.id and inv_budget_line.bucket_type_id.id == rec.vendor_line_bucket_id.bucket_type_id.id:
+                                    amount_released += inv_budget_line.amount
+                            total_released += amount_released
 
-                            if inv_budget_line.budget_inv_vendor_id.id == rec.vendor_id.id and inv_budget_line.bucket_type_id.id == rec.vendor_line_bucket_id.bucket_type_id.id:
-                                amount_released += inv_budget_line.amount
-                        total_released += amount_released
+                        for inv_budget_line in invoices.product_remaining_budget_line:
+                            amount_released = 0
 
-                    for inv_budget_line in invoices.product_remaining_budget_line:
-                        amount_released = 0
+                            if not inv_budget_line.released:
+                                if inv_budget_line.budget_inv_remaining_vendor_id.id == rec.vendor_id.id and inv_budget_line.bucket_type_id.id == rec.vendor_line_bucket_id.bucket_type_id.id:
+                                    if inv_budget_line.amount_residual != inv_budget_line.amount and not inv_budget_line.amount_residual == 0.0:
+                                        total_amount_rel += inv_budget_line.amount - inv_budget_line.amount_residual
+                                        total_amount_inv += inv_budget_line.amount_residual
+                                    elif inv_budget_line.amount_residual == 0.0:
+                                        total_amount_inv += inv_budget_line.amount - inv_budget_line.amount_residual
+                                        total_amount_rel += inv_budget_line.amount_residual
+                                    else:
+                                        total_amount_inv += inv_budget_line.amount
+                            if inv_budget_line.released:
 
-                        if not inv_budget_line.released:
-                            if inv_budget_line.budget_inv_remaining_vendor_id.id == rec.vendor_id.id and inv_budget_line.bucket_type_id.id == rec.vendor_line_bucket_id.bucket_type_id.id:
-                                if inv_budget_line.amount_residual != inv_budget_line.amount and not inv_budget_line.amount_residual == 0.0:
-                                    total_amount_rel += inv_budget_line.amount - inv_budget_line.amount_residual
-                                    total_amount_inv += inv_budget_line.amount_residual
-                                elif inv_budget_line.amount_residual == 0.0:
-                                    total_amount_inv += inv_budget_line.amount - inv_budget_line.amount_residual
-                                    total_amount_rel += inv_budget_line.amount_residual
-                                else:
-                                    total_amount_inv += inv_budget_line.amount
-                        if inv_budget_line.released:
+                                if inv_budget_line.budget_inv_remaining_vendor_id.id == rec.vendor_id.id and inv_budget_line.bucket_type_id.id == rec.vendor_line_bucket_id.bucket_type_id.id:
+                                    amount_released += inv_budget_line.amount
+                            total_released += amount_released
 
-                            if inv_budget_line.budget_inv_remaining_vendor_id.id == rec.vendor_id.id and inv_budget_line.bucket_type_id.id == rec.vendor_line_bucket_id.bucket_type_id.id:
-                                amount_released += inv_budget_line.amount
-                        total_released += amount_released
+                        total_released_amount += total_amount_rel + total_released
+                        total_invoiced_amount += total_amount_inv
+                    rec.write(
+                        {'total_amount_released': total_released_amount, "total_amount_invoiced": total_invoiced_amount})
 
-                    total_released_amount += total_amount_rel + total_released
-                    total_invoiced_amount += total_amount_inv
-                rec.write(
-                    {'total_amount_released': total_released_amount, "total_amount_invoiced": total_invoiced_amount})
-                
+            if self.bucket_status == 'billed':
 
+                total_released_amount = 0.0
+                total_invoiced_amount = 0.0
+                all_invoices = []
+                all_invoice_billed = self.env['account.move'].search([('partner_id','=',rec.vendor_id.id),('move_type','=','in_invoice')])
+                for bill_vendor in all_invoice_billed:
+                    all_invoices.append(bill_vendor)
+                rem_duplicate_invoice_no_set = set(all_invoices)
+                final_invoice_no = list(rem_duplicate_invoice_no_set)
+                total_released_bill_amount = 0.0
+                total_bill_due_amount = 0.0
+                total_bill_amount = 0.0
+                for invoices in final_invoice_no:
+                    if invoices.payment_state not in ("paid", "in_payment"):
+                        print(invoices,"invoicess")
+                        if invoices.invoice_line_ids:
+                            visited_move_line_product = set()
+                            for move_line_product in invoices.invoice_line_ids:
+                                vendor_bill_bucket = self.env['bucket'].sudo().search(
+                                    [('bucket_type_id', '=', move_line_product.bucket_ids.bucket_type_id.id),
+                                     ('bucket_status', '=', 'billed')])
+                                if vendor_bill_bucket.id == self.id:
+                                    visited_move_line_product.add(move_line_product.product_id.id)
+                                    if move_line_product.product_id.id in visited_move_line_product and move_line_product.bill_residual_amount == move_line_product.price_subtotal:
+                                        total_released_bill_amount += move_line_product.price_subtotal - move_line_product.bill_residual_amount
+                                        total_bill_due_amount += move_line_product.price_subtotal
+                                    elif move_line_product.product_id.id in visited_move_line_product and move_line_product.bill_residual_amount != move_line_product.price_subtotal:
+                                        total_released_bill_amount += move_line_product.price_subtotal - move_line_product.bill_residual_amount
+                                        total_bill_due_amount += move_line_product.bill_residual_amount
+                                        total_bill_amount += move_line_product.price_subtotal
+                                        if invoices.amount_residual == 0:
+                                            total_bill_amount = 0
+                                        if total_released_bill_amount == invoices.amount_residual and invoices.payment_state != 'partial':
+                                            total_released_bill_amount = 0
+                                    elif not move_line_product.product_id.id in visited_move_line_product and move_line_product.bill_residual_amount == move_line_product.price_subtotal:
+                                        total_released_bill_amount += move_line_product.price_subtotal
+                                        total_bill_due_amount += move_line_product.price_subtotal
+                                    elif not move_line_product.product_id.id in visited_move_line_product and move_line_product.bill_residual_amount != move_line_product.price_subtotal:
+                                        total_released_bill_amount += move_line_product.price_subtotal - move_line_product.bill_residual_amount
+                                        total_bill_due_amount += move_line_product.bill_residual_amount
+                                        if total_bill_due_amount != 0.0:
+                                            total_released_bill_amount = total_bill_due_amount
+                            print(total_released_bill_amount,'>>>>',total_bill_due_amount,total_bill_amount)
+                    rec.write({'total_amount_released': total_released_bill_amount, "total_amount_invoiced": total_bill_amount-total_released_bill_amount})
 
     def _get_vendor_line_released_amount(self):
         for rec in self.vendor_line_released:
@@ -490,14 +534,15 @@ class Bucket(models.Model):
                                 total_ref_bill_amount += move_line_product.price_subtotal - move_line_product.refund_residual_amount
             rec.write({'total_amount_refunded': total_ref_bill_amount,
                        })
-            
-    def _domain_data_filter(self):
-        result = {}
-        lst = []
-        if self.id:
-            vendor_ids = self.env['vendor.line'].search([('total_amount_invoiced', '>', 0),('vendor_line_bucket_id','=',self.id)])
-            if vendor_ids:
-                self.vendor_line = vendor_ids
+
+    # @api.depends('vendor_line')
+    # def _get_value_vendor_line(self):
+    #     domain = {}
+    #     domain = { 'domain':[('total_amount_invoiced', '>',  0.0)]}
+    #     print(domain,"domaiinnnn")
+    #     return domain
+
+
 
 class VendorLine(models.Model):
     _name = "vendor.line"
@@ -508,7 +553,7 @@ class VendorLine(models.Model):
     total_amount_invoiced = fields.Float('Amount')
     total_amount_billed = fields.Float('Bill Released')
     total_amount_billed_due = fields.Float('Bill Due')
-
+    bucket_status_billed = fields.Selection(related='vendor_line_bucket_id.bucket_status')
 
     def fetch_vendor_unpaid_invoice_details(self,final_invoice_no):
         for invoices in final_invoice_no:
@@ -572,9 +617,6 @@ class VendorLine(models.Model):
                         existing_record = self.env['vendor.invoice.detail'].sudo().search([('invoice_name','=',invoices.id),('vendor_id','=',self.vendor_id.id),('bucket_type_id','=',self.vendor_line_bucket_id.bucket_type_id.id)])
                         if not existing_record:
                             create_record = self.env['vendor.invoice.detail'].sudo().create({"vendor_id":self.vendor_id.id,'invoice_name':invoices.id,"bucket_type_id":self.vendor_line_bucket_id.bucket_type_id.id,'vendor_amount_invoiced':total_vendor_amount_per_invoice})
-
-
-
 
     def fetch_vendor_paid_invoice_details(self,final_paid_invoice_no):
         for paid_invoices in final_paid_invoice_no:
@@ -662,9 +704,371 @@ class VendorLine(models.Model):
                         existing_record.write({'vendor_amount_released': total_vendor_amount_per_invoice,
                              'vendor_amount_invoiced': 0.0,'released':True})
 
+    def fetch_vendor_bill_details(self):
+        fetch_bills = self.env['account.move'].sudo().search([('move_type', '=', "in_invoice")])
+        fetch_refunded_bills = self.env['account.move'].sudo().search([('move_type', '=', "in_refund")])
+        self.fetch_vendor_paid_bills(fetch_bills)
+        self.fetch_vendor_refunded_bills(fetch_refunded_bills)
+        domain = [('vendor_id', '=', self.vendor_id.id), ("debit", '=', False),
+                  ('bucket_type_id', '=', self.vendor_line_bucket_id.bucket_type_id.id)]
 
-                        
-                        
+        vals = {
+            'name': _('Bill Detail'),
+            'domain': domain,
+            'type': 'ir.actions.act_window',
+            'view_type': 'form',
+            'view_mode': 'tree',
+            'target': 'new',
+            'res_model': 'vendor.bill.detail',
+        }
+        return vals
+
+    def fetch_vendor_paid_bills(self, fetch_bills):
+        for record in fetch_bills:
+            if record.partner_id.id == self.vendor_id.id:
+                if record.state == 'posted' and record.payment_state in ("paid", "in_payment"):
+                    if record.invoice_line_ids:
+                        visited_move_line_product = set()
+                        for move_line_product in record.invoice_line_ids:
+                            visited_move_line_product.add(move_line_product.product_id.id)
+                            if move_line_product.product_id:
+                                vendor_id = self.env["product.supplierinfo"].sudo().search(
+                                    [('product_tmpl_id', '=', move_line_product.product_id.product_tmpl_id.id)],
+                                    limit=1, order="id desc")
+                                vendor_id = vendor_id.partner_id
+                            else:
+                                vendor_id = self.vendor_id
+                            existing_bill_rec = self.env['vendor.bill.detail'].sudo().search(
+                                [('bill_name', '=', record.id), ('vendor_id', '=', vendor_id.id),
+                                 ('bucket_type_id', '=', self.vendor_line_bucket_id.bucket_type_id.id)])
+                            total_amount_paid = 0
+                            for move_line_product in record.invoice_line_ids:
+                                if move_line_product.product_id.id in visited_move_line_product:
+                                    total_amount_paid += move_line_product.price_subtotal
+                                else:
+                                    total_amount_paid = move_line_product.price_subtotal
+                            if not existing_bill_rec:
+                                self.env['vendor.bill.detail'].sudo().create({
+                                    'bill_name': record.id,
+                                    'vendor_id': vendor_id.id,
+                                    'vendor_amount_paid': total_amount_paid,
+                                    'bill_paid': True,
+                                    'bucket_type_id': self.vendor_line_bucket_id.bucket_type_id.id
+                                })
+                            else:
+                                existing_bill_rec.write({
+                                    'vendor_amount_bill': 0.0,
+                                    'vendor_amount_paid': total_amount_paid,
+                                    'bill_paid': True,
+                                })
+
+                if record.state == 'posted' and record.payment_state == 'partial':
+                    if record.invoice_line_ids:
+                        visited_move_line_product = set()
+                        total_amount_paid = 0
+                        remaining_bill_amount = 0
+                        for move_line_product in record.invoice_line_ids:
+                            visited_move_line_product.add(move_line_product.product_id.id)
+                            if move_line_product.bill_residual_amount != 0.0:
+                                if not move_line_product.is_bill_paid:
+                                    if move_line_product.product_id:
+                                        vendor_id = self.env["product.supplierinfo"].sudo().search(
+                                            [('product_tmpl_id', '=', move_line_product.product_id.product_tmpl_id.id)],
+                                            limit=1, order="id desc")
+                                        vendor_id = vendor_id.partner_id
+                                    else:
+                                        vendor_id = self.vendor_id
+                                    existing_bill_rec = self.env['vendor.bill.detail'].sudo().search(
+                                        [('bill_name', '=', record.id), ('vendor_id', '=', vendor_id.id), (
+                                            'bucket_type_id', '=',
+                                            self.vendor_line_bucket_id.bucket_type_id.id)])
+                                    vendor_line_released_id = self.search([('vendor_id', '=', vendor_id.id),('id','=',self.id)])
+                                    print(vendor_line_released_id,"idd realse")
+
+                                    if move_line_product.product_id.id in visited_move_line_product and move_line_product.bill_residual_amount == move_line_product.price_subtotal:
+                                        total_amount_paid += move_line_product.price_subtotal - move_line_product.bill_residual_amount
+                                        remaining_bill_amount += move_line_product.price_subtotal
+                                    elif move_line_product.product_id.id in visited_move_line_product and move_line_product.bill_residual_amount != move_line_product.price_subtotal:
+                                        total_amount_paid += move_line_product.price_subtotal - move_line_product.bill_residual_amount
+                                        remaining_bill_amount += move_line_product.bill_residual_amount
+                                    elif not move_line_product.product_id.id in visited_move_line_product and move_line_product.bill_residual_amount == move_line_product.price_subtotal:
+                                        total_amount_paid += move_line_product.price_subtotal
+                                        remaining_bill_amount += move_line_product.price_subtotal
+
+                                    elif not move_line_product.product_id.id in visited_move_line_product and move_line_product.bill_residual_amount != move_line_product.price_subtotal:
+                                        total_amount_paid += move_line_product.price_subtotal - move_line_product.bill_residual_amount
+                                        remaining_bill_amount += move_line_product.bill_residual_amount
+
+                                    if not existing_bill_rec:
+
+                                        self.env['vendor.bill.detail'].sudo().create({
+                                            'bill_name': record.id,
+                                            'vendor_id': vendor_id.id,
+                                            'vendor_amount_bill': remaining_bill_amount,
+                                            'vendor_line_billed_id': vendor_line_released_id.id,
+                                            'vendor_amount_paid': total_amount_paid,
+                                            'bill_paid': move_line_product.is_bill_paid,
+                                            'bucket_type_id': self.vendor_line_bucket_id.bucket_type_id.id
+                                        })
+                                    else:
+                                        existing_bill_rec.write({'vendor_amount_paid': total_amount_paid,
+                                                                 'vendor_amount_bill': remaining_bill_amount,
+                                                                 'bill_paid': move_line_product.is_bill_paid})
+                                else:
+                                    if move_line_product.product_id:
+                                        vendor_id = self.env["product.supplierinfo"].sudo().search(
+                                            [('product_tmpl_id', '=', move_line_product.product_id.product_tmpl_id.id)],
+                                            limit=1, order="id desc")
+                                        vendor_id = vendor_id.partner_id
+                                    else:
+                                        vendor_id = self.vendor_id
+                                    existing_bill_rec = self.env['vendor.bill.detail'].sudo().search(
+                                        [('bill_name', '=', record.id), ('vendor_id', '=', vendor_id.id),
+                                         (
+                                         'bucket_type_id', '=', self.vendor_line_bucket_id.bucket_type_id.id)])
+
+                                    vendor_line_released_id = self.search([('vendor_id', '=', vendor_id.id)])
+                                    total_amount_paid = 0
+                                    if move_line_product.product_id.id in visited_move_line_product and move_line_product.is_partial:
+                                        total_amount_paid += move_line_product.price_subtotal
+                                    elif move_line_product.is_partial and not move_line_product.is_bill_paid:
+                                        total_amount_paid += move_line_product.price_subtotal - move_line_product.bill_residual_amount
+                                    if not existing_bill_rec:
+                                        self.env['vendor.bill.detail'].sudo().create({
+                                            'bill_name': record.id,
+                                            'vendor_id': vendor_id.id,
+                                            'vendor_amount_bill': 0.0,
+                                            'vendor_line_billed_id': vendor_line_released_id.id,
+                                            'vendor_amount_paid': total_amount_paid,
+                                            'bill_paid': move_line_product.is_bill_paid,
+                                            'bucket_type_id': self.vendor_line_bucket_id.bucket_type_id.id
+                                        })
+                                    else:
+                                        existing_bill_rec.write({'vendor_amount_paid': total_amount_paid,
+                                                                 'bill_paid': move_line_product.is_bill_paid})
+                            else:
+                                if move_line_product.is_bill_paid:
+                                    if move_line_product.product_id:
+                                        vendor_id = self.env["product.supplierinfo"].sudo().search(
+                                            [('product_tmpl_id', '=', move_line_product.product_id.product_tmpl_id.id)],
+                                            limit=1,
+                                            order="id desc")
+                                        vendor_id = vendor_id.partner_id
+                                    else:
+                                        vendor_id = self.vendor_id
+                                    existing_bill_rec = self.env['vendor.bill.detail'].sudo().search(
+                                        [('bill_name', '=', record.id), ('vendor_id', '=', vendor_id.id),
+                                         (
+                                             'bucket_type_id', '=',
+                                             self.vendor_line_released_bucket_id.bucket_type_id.id)])
+                                    vendor_line_released_id = self.search([('vendor_id', '=', vendor_id.id)])
+                                    if not existing_bill_rec:
+                                        self.env['vendor.bill.detail'].sudo().create({
+                                            'bill_name': record.id,
+                                            'vendor_id': vendor_id.id,
+                                            'vendor_amount_bill': 0.0,
+                                            'vendor_line_billed_id': vendor_line_released_id.id,
+                                            'vendor_amount_paid': move_line_product.price_subtotal,
+                                            'bill_paid': move_line_product.is_bill_paid,
+                                            'bucket_type_id': self.vendor_line_bucket_id.bucket_type_id.id
+                                        })
+                                    else:
+                                        existing_bill_rec.write({
+                                            'vendor_amount_paid': move_line_product.price_subtotal - move_line_product.bill_residual_amount,
+                                            'vendor_amount_bill': 0.0,
+                                            'bill_paid': move_line_product.is_bill_paid, })
+
+    def fetch_vendor_refunded_bills(self, fetch_refunded_bills):
+        for record in fetch_refunded_bills:
+            if record.partner_id.id == self.vendor_id.id:
+                if record.state == 'posted' and record.payment_state in ("paid", "in_payment"):
+                    if record.invoice_line_ids:
+                        visited_move_line_product = set()
+                        for move_line_product in record.invoice_line_ids:
+                            visited_move_line_product.add(move_line_product.product_id.id)
+                            if move_line_product.product_id:
+                                vendor_id = self.env["product.supplierinfo"].sudo().search(
+                                    [('product_tmpl_id', '=', move_line_product.product_id.product_tmpl_id.id)],
+                                    limit=1, order="id desc")
+                                vendor_id = vendor_id.partner_id
+                            else:
+                                vendor_id = self.vendor_id
+                            existing_bill_rec = self.env['vendor.bill.detail'].sudo().search(
+                                [('bill_name', '=', record.reversed_entry_id.id), ('vendor_id', '=', vendor_id.id),
+                                 ('bucket_type_id', '=', self.vendor_line_bucket_id.bucket_type_id.id)])
+                            vendor_line_released_id = self.search([('vendor_id', '=', vendor_id.id), (
+                            'vendor_line_bucket_id', '=',
+                            self.vendor_line_bucket_id.bucket_type_id.id)])
+                            total_amount_refunded = 0
+                            for move_line_product in record.invoice_line_ids:
+                                if move_line_product.product_id.id in visited_move_line_product:
+                                    total_amount_refunded += move_line_product.price_subtotal
+                                else:
+                                    total_amount_refunded = move_line_product.price_subtotal
+
+                            if not existing_bill_rec:
+                                self.env['vendor.bill.detail'].sudo().create({
+                                    'bill_name': record.reversed_entry_id.id,
+                                    'vendor_id': vendor_id.id,
+                                    # 'vendor_amount_bill':move_line_product.price_subtotal,
+                                    'vendor_line_released_id': vendor_line_released_id.id,
+                                    'vendor_bill_amount_refunded': total_amount_refunded,
+                                    'vendor_amount_paid': total_amount_refunded,
+                                    'bill_paid': True,
+                                    'bucket_type_id': self.vendor_line_bucket_id.bucket_type_id.id
+                                })
+                            else:
+                                existing_bill_rec.write({
+                                    'vendor_amount_bill': 0.0,
+                                    'vendor_bill_amount_refunded': total_amount_refunded,
+                                    'bill_paid': True,
+                                })
+                if record.state == 'posted' and record.payment_state == 'partial':
+                    if record.reversed_entry_id.invoice_line_ids:
+                        visited_move_line_product = set()
+                        total_amount_paid = 0
+                        remaining_bill_amount = 0
+                        total_refund = 0
+                        for move_line_product in record.reversed_entry_id.invoice_line_ids:
+                            visited_move_line_product.add(move_line_product.product_id.id)
+                            if move_line_product.bill_residual_amount != 0.0:
+                                if not move_line_product.is_bill_paid:
+                                    if move_line_product.product_id:
+                                        vendor_id = self.env["product.supplierinfo"].sudo().search(
+                                            [('product_tmpl_id', '=', move_line_product.product_id.product_tmpl_id.id)],
+                                            limit=1, order="id desc")
+                                        vendor_id = vendor_id.partner_id
+                                    else:
+                                        vendor_id = self.vendor_id
+                                    existing_bill_rec = self.env['vendor.bill.detail'].sudo().search(
+                                        [('bill_name', '=', record.reversed_entry_id.id),
+                                         ('vendor_id', '=', vendor_id.id),
+                                         (
+                                         'bucket_type_id', '=', self.vendor_line_bucket_id.bucket_type_id.id)])
+                                    vendor_line_released_id = self.search([('vendor_id', '=', vendor_id.id)])
+
+                                    if move_line_product.product_id.id in visited_move_line_product and move_line_product.refund_residual_amount == move_line_product.price_subtotal:
+                                        total_amount_paid += move_line_product.price_subtotal - move_line_product.refund_residual_amount
+                                        remaining_bill_amount += move_line_product.price_subtotal
+                                    elif move_line_product.product_id.id in visited_move_line_product and move_line_product.refund_residual_amount != move_line_product.price_subtotal:
+                                        total_amount_paid += move_line_product.price_subtotal - move_line_product.refund_residual_amount
+                                        remaining_bill_amount += move_line_product.refund_residual_amount
+                                    elif not move_line_product.product_id.id in visited_move_line_product and move_line_product.refund_residual_amount == move_line_product.price_subtotal:
+                                        total_amount_paid += move_line_product.price_subtotal
+                                        remaining_bill_amount += move_line_product.price_subtotal
+
+                                    elif not move_line_product.product_id.id in visited_move_line_product and move_line_product.refund_residual_amount != move_line_product.price_subtotal:
+                                        total_amount_paid += move_line_product.price_subtotal - move_line_product.refund_residual_amount
+                                        remaining_bill_amount += move_line_product.refund_residual_amount
+                                    if not existing_bill_rec:
+                                        self.env['vendor.bill.detail'].sudo().create({
+                                            'bill_name': record.id,
+                                            'vendor_id': vendor_id.id,
+                                            'vendor_amount_bill': remaining_bill_amount,
+                                            'vendor_line_released_id': vendor_line_released_id.id,
+                                            'vendor_amount_paid': total_amount_paid,
+                                            'bill_paid': move_line_product.is_bill_paid,
+                                            'bucket_type_id': self.vendor_line_bucket_id.bucket_type_id.id
+                                        })
+                                    else:
+                                        existing_bill_rec.write({'vendor_amount_paid': total_amount_paid,
+                                                                 'vendor_amount_bill': remaining_bill_amount,
+                                                                 'bill_paid': move_line_product.is_bill_paid})
+                                else:
+                                    if move_line_product.product_id:
+                                        vendor_id = self.env["product.supplierinfo"].sudo().search(
+                                            [('product_tmpl_id', '=', move_line_product.product_id.product_tmpl_id.id)],
+                                            limit=1, order="id desc")
+                                        vendor_id = vendor_id.partner_id
+                                    else:
+                                        vendor_id = self.vendor_id
+                                    existing_bill_rec = self.env['vendor.bill.detail'].sudo().search(
+                                        [('bill_name', '=', record.id), ('vendor_id', '=', vendor_id.id),
+                                         (
+                                         'bucket_type_id', '=', self.vendor_line_bucket_id.bucket_type_id.id)])
+                                    vendor_line_released_id = self.search([('vendor_id', '=', vendor_id.id)])
+                                    total_amount_paid = 0
+                                    if move_line_product.product_id.id in visited_move_line_product and move_line_product.is_partial:
+                                        total_amount_paid += move_line_product.price_subtotal
+                                    elif move_line_product.is_partial and not move_line_product.is_bill_paid:
+                                        total_amount_paid += move_line_product.price_subtotal - move_line_product.bill_residual_amount
+                                    if not existing_bill_rec:
+                                        self.env['vendor.bill.detail'].sudo().create({
+                                            'bill_name': record.id,
+                                            'vendor_id': vendor_id.id,
+                                            'vendor_amount_bill': 0.0,
+                                            'vendor_line_released_id': vendor_line_released_id.id,
+                                            'vendor_amount_paid': total_amount_paid,
+                                            'bill_paid': move_line_product.is_bill_paid,
+                                            'bucket_type_id': self.vendor_line_bucket_id.bucket_type_id.id
+                                        })
+                                    else:
+                                        existing_bill_rec.write({'vendor_amount_paid': total_amount_paid,
+                                                                 'bill_paid': move_line_product.is_bill_paid})
+                            else:
+                                if move_line_product.is_bill_refunded:
+                                    if move_line_product.product_id:
+                                        vendor_id = self.env["product.supplierinfo"].sudo().search(
+                                            [('product_tmpl_id', '=', move_line_product.product_id.product_tmpl_id.id)],
+                                            limit=1,
+                                            order="id desc")
+                                        vendor_id = vendor_id.partner_id
+                                    else:
+                                        vendor_id = self.vendor_id
+                                    existing_bill_rec = self.env['vendor.bill.detail'].sudo().search(
+                                        [('bill_name', '=', record.reversed_entry_id.id),
+                                         ('vendor_id', '=', vendor_id.id),
+                                         (
+                                         'bucket_type_id', '=', self.vendor_line_bucket_id.bucket_type_id.id)])
+                                    vendor_line_released_id = self.search([('vendor_id', '=', vendor_id.id)])
+                                    if not existing_bill_rec:
+                                        self.env['vendor.bill.detail'].sudo().create({
+                                            'bill_name': record.reversed_entry_id.id,
+                                            'vendor_id': vendor_id.id,
+                                            'vendor_amount_bill': 0.0,
+                                            'vendor_line_released_id': vendor_line_released_id.id,
+                                            'vendor_amount_paid': move_line_product.price_subtotal,
+                                            'bill_paid': move_line_product.is_bill_paid,
+                                            'bucket_type_id': self.vendor_line_bucket_id.bucket_type_id.id
+                                        })
+                                    else:
+                                        existing_bill_rec.write({
+                                            'vendor_amount_paid': move_line_product.price_subtotal - move_line_product.bill_residual_amount,
+                                            'vendor_amount_bill': 0.0,
+                                            'bill_paid': move_line_product.is_bill_paid, })
+                                else:
+                                    total_refund += move_line_product.price_subtotal - move_line_product.refund_residual_amount
+                                    if move_line_product.product_id:
+                                        vendor_id = self.env["product.supplierinfo"].sudo().search(
+                                            [('product_tmpl_id', '=', move_line_product.product_id.product_tmpl_id.id)],
+                                            limit=1,
+                                            order="id desc")
+                                        vendor_id = vendor_id.partner_id
+                                    else:
+                                        vendor_id = self.vendor_id
+                                    existing_bill_rec = self.env['vendor.bill.detail'].sudo().search(
+                                        [('bill_name', '=', record.reversed_entry_id.id),
+                                         ('vendor_id', '=', vendor_id.id),
+                                         (
+                                         'bucket_type_id', '=', self.vendor_line_bucket_id.bucket_type_id.id)])
+                                    vendor_line_released_id = self.search([('vendor_id', '=', vendor_id.id)])
+                                    if not existing_bill_rec:
+                                        self.env['vendor.bill.detail'].sudo().create({
+                                            'bill_name': record.reversed_entry_id.id,
+                                            'vendor_id': vendor_id.id,
+                                            'vendor_amount_bill': 0.0,
+                                            'vendor_line_released_id': vendor_line_released_id.id,
+                                            'vendor_amount_paid': move_line_product.price_subtotal,
+                                            'vendor_bill_amount_refunded': total_refund,
+                                            'bill_paid': move_line_product.is_bill_paid,
+                                            'bucket_type_id': self.vendor_line_bucket_id.bucket_type_id.id
+                                        })
+                                    else:
+                                        existing_bill_rec.write({
+                                            'vendor_amount_paid': move_line_product.price_subtotal - move_line_product.bill_residual_amount,
+                                            'vendor_amount_bill': 0.0,
+                                            'vendor_bill_amount_refunded': total_refund,
+                                            'bill_paid': move_line_product.is_bill_paid, })
 
     def fetch_vendor_invoice_details(self):
         all_vendor_invoice_lines = self.env['invoice.budget.line'].sudo().search(
@@ -704,8 +1108,6 @@ class VendorLine(models.Model):
             'target':'new',
             'res_model': 'vendor.invoice.detail',
         }
-        
-
 
 class VendorLineReleased(models.Model):
     _name = "vendor.line.released"
@@ -780,7 +1182,7 @@ class VendorLineReleased(models.Model):
                                     existing_bill_rec = self.env['vendor.bill.detail'].sudo().search(
                                         [('bill_name', '=', record.id), ('vendor_id', '=', vendor_id.id), (
                                         'bucket_type_id', '=', self.vendor_line_released_bucket_id.bucket_type_id.id)])
-                                    vendor_line_released_id = self.search([('vendor_id', '=', vendor_id.id)])
+                                    vendor_line_released_id = self.search([('vendor_id', '=', vendor_id.id),('vendor_line_released_bucket_id','=',self.vendor_line_released_bucket_id.bucket_type_id.id)])
 
                                     if move_line_product.product_id.id in visited_move_line_product and move_line_product.bill_residual_amount == move_line_product.price_subtotal:
                                         total_amount_paid += move_line_product.price_subtotal - move_line_product.bill_residual_amount
