@@ -3354,9 +3354,11 @@ class AccountPaymentRegister(models.TransientModel):
             total_released_amount = self.amount
             self.line_ids.move_id.previous_released_amount += self.amount
             if invoice_amount.amount_total == self.amount and invoice_amount.payment_state in ("paid", "in_payment"):
+                print("if outtt")
                 self.create_payment_out_invoice_in_payment()
 
             elif invoice_amount.amount_total > self.amount and invoice_amount.payment_state == "partial":
+                print("elif aout")
                 self.create_payment_out_invoice_partial(total_released_amount)
             else:
                 self.create_payment_out_invoice_paid(invoice_amount)

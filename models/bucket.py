@@ -22,13 +22,6 @@ class Bucket(models.Model):
     # check3 = fields.Boolean(compute='_remove_vendor_line')
 
 
-    # def _get_vendor_invoice(self):
-    #     print(self.id,"selfid")
-    #     print(self.vendor_line,"vendor line")
-    #     self.vendor_line = self.env['vendor.line'].search([('total_amount_invoiced','>',0),('vendor_line_bucket_id','=',self.id)])
-        # for line in vendor_line:
-        #     self.vendor_line = line
-        #     print(self.vendor_line,"vendor lineee22")
 
     def name_get(self):
         result = []
@@ -78,7 +71,7 @@ class Bucket(models.Model):
     def _get_amount(self):
         if self.vendor_line:
             self._get_vendor_line_amount()
-            # self._get_value_vendor_line()
+            self.domain_invoiced_amount()
 
         if self.vendor_line_released:
             self._get_vendor_line_released_amount()
@@ -535,12 +528,10 @@ class Bucket(models.Model):
             rec.write({'total_amount_refunded': total_ref_bill_amount,
                        })
 
-    # @api.depends('vendor_line')
-    # def _get_value_vendor_line(self):
-    #     domain = {}
-    #     domain = { 'domain':[('total_amount_invoiced', '>',  0.0)]}
-    #     print(domain,"domaiinnnn")
-    #     return domain
+    def domain_invoiced_amount(self):
+        if self.vendor_line:
+            self.vendor_line = [(6, 0, self.env['vendor.line'].search([('total_amount_invoiced', '>', 0.0),('vendor_line_bucket_id','=',self.id)]).ids)]
+
 
 
 
