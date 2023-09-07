@@ -7,6 +7,7 @@ class BucketType(models.Model):
     _name = "bucket.type"
     
     name = fields.Char(string='Name')
+    # is_salesperson = fields.Boolean(string='Is Sales Person')
     # is_vendor = fields.Boolean(string='Is Vendor')
 
     def unlink(self):
@@ -24,18 +25,18 @@ class BucketType(models.Model):
 
     @api.constrains('name')
     def _check_name_duplicacy(self):
-        buckettype = self.env['bucket.type'].search([('name', '=', self.name), ('id', '!=', self.id)])
+        buckettype = self.env['bucket.type'].search([('name', '=', self.name),('id', '!=', self.id)])
         if buckettype:
             raise UserError(_('Already a Bucket Type Exists ! '))
 
-    # @api.constrains('is_vendor')
+    # @api.constrains('is_salesperson')
     # def bucket_is_vendor_status(self):
     #     total = 0
     #     for record in self:
-    #         obj = self.env['bucket.type'].search([('id','!=',record.id),('is_vendor','=',True)])
+    #         obj = self.env['bucket.type'].search([('id','!=',record.id),('is_salesperson','=',True)])
     #         if obj:
-    #             if record.is_vendor:
-    #                 raise UserError(_('There is already a bucket type exist with Vendor'))
+    #             if record.is_salesperson:
+    #                 raise UserError(_('There is already a bucket type exist with Sales Person'))
 
     @api.model_create_multi
     def create(self, vals_list):

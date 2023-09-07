@@ -8,8 +8,9 @@ class VendorInvoiceDetail(models.TransientModel):
 
     vendor_id = fields.Many2one('res.partner','Name')
     invoice_name = fields.Many2one('account.move',string="Invoices",copy=False)
-    vendor_amount_invoiced = fields.Float("Invoiced Amount")
-    vendor_amount_released = fields.Float("Released Amount")
+    vendor_amount_invoiced = fields.Float("Inv. Due")
+    vendor_amount_released = fields.Float("Inv. Paid")
+    vendor_inv_amount = fields.Float("Inv. Amount")
     released = fields.Boolean('Released')
 
     user_released = fields.Many2one('user.line.released', string='User Released')

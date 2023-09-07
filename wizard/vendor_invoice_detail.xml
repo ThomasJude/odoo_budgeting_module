@@ -16,12 +16,13 @@
                 <field name="refunded_amount" readonly="1" force_save="1"/>
                 <field name="vendor_amount_released" sum="Total"/>
                 <field name="vendor_amount_invoiced" sum="Total"/>
+                <field name="vendor_inv_amount" sum="Total"/>
                 <field name="user_released" invisible="1"/>
                 <field name="vendor_released" invisible="1"/>
                 <field name="user_invoiced" invisible="1"/>
                 <field name="vendor_invoiced" invisible="1"/>
 
-                <field name="bucket_type_id" />
+                <field name="bucket_type_id" invisible="1"/>
                 <field name="partial_due_amount" invisible="1"/>
                 <field name="partial_paid_amount" invisible="1"/>
                 <button name="see_payments" type="object" string="Payments" class="btn btn-primary"/>

@@ -580,17 +580,17 @@ class VendorLine(models.Model):
                         [('invoice_name', '=', invoices.id), ('vendor_id', '=', self.vendor_id.id)])
                     if total_vendor_amount_part_paid_per_invoice != 0.0:
                         if existing_record_1:
-                            existing_record_1.write({'vendor_amount_invoiced':total_vendor_amount_part_paid_per_invoice,'vendor_amount_released':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice,'partial_due_amount':total_vendor_amount_part_paid_per_invoice,'partial_paid_amount':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice})
+                            existing_record_1.write({'vendor_amount_invoiced':total_vendor_amount_part_paid_per_invoice,'vendor_amount_released':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice,'partial_due_amount':total_vendor_amount_part_paid_per_invoice,'partial_paid_amount':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice,'vendor_inv_amount':total_vendor_paid_amount})
                         else:
                             create_record = self.env['vendor.invoice.detail'].sudo().create(
-                                {"vendor_id": self.vendor_id.id, 'invoice_name': invoices.id,'bucket_type_id':self.vendor_line_bucket_id.bucket_type_id.id,
+                                {"vendor_id": self.vendor_id.id, 'invoice_name': invoices.id,'bucket_type_id':self.vendor_line_bucket_id.bucket_type_id.id,'vendor_inv_amount':total_vendor_paid_amount,
                                  'vendor_amount_invoiced':total_vendor_amount_part_paid_per_invoice,'vendor_amount_released':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice,'partial_due_amount':total_vendor_amount_part_paid_per_invoice,'partial_paid_amount':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice})
 
                     else:
                         if existing_record_1:
-                            existing_record_1.write({'released':True,'vendor_amount_invoiced':0.0,'partial_due_amount':0.0,'partial_paid_amount':0.0,'vendor_amount_released':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice})
+                            existing_record_1.write({'released':True,'vendor_amount_invoiced':0.0,'partial_due_amount':0.0,'partial_paid_amount':0.0,'vendor_amount_released':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice,'vendor_inv_amount':total_vendor_paid_amount})
                         else:
-                            self.env['vendor.invoice.detail'].sudo().create({"vendor_id": self.vendor_id.id, 'invoice_name': invoices.id,'bucket_type_id':self.vendor_line_bucket_id.bucket_type_id.id,'released':True,'vendor_amount_invoiced':0.0,'partial_due_amount':0.0,'partial_paid_amount':0.0,'vendor_amount_released':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice})
+                            self.env['vendor.invoice.detail'].sudo().create({"vendor_id": self.vendor_id.id, 'invoice_name': invoices.id,'bucket_type_id':self.vendor_line_bucket_id.bucket_type_id.id,'released':True,'vendor_amount_invoiced':0.0,'partial_due_amount':0.0,'partial_paid_amount':0.0,'vendor_amount_released':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice,'vendor_inv_amount':total_vendor_paid_amount})
 
                 else:
                     if not invoices.payment_state == 'posted':
@@ -607,7 +607,7 @@ class VendorLine(models.Model):
                         total_vendor_amount_per_invoice = total_amount_rel + total_amount_inv
                         existing_record = self.env['vendor.invoice.detail'].sudo().search([('invoice_name','=',invoices.id),('vendor_id','=',self.vendor_id.id),('bucket_type_id','=',self.vendor_line_bucket_id.bucket_type_id.id)])
                         if not existing_record:
-                            create_record = self.env['vendor.invoice.detail'].sudo().create({"vendor_id":self.vendor_id.id,'invoice_name':invoices.id,"bucket_type_id":self.vendor_line_bucket_id.bucket_type_id.id,'vendor_amount_invoiced':total_vendor_amount_per_invoice})
+                            create_record = self.env['vendor.invoice.detail'].sudo().create({"vendor_id":self.vendor_id.id,'invoice_name':invoices.id,"bucket_type_id":self.vendor_line_bucket_id.bucket_type_id.id,'vendor_amount_invoiced':total_vendor_amount_per_invoice,'vendor_inv_amount':total_vendor_amount_per_invoice})
 
     def fetch_vendor_paid_invoice_details(self,final_paid_invoice_no):
         for paid_invoices in final_paid_invoice_no:
@@ -647,7 +647,8 @@ class VendorLine(models.Model):
                                 {'vendor_amount_invoiced': total_vendor_amount_part_paid_per_invoice,
                                  'vendor_amount_released': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice,
                                  'partial_due_amount': total_vendor_amount_part_paid_per_invoice,
-                                 'partial_paid_amount': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice})
+                                 'partial_paid_amount': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice,
+                                 'vendor_inv_amount':total_vendor_paid_amount})
                         else:
                             create_record = self.env['vendor.invoice.detail'].sudo().create(
                                 {"vendor_id": self.vendor_id.id, 'invoice_name': paid_invoices.id,
@@ -655,20 +656,23 @@ class VendorLine(models.Model):
                                  'vendor_amount_invoiced': total_vendor_amount_part_paid_per_invoice,
                                  'vendor_amount_released': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice,
                                  'partial_due_amount': total_vendor_amount_part_paid_per_invoice,
-                                 'partial_paid_amount': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice})
+                                 'partial_paid_amount': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice,
+                                 'vendor_inv_amount':total_vendor_paid_amount})
 
                     else:
                         if existing_record_1:
                             existing_record_1.write(
                                 {'released': True, 'vendor_amount_invoiced': 0.0, 'partial_due_amount': 0.0,
                                  'partial_paid_amount': 0.0,
-                                 'vendor_amount_released': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice})
+                                 'vendor_amount_released': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice,
+                                 'vendor_inv_amount':total_vendor_paid_amount})
                         else:
                             self.env['vendor.invoice.detail'].sudo().create(
                                 {"vendor_id": self.vendor_id.id, 'invoice_name': paid_invoices.id,
                                  'bucket_type_id': self.vendor_line_bucket_id.bucket_type_id.id, 'released': True,
                                  'vendor_amount_invoiced': 0.0, 'partial_due_amount': 0.0, 'partial_paid_amount': 0.0,
-                                 'vendor_amount_released': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice})
+                                 'vendor_amount_released': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice,
+                                 'vendor_inv_amount':total_vendor_paid_amount})
                 else:
                     total_vendor_amount = 0.0
                     total_amount_inv = 0.0
@@ -690,10 +694,11 @@ class VendorLine(models.Model):
                              "bucket_type_id": self.vendor_line_bucket_id.bucket_type_id.id,
                              'released':True,
                              'vendor_amount_released': total_vendor_amount_per_invoice,
-                             'vendor_amount_invoiced': 0.0})
+                             'vendor_amount_invoiced': 0.0,
+                             'vendor_inv_amount':total_vendor_amount_per_invoice})
                     else:
                         existing_record.write({'vendor_amount_released': total_vendor_amount_per_invoice,
-                             'vendor_amount_invoiced': 0.0,'released':True})
+                             'vendor_amount_invoiced': 0.0,'released':True,'vendor_inv_amount':total_vendor_amount_per_invoice})
 
     def fetch_vendor_bill_details(self):
         fetch_bills = self.env['account.move'].sudo().search([('move_type', '=', "in_invoice")])
@@ -1506,16 +1511,16 @@ class VendorLineReleased(models.Model):
                     if total_vendor_amount_part_paid_per_invoice != 0.0:
 
                         if existing_record_2:
-                            existing_record_2.write({'vendor_amount_invoiced':total_vendor_amount_part_paid_per_invoice,'vendor_amount_released':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice,'partial_due_amount':total_vendor_amount_part_paid_per_invoice,'partial_paid_amount':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice})
+                            existing_record_2.write({'vendor_amount_invoiced':total_vendor_amount_part_paid_per_invoice,'vendor_amount_released':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice,'partial_due_amount':total_vendor_amount_part_paid_per_invoice,'partial_paid_amount':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice,'vendor_inv_amount':total_vendor_paid_amount})
                         else:
-                            vals = {"vendor_id": self.vendor_id.id, 'invoice_name': invoices.id,'bucket_type_id':self.vendor_line_released_bucket_id.bucket_type_id.id,
+                            vals = {"vendor_id": self.vendor_id.id, 'invoice_name': invoices.id,'bucket_type_id':self.vendor_line_released_bucket_id.bucket_type_id.id,'vendor_inv_amount':total_vendor_paid_amount,
                                  'vendor_amount_invoiced':total_vendor_amount_part_paid_per_invoice,'vendor_amount_released':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice,'partial_due_amount':total_vendor_amount_part_paid_per_invoice,'partial_paid_amount':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice}
                             create_record = self.env['vendor.invoice.detail'].sudo().create(vals)
                     else:
                         if existing_record_2:
-                            existing_record_2.write({'released':True,'vendor_amount_invoiced':0.0,'partial_due_amount':0.0,'partial_paid_amount':0.0,'vendor_amount_released':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice})
+                            existing_record_2.write({'released':True,'vendor_amount_invoiced':0.0,'partial_due_amount':0.0,'partial_paid_amount':0.0,'vendor_amount_released':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice,'vendor_inv_amount':total_vendor_paid_amount})
                         else:
-                            self.env['vendor.invoice.detail'].sudo().create({"vendor_id": self.vendor_id.id, 'invoice_name': invoices.id,'bucket_type_id':self.vendor_line_released_bucket_id.bucket_type_id.id,'released':True,'vendor_amount_invoiced':0.0,'partial_due_amount':0.0,'partial_paid_amount':0.0,'vendor_amount_released':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice})
+                            self.env['vendor.invoice.detail'].sudo().create({"vendor_id": self.vendor_id.id, 'invoice_name': invoices.id,'bucket_type_id':self.vendor_line_released_bucket_id.bucket_type_id.id,'released':True,'vendor_amount_invoiced':0.0,'partial_due_amount':0.0,'partial_paid_amount':0.0,'vendor_amount_released':total_vendor_paid_amount-total_vendor_amount_part_paid_per_invoice,'vendor_inv_amount':total_vendor_paid_amount})
 
                 else:
                     total_vendor_amount = 0.0
@@ -1531,7 +1536,7 @@ class VendorLineReleased(models.Model):
                     total_vendor_amount_per_invoice = total_amount_rel + total_amount_inv
                     existing_record = self.env['vendor.invoice.detail'].sudo().search([('invoice_name','=',invoices.id),('vendor_id','=',self.vendor_id.id),('bucket_type_id','=',self.vendor_line_released_bucket_id.bucket_type_id.id)])
                     if not existing_record:
-                        create_record = self.env['vendor.invoice.detail'].sudo().create({"vendor_id":self.vendor_id.id,'invoice_name':invoices.id,"bucket_type_id":self.vendor_line_released_bucket_id.bucket_type_id.id,'vendor_amount_invoiced':total_vendor_amount_per_invoice})
+                        create_record = self.env['vendor.invoice.detail'].sudo().create({"vendor_id":self.vendor_id.id,'invoice_name':invoices.id,"bucket_type_id":self.vendor_line_released_bucket_id.bucket_type_id.id,'vendor_amount_invoiced':total_vendor_amount_per_invoice,'vendor_inv_amount':total_vendor_amount_per_invoice})
 
     
     
@@ -1565,6 +1570,7 @@ class VendorLineReleased(models.Model):
                                 total_amount_rel += product_remaining_budget_line.amount
                     total_vendor_paid_amount = total_amount_inv + total_amount_rel
                     total_vendor_amount_part_paid_per_invoice = total_paid_amount_inv + total_paid_amount_rel
+
                     existing_record_1 = self.env['vendor.invoice.detail'].sudo().search(
                         [('invoice_name', '=', paid_invoices.id), ('vendor_id', '=', self.vendor_id.id),
                          ('bucket_type_id', '=', self.vendor_line_released_bucket_id.bucket_type_id.id)])
@@ -1574,7 +1580,8 @@ class VendorLineReleased(models.Model):
                                 {'vendor_amount_invoiced': total_vendor_amount_part_paid_per_invoice,
                                  'vendor_amount_released': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice,
                                  'partial_due_amount': total_vendor_amount_part_paid_per_invoice,
-                                 'partial_paid_amount': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice})
+                                 'partial_paid_amount': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice,
+                                 'vendor_inv_amount':total_vendor_paid_amount})
                         else:
                             create_record = self.env['vendor.invoice.detail'].sudo().create(
                                 {"vendor_id": self.vendor_id.id, 'invoice_name': paid_invoices.id,
@@ -1582,21 +1589,24 @@ class VendorLineReleased(models.Model):
                                  'vendor_amount_invoiced': total_vendor_amount_part_paid_per_invoice,
                                  'vendor_amount_released': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice,
                                  'partial_due_amount': total_vendor_amount_part_paid_per_invoice,
-                                 'partial_paid_amount': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice})
+                                 'partial_paid_amount': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice,
+                                 'vendor_inv_amount':total_vendor_paid_amount})
 
                     else:
                         if existing_record_1:
                             existing_record_1.write(
                                 {'released': True, 'vendor_amount_invoiced': 0.0, 'partial_due_amount': 0.0,
                                  'partial_paid_amount': 0.0,
-                                 'vendor_amount_released': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice})
+                                 'vendor_amount_released': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice,
+                                 'vendor_inv_amount':total_vendor_paid_amount})
                         else:
                             self.env['vendor.invoice.detail'].sudo().create(
                                 {"vendor_id": self.vendor_id.id, 'invoice_name': paid_invoices.id,
                                  'bucket_type_id': self.vendor_line_released_bucket_id.bucket_type_id.id,
                                  'released': True,
                                  'vendor_amount_invoiced': 0.0, 'partial_due_amount': 0.0, 'partial_paid_amount': 0.0,
-                                 'vendor_amount_released': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice})
+                                 'vendor_amount_released': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice,
+                                 'vendor_inv_amount':total_vendor_paid_amount})
                 else:
 
                     total_vendor_amount = 0.0
@@ -1619,11 +1629,12 @@ class VendorLineReleased(models.Model):
                             {"vendor_id": self.vendor_id.id, 'invoice_name': paid_invoices.id,
                              "bucket_type_id": self.vendor_line_released_bucket_id.bucket_type_id.id,
                              'released': True, 'vendor_amount_released': total_vendor_amount_per_invoice,
+                             'vendor_inv_amount':total_vendor_amount_per_invoice,
                              'vendor_amount_invoiced': 0.0})
                     else:
                         existing_record.write(
                             {'vendor_amount_released': total_vendor_amount_per_invoice, 'released': True,
-                             'vendor_amount_invoiced': 0.0})
+                             'vendor_amount_invoiced': 0.0,'vendor_inv_amount':total_vendor_amount_per_invoice,})
             if paid_invoices.state == 'posted' and paid_invoices.move_type == 'out_refund':
                 if paid_invoices.payment_state == 'partial':
                     total_vendor_amount = 0.0
@@ -1666,7 +1677,7 @@ class VendorLineReleased(models.Model):
                             existing_record_1.write(
                                 {'released': True, 'refunded_invoice_name': paid_invoices.id,
                                  'refunded_amount': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice,
-                                 'vendor_amount_released': total_vendor_amount_part_paid_per_invoice,
+                                 'vendor_amount_released': total_vendor_amount_part_paid_per_invoice,'vendor_inv_amount':total_vendor_paid_amount
                                  })
                         else:
                             if vendor_id_check:
@@ -1677,6 +1688,7 @@ class VendorLineReleased(models.Model):
                                      'bucket_type_id': self.vendor_line_released_bucket_id.bucket_type_id.id,
                                      'vendor_amount_released': total_vendor_amount_part_paid_per_invoice,
                                      'refunded_amount': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice,
+                                     'vendor_inv_amount': total_vendor_paid_amount
                                      })
 
                     else:
@@ -1685,6 +1697,7 @@ class VendorLineReleased(models.Model):
                             existing_record_1.write(
                                 {'released': True, 'refunded_invoice_name': paid_invoices.id,
                                  'refunded_amount': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice,
+                                 'vendor_inv_amount':total_vendor_paid_amount
                                  })
                         else:
                             if vendor_id_check:
@@ -1697,6 +1710,7 @@ class VendorLineReleased(models.Model):
                                      'partial_paid_amount': 0.0,
                                      'vendor_amount_released': 0.0,
                                      'refunded_amount': total_vendor_paid_amount - total_vendor_amount_part_paid_per_invoice,
+                                     'vendor_inv_amount': total_vendor_paid_amount
                                      })
 
                 else:
@@ -1725,13 +1739,15 @@ class VendorLineReleased(models.Model):
                              'refunded_invoice_name': paid_invoices.id,
                              "bucket_type_id": self.vendor_line_released_bucket_id.bucket_type_id.id,
                              'released': True, 'vendor_amount_released': 0.0,
-                             'vendor_amount_invoiced': 0.0, 'refunded_amount': total_vendor_amount_per_invoice})
+                             'vendor_amount_invoiced': 0.0, 'refunded_amount': total_vendor_amount_per_invoice,
+                             'vendor_inv_amount':total_vendor_amount_per_invoice})
                     else:
                         if vendor_id_check:
                             existing_record.write(
                                 {'vendor_amount_released': 0.0, 'released': True,
                                  'refunded_invoice_name': paid_invoices.id,
-                                 'vendor_amount_invoiced': 0.0, 'refunded_amount': total_vendor_amount_per_invoice})
+                                 'vendor_amount_invoiced': 0.0, 'refunded_amount': total_vendor_amount_per_invoice,
+                                 'vendor_inv_amount':total_vendor_amount_per_invoice})
                             
                             
 
