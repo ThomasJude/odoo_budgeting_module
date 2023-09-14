@@ -162,6 +162,7 @@ class Bucket(models.Model):
                     all_invoices.append(bill_vendor)
                 rem_duplicate_invoice_no_set = set(all_invoices)
                 final_invoice_no = list(rem_duplicate_invoice_no_set)
+                print(final_invoice_no,"invoicess no")
                 total_released_bill_amount = 0.0
                 total_bill_due_amount = 0.0
                 total_bill_amount = 0.0
@@ -183,7 +184,8 @@ class Bucket(models.Model):
                                         total_bill_due_amount += move_line_product.price_subtotal
                                     elif move_line_product.product_id.id in visited_move_line_product and move_line_product.bill_residual_amount != move_line_product.price_subtotal:
                                         print("elif first")
-                                        total_released_bill_amount += move_line_product.price_subtotal - move_line_product.bill_residual_amount
+                                        if move_line_product.bill_residual_amount > 0:
+                                            total_released_bill_amount += move_line_product.price_subtotal - move_line_product.bill_residual_amount
                                         print(move_line_product.bill_residual_amount,"bill residual amt")
                                         print(move_line_product.price_subtotal,"price subtotal")
                                         print(total_released_bill_amount, "residual amtt")
@@ -194,12 +196,12 @@ class Bucket(models.Model):
                                         print(invoices.amount_residual,"amount residual invoice")
                                         if invoices.amount_residual == 0:
                                             total_bill_amount = 0
-                                        if total_released_bill_amount == invoices.amount_residual and invoices.payment_state != 'partial':
-                                            print("partial 1")
-                                            total_released_bill_amount = 0
-                                        if total_released_bill_amount != invoices.amount_residual and invoices.payment_state != 'partial':
-                                            print("partial 2")
-                                            total_released_bill_amount = 0
+                                        # if move_line_product.price_unit == invoices.amount_residual and invoices.payment_state != 'partial':
+                                        #     print("partial 1")
+                                        #     total_released_bill_amount = 0
+                                        # if move_line_product.price_unit != invoices.amount_residual and invoices.payment_state != 'partial':
+                                        #     print("partial 2")
+                                        #     total_released_bill_amount = 0
                                     elif not move_line_product.product_id.id in visited_move_line_product and move_line_product.bill_residual_amount == move_line_product.price_subtotal:
                                         print("elif22")
                                         total_released_bill_amount += move_line_product.price_subtotal
