@@ -1727,6 +1727,26 @@ class AccountMove(models.Model):
                                         user_line.unlink()
                                     budget_remaining_line.check_invoice_posted = False
 
+        if self.move_type == 'in_invoice':
+            if self.invoice_line_ids:
+                for vendor_bill_line in self.invoice_line_ids:
+                    fixed_bucket = self.env['bucket'].sudo().search(
+                        [('bucket_type_id', '=', vendor_bill_line.bucket_ids.bucket_type_id.id),
+                         ('bucket_status', '=', 'billed')])
+                    fixed_bucket.bucket_amount -= vendor_bill_line.price_subtotal
+                    if fixed_bucket.vendor_line:
+                        for vendor_line in fixed_bucket.vendor_line:
+                            if vendor_line.vendor_id.id == self.partner_id.id:
+                                existing_rec = self.env['vendor.bill.detail'].sudo().search(
+                                    [('bill_name', '=', self.id),
+                                     ('bucket_type_id', '=', vendor_bill_line.bucket_ids.bucket_type_id.id),
+                                     ('vendor_id', '=', self.partner_id.id)])
+                                if existing_rec:
+                                    existing_rec.unlink()
+                                print(vendor_line.total_amount_invoiced,"vendor line")
+                                print(vendor_bill_line.price_subtotal,"price total")
+                            vendor_line.total_amount_invoiced -= vendor_bill_line.price_subtotal
+
         return res
 
     @api.model_create_multi

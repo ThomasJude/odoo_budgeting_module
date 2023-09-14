@@ -157,7 +157,7 @@ class Bucket(models.Model):
                 total_released_amount = 0.0
                 total_invoiced_amount = 0.0
                 all_invoices = []
-                all_invoice_billed = self.env['account.move'].search([('partner_id','=',rec.vendor_id.id),('move_type','=','in_invoice')])
+                all_invoice_billed = self.env['account.move'].search([('partner_id','=',rec.vendor_id.id),('move_type','=','in_invoice'),('state','=','posted')])
                 for bill_vendor in all_invoice_billed:
                     all_invoices.append(bill_vendor)
                 rem_duplicate_invoice_no_set = set(all_invoices)
@@ -166,7 +166,7 @@ class Bucket(models.Model):
                 total_bill_due_amount = 0.0
                 total_bill_amount = 0.0
                 for invoices in final_invoice_no:
-                    if invoices.payment_state not in ("paid", "in_payment"):
+                    if invoices.payment_state not in ("paid", "in_payment",):
                         print(invoices,"invoicess")
                         if invoices.invoice_line_ids:
                             visited_move_line_product = set()
@@ -176,21 +176,36 @@ class Bucket(models.Model):
                                      ('bucket_status', '=', 'billed')])
                                 if vendor_bill_bucket.id == self.id:
                                     visited_move_line_product.add(move_line_product.product_id.id)
+                                    print(visited_move_line_product,"visited move line product")
                                     if move_line_product.product_id.id in visited_move_line_product and move_line_product.bill_residual_amount == move_line_product.price_subtotal:
+                                        print("if first")
                                         total_released_bill_amount += move_line_product.price_subtotal - move_line_product.bill_residual_amount
                                         total_bill_due_amount += move_line_product.price_subtotal
                                     elif move_line_product.product_id.id in visited_move_line_product and move_line_product.bill_residual_amount != move_line_product.price_subtotal:
+                                        print("elif first")
                                         total_released_bill_amount += move_line_product.price_subtotal - move_line_product.bill_residual_amount
+                                        print(move_line_product.bill_residual_amount,"bill residual amt")
+                                        print(move_line_product.price_subtotal,"price subtotal")
+                                        print(total_released_bill_amount, "residual amtt")
                                         total_bill_due_amount += move_line_product.bill_residual_amount
+                                        print(total_bill_due_amount,"bill_due")
                                         total_bill_amount += move_line_product.price_subtotal
+                                        print(total_bill_amount,"total bill amount")
+                                        print(invoices.amount_residual,"amount residual invoice")
                                         if invoices.amount_residual == 0:
                                             total_bill_amount = 0
                                         if total_released_bill_amount == invoices.amount_residual and invoices.payment_state != 'partial':
+                                            print("partial 1")
+                                            total_released_bill_amount = 0
+                                        if total_released_bill_amount != invoices.amount_residual and invoices.payment_state != 'partial':
+                                            print("partial 2")
                                             total_released_bill_amount = 0
                                     elif not move_line_product.product_id.id in visited_move_line_product and move_line_product.bill_residual_amount == move_line_product.price_subtotal:
+                                        print("elif22")
                                         total_released_bill_amount += move_line_product.price_subtotal
                                         total_bill_due_amount += move_line_product.price_subtotal
                                     elif not move_line_product.product_id.id in visited_move_line_product and move_line_product.bill_residual_amount != move_line_product.price_subtotal:
+                                        print("elif33")
                                         total_released_bill_amount += move_line_product.price_subtotal - move_line_product.bill_residual_amount
                                         total_bill_due_amount += move_line_product.bill_residual_amount
                                         if total_bill_due_amount != 0.0:
@@ -722,6 +737,43 @@ class VendorLine(models.Model):
     def fetch_vendor_paid_bills(self, fetch_bills):
         for record in fetch_bills:
             if record.partner_id.id == self.vendor_id.id:
+                if record.state == 'posted' and record.payment_state == 'not_paid':
+                    print("posted")
+                    if record.invoice_line_ids:
+                        visited_move_line_product = set()
+                        for move_line_product in record.invoice_line_ids:
+                            visited_move_line_product.add(move_line_product.product_id.id)
+                            if move_line_product.product_id:
+                                vendor_id = self.env["product.supplierinfo"].sudo().search(
+                                    [('product_tmpl_id', '=', move_line_product.product_id.product_tmpl_id.id)],
+                                    limit=1, order="id desc")
+                                vendor_id = vendor_id.partner_id
+                            else:
+                                vendor_id = self.vendor_id
+                            existing_bill_rec = self.env['vendor.bill.detail'].sudo().search(
+                                [('bill_name', '=', record.id), ('vendor_id', '=', vendor_id.id),
+                                 ('bucket_type_id', '=', self.vendor_line_bucket_id.bucket_type_id.id)])
+                            total_amount_paid = 0
+                            for move_line_product in record.invoice_line_ids:
+                                if move_line_product.product_id.id in visited_move_line_product:
+                                    total_amount_paid += move_line_product.price_subtotal
+                                else:
+                                    total_amount_paid = move_line_product.price_subtotal
+                            if not existing_bill_rec:
+                                self.env['vendor.bill.detail'].sudo().create({
+                                    'bill_name': record.id,
+                                    'vendor_id': vendor_id.id,
+                                    'vendor_amount_paid': total_amount_paid,
+                                    'bill_paid': True,
+                                    'bucket_type_id': self.vendor_line_bucket_id.bucket_type_id.id
+                                })
+                            else:
+                                existing_bill_rec.write({
+                                    'vendor_amount_bill': 0.0,
+                                    'vendor_amount_paid': total_amount_paid,
+                                    'bill_paid': True,
+                                })
+
                 if record.state == 'posted' and record.payment_state in ("paid", "in_payment"):
                     if record.invoice_line_ids:
                         visited_move_line_product = set()
