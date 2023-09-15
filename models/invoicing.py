@@ -1650,6 +1650,7 @@ class AccountMove(models.Model):
                                          ('vendor_id', '=', buget_inv_line.budget_inv_vendor_id.id)])
                                     if existing_rec:
                                         existing_rec.unlink()
+                                    vendor_line.total_amount_invoiced -= buget_inv_line.amount
                                     cr = self.env.cr
                                     cr.execute(
                                         "SELECT id FROM invoice_budget_line where check_invoice_posted = '%s' and budget_inv_vendor_id = '%s' and bucket_type_id = '%s' and prod_inv_id != '%s'",
@@ -1699,6 +1700,7 @@ class AccountMove(models.Model):
                                          ('vendor_id', '=', budget_remaining_line.budget_inv_remaining_vendor_id.id)])
                                     if existing_rec:
                                         existing_rec.unlink()
+                                    vendor_line.total_amount_invoiced -= budget_remaining_line.amount
                                     cr = self.env.cr
                                     cr.execute(
                                         "SELECT id FROM product_budget_remaining where check_invoice_posted = '%s' and budget_inv_remaining_vendor_id = '%s' and bucket_type_id = '%s' and prod_remaining_id != '%s'",
@@ -1743,8 +1745,7 @@ class AccountMove(models.Model):
                                      ('vendor_id', '=', self.partner_id.id)])
                                 if existing_rec:
                                     existing_rec.unlink()
-                                print(vendor_line.total_amount_invoiced,"vendor line")
-                                print(vendor_bill_line.price_subtotal,"price total")
+
                             vendor_line.total_amount_invoiced -= vendor_bill_line.price_subtotal
 
         return res
