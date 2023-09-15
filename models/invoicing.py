@@ -1627,6 +1627,8 @@ class AccountMove(models.Model):
 
 
     def button_draft(self):
+        state = self.state
+
         res = super(AccountMove, self).button_draft()
         if self.move_type == 'out_invoice':
             if self.inv_budget_line:
@@ -1712,7 +1714,7 @@ class AccountMove(models.Model):
                                     else:
                                         print("else")
                                         vendor_line.total_amount_invoiced -= budget_remaining_line.amount
-    
+
                                     cr = self.env.cr
                                     cr.execute(
                                         "SELECT id FROM product_budget_remaining where check_invoice_posted = '%s' and budget_inv_remaining_vendor_id = '%s' and bucket_type_id = '%s' and prod_remaining_id != '%s'",
@@ -1741,7 +1743,8 @@ class AccountMove(models.Model):
                                         user_line.unlink()
                                     budget_remaining_line.check_invoice_posted = False
 
-        if self.move_type == 'in_invoice':
+        if self.move_type == 'in_invoice' and state == 'posted':
+            print("testedd")
             if self.invoice_line_ids:
                 for vendor_bill_line in self.invoice_line_ids:
                     fixed_bucket = self.env['bucket'].sudo().search(
