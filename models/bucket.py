@@ -104,7 +104,7 @@ class Bucket(models.Model):
                 total_released_amount = 0.0
                 total_invoiced_amount = 0.0
                 for invoices in final_invoice_no:
-                    if invoices.payment_state not in ("paid", "in_payment"):
+                    if invoices.payment_state not in ("paid", "in_payment") and invoices.state == 'posted':
                         total_amount_inv = 0.0
                         total_amount_rel = 0.0
                         total_released = 0.0
