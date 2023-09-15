@@ -1630,7 +1630,7 @@ class AccountMove(models.Model):
         state = self.state
 
         res = super(AccountMove, self).button_draft()
-        if self.move_type == 'out_invoice':
+        if self.move_type == 'out_invoice' and state == 'posted':
             if self.inv_budget_line:
                 for buget_inv_line in self.inv_budget_line:
                     if not buget_inv_line.released and buget_inv_line.check_invoice_posted:
