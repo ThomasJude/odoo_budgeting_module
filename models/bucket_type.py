@@ -13,14 +13,15 @@ class BucketType(models.Model):
     def unlink(self):
         if not self.env.user.has_group('odoo_budgeting_module.bucket_delete_group'):
             raise UserError("You don't have permission to delete this record.")
-        bucket = self.env['bucket'].search([('bucket_type_id','=',self.id)])
-        product_fixed = self.env['product.budget.fixed'].search([('bucket_type_id','=',self.id)])
-        product_allocate = self.env['product.budget.allocate'].search([('bucket_type_id','=',self.id)])
-        allocation_template = self.env['allocation.template.line'].search([('bucket_type','=',self.id)])
-        for rec in bucket:
-            if rec.bucket_amount > 0.0 or len(product_fixed) > 0 or \
-                    len(product_allocate) > 0 or len(allocation_template) > 0:
-                raise UserError("Bucket Type has been used in Invoices/Products/Budget Allocation Templates.")
+        for res in self:
+            bucket = self.env['bucket'].search([('bucket_type_id','=',res.id)])
+            product_fixed = self.env['product.budget.fixed'].search([('bucket_type_id','=',res.id)])
+            product_allocate = self.env['product.budget.allocate'].search([('bucket_type_id','=',res.id)])
+            allocation_template = self.env['allocation.template.line'].search([('bucket_type','=',res.id)])
+            for rec in bucket:
+                if rec.bucket_amount > 0.0 or len(product_fixed) > 0 or \
+                        len(product_allocate) > 0 or len(allocation_template) > 0:
+                    raise UserError("Bucket Type has been used in Invoices/Products/Budget Allocation Templates.")
         return super(BucketType,self).unlink()
 
     @api.constrains('name')
