@@ -45,7 +45,8 @@
                                 <field name="vendor_line">
 									<tree string="Vendor Line Invoiced" create="false" edit="false" duplicate="false" delete="false">
 		                                <field name="vendor_id" domain="[('supplier_rank', '>', 0)]" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
-		                                <field name="total_amount_released" readonly="1" invisible="1"/>
+		                                <field name="sub_bucket_type"/>
+										<field name="total_amount_released" readonly="1" invisible="1"/>
 		                                <field name="total_amount_invoiced" readonly="1" invisible="0" sum="Total Amount Invoiced"/>
 		                                <field name="total_amount_billed" readonly="1" invisible="1"/>
 		                                <field name="total_amount_billed_due" readonly="1" invisible="1"/>
@@ -61,7 +62,7 @@
                                 <field name="vendor_line_released" >
 									<tree string="Vendor Line Released" create="false" edit="false" duplicate="false" delete="false">
 		                                <field name="vendor_id" domain="[('supplier_rank', '>', 0)]" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
-		                                <field name="total_amount_refunded" readonly="1" invisible="0" width="20%"/>
+										<field name="total_amount_refunded" readonly="1" invisible="0" width="20%"/>
 		                                <field name="total_amount_released" readonly="1" invisible="0" sum="Total Amount Released" width="20%"/>
 		                                <field name="total_amount_invoiced" readonly="1" invisible="0" width="20%"/>
 										<field name="total_amount_bill" readonly="1" invisible="1" width="20%"/>

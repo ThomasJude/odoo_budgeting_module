@@ -7,12 +7,9 @@
             <field name="model">bucket.type</field>
             <field name="arch" type="xml">
                 <tree string="Bucket Type">
-                    <field name="name" required="1"/>
-<!--                    <field name="is_vendor"/>-->
-                    <!--<field name="user_type" required="1"/>-->
-                    <!--<field name="bucket_amount"/>
-                    
-                    <field name="bucket_status"/>-->
+<!--                    <field name="name" required="1"/>-->
+                    <field name="display_name" string="Name"/>
+
                 </tree>
             </field>
         </record>
@@ -28,11 +25,11 @@
 	                    <group>
 	                        <group>
 	                            <field name="name" required="1"/>
-	                            <!--<field name="user_type"/>-->
+	                            <field name="sub_buckettype" options="{'no_edit': True, 'no_create': True}"/>
 	                            
 	                        </group>
 	                        <group>
-<!--								<field name="is_salesperson"/>-->
+<!--								<field name="is_parent"/>-->
 	                            <!--<field name="bucket_amount"/>
 	                            <field name="bucket_status"/>-->
 							</group>

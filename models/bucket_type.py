@@ -5,10 +5,36 @@ from odoo.exceptions import UserError, ValidationError
 
 class BucketType(models.Model):
     _name = "bucket.type"
+    _parent_name = "sub_buckettype"
+    _parent_store = True
+    _rec_name = 'complete_name'
+    _order = 'complete_name'
     
     name = fields.Char(string='Name')
-    # is_salesperson = fields.Boolean(string='Is Sales Person')
+    sub_buckettype = fields.Many2one('bucket.type','Parent Bucket',index=True, ondelete='cascade')
+    complete_name = fields.Char(
+        'Name', compute='_compute_complete_name', recursive=True,
+        store=True)
+    parent_path = fields.Char(index=True, unaccent=False)
+    # is_parent = fields.Boolean(string='Is Sales Person')
     # is_vendor = fields.Boolean(string='Is Vendor')
+
+    @api.depends('name', 'sub_buckettype.complete_name')
+    def _compute_complete_name(self):
+        for category in self:
+            if category.sub_buckettype:
+                category.complete_name = '%s / %s' % (category.sub_buckettype.complete_name, category.name)
+            else:
+                category.complete_name = category.name
+
+    @api.model
+    def name_create(self, name):
+        return self.create({'name': name}).name_get()[0]
+
+    def name_get(self):
+        if not self.env.context.get('hierarchical_naming', True):
+            return [(record.id, record.name) for record in self]
+        return super().name_get()
 
     def unlink(self):
         if not self.env.user.has_group('odoo_budgeting_module.bucket_delete_group'):
@@ -43,8 +69,9 @@ class BucketType(models.Model):
     def create(self, vals_list):
 
         res = super(BucketType,self).create(vals_list)
-        for rec in res:
-            inv_bucket_id= self.env['bucket'].sudo().create({"name": rec.name, 'bucket_status': 'invoiced','bucket_type_id':rec.id})
-            rel_bucket_id= self.env['bucket'].sudo().create({"name": rec.name, 'bucket_status': 'released','bucket_type_id':rec.id})
-            bil_bucket_id= self.env['bucket'].sudo().create({"name": rec.name, 'bucket_status': 'billed','bucket_type_id':rec.id})
+        if not res.sub_buckettype:
+            for rec in res:
+                inv_bucket_id= self.env['bucket'].sudo().create({"name": rec.name, 'bucket_status': 'invoiced','bucket_type_id':rec.id})
+                rel_bucket_id= self.env['bucket'].sudo().create({"name": rec.name, 'bucket_status': 'released','bucket_type_id':rec.id})
+                bil_bucket_id= self.env['bucket'].sudo().create({"name": rec.name, 'bucket_status': 'billed','bucket_type_id':rec.id})
         return res

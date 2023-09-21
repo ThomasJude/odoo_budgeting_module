@@ -15,17 +15,15 @@
                 <field name="vendor_line_billed_id" invisible="1"/>
                 <field name="vendor_line_released_from_user_bucket_id" invisible="1"/>
                 <field name="bill_name" widget="many2onebutton"/>
-                
                 <field name="refund_bill_name"/>
                 <field name="bill_paid" invisible="1"/>
                 <field name="vendor_amount_bill" sum="Total"/>
                 <field name="vendor_bill_amount_refunded" sum="Total" invisible="0"/>
                 <field name="vendor_amount_paid" sum="Total"/>
-
-                <field name="vendor_id" />
-                <field name="debit" />
-                <field name="bucket_type_id" />
-
+                <field name="vendor_id" invisible="1"/>
+                <field name="debit" invisible="1"/>
+                <field name="bucket_type_id"/>
+                <field name="bucket_sub_type"/>
                 <button name="see_payments" type="object" string="Payments" class="btn btn-primary"/>
                 <button name="show_billed_items" type="object" class="btn btn-primary" string="Items"/>
 

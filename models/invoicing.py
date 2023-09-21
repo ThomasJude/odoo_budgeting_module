@@ -1744,7 +1744,6 @@ class AccountMove(models.Model):
                                     budget_remaining_line.check_invoice_posted = False
 
         if self.move_type == 'in_invoice' and state == 'posted':
-            print("testedd")
             if self.invoice_line_ids:
                 for vendor_bill_line in self.invoice_line_ids:
                     fixed_bucket = self.env['bucket'].sudo().search(
@@ -2103,12 +2102,12 @@ class AccountMove(models.Model):
                                  ('bucket_status', '=', 'billed')])
                             existing_vendor = self.env['vendor.line'].sudo().search(
                                 [("vendor_id", '=', self.partner_id.id),
-                                 ('vendor_line_bucket_id', '=', vendor_bill_bucket.id)])
+                                 ('vendor_line_bucket_id', '=', vendor_bill_bucket.id),('sub_bucket_type','=',move_lines.bucket_sub_type.id)])
 
                             if not existing_vendor:
                                 vendor_bucket_line = self.env['vendor.line'].sudo().create(
                                     {'vendor_line_bucket_id': vendor_bill_bucket.id,
-                                     'vendor_id': self.partner_id.id})
+                                     'vendor_id': self.partner_id.id,'sub_bucket_type':move_lines.bucket_sub_type.id})
 
         return res
 
@@ -3432,6 +3431,18 @@ class AccountMoveLine(models.Model):
     refund_residual_amount = fields.Float('Refund Due Amount')
     parent_move_type = fields.Selection(related='move_id.move_type', store=True, readonly=True, precompute=True, )
     bucket_ids = fields.Many2one('bucket', string="Buckets",copy=False)
+    bucket_sub_type = fields.Many2one('bucket.type','Sub Bucket',domain="[('sub_buckettype', '=', True)]")
+
+    @api.onchange('bucket_ids')
+    def _onchange_bucket_ids(self):
+        res = {}
+        if self.bucket_ids:
+            bucketid = self.bucket_ids.bucket_type_id.id
+            self.bucket_sub_type = ''
+            res['domain'] = ({'bucket_sub_type': [('sub_buckettype', '=', bucketid)]})
+        else:
+            res['domain'] = ({'bucket_sub_type': [('sub_buckettype', '=', '')]})
+        return res
 
 
     def popup_button(self):
