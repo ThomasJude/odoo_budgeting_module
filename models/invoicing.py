@@ -9,6 +9,13 @@ class AccountMove(models.Model):
     product_remaining_budget_line = fields.One2many('product.budget.remaining', 'prod_remaining_id',
                                                     'Product Remaining Budget')
     previous_released_amount = fields.Float('Previous Released')
+    # sub_type =  fields.Char('sub type',compute="_compute_sub_bucket_type",store=True)
+    #
+    # @api.depends('invoice_line_ids')
+    # def _compute_sub_bucket_type(self):
+    #     for rec in self:
+    #         print(rec, "recc>>>")
+
 
     def js_assign_out_invoice_in_payment(self,invoice_amount):
 
@@ -2088,13 +2095,13 @@ class AccountMove(models.Model):
                             [('bucket_type_id', '=', move_lines.bucket_ids.bucket_type_id.id),
                              ('bucket_status', '=', 'billed')])
                         billed_bucket.bucket_amount += move_lines.price_subtotal
-                        if move_lines.bucket_ids.bucket_type_id:
-                            existing_vendor = self.env['vendor.line.released'].sudo().search(
-                                [("vendor_id", '=', self.partner_id.id),('vendor_line_released_bucket_id','=',move_lines.bucket_ids.id)])
-
-                            if not existing_vendor:
-                                vendor_bucket_line = self.env['vendor.line.released'].sudo().create(
-                                    {'vendor_line_released_bucket_id': move_lines.bucket_ids.id, 'vendor_id': self.partner_id.id})
+                        # if move_lines.bucket_ids.bucket_type_id:
+                        #     existing_vendor = self.env['vendor.line.released'].sudo().search(
+                        #         [("vendor_id", '=', self.partner_id.id),('vendor_line_released_bucket_id','=',move_lines.bucket_ids.id)])
+                        #
+                        #     if not existing_vendor:
+                        #         vendor_bucket_line = self.env['vendor.line.released'].sudo().create(
+                        #             {'vendor_line_released_bucket_id': move_lines.bucket_ids.id, 'vendor_id': self.partner_id.id})
 
                         if move_lines.bucket_ids.bucket_type_id:
                             vendor_bill_bucket = self.env['bucket'].sudo().search(
@@ -2175,6 +2182,14 @@ class AccountPaymentRegister(models.TransientModel):
                 if not bill_line.is_partial and not bill_line.is_bill_paid:
                     if total_released_amount > bill_line.price_subtotal:
                         bill_line.bucket_ids.bucket_amount -= bill_line.price_subtotal
+                        if bill_line.bucket_ids.bucket_type_id:
+                            existing_vendor = self.env['vendor.line.released'].sudo().search(
+                                [("vendor_id", '=', self.partner_id.id),
+                                 ('vendor_line_released_bucket_id', '=', bill_line.bucket_ids.id)])
+
+                            if not existing_vendor:
+                                vendor_bucket_line = self.env['vendor.line.released'].sudo().create(
+                                    {'vendor_line_released_bucket_id': bill_line.bucket_ids.id, 'vendor_id': self.partner_id.id})
                         if not bill_line.bucket_ids.bucket_type_id:
                             vendor = self.env["vendor.line.released.inside.user"].sudo().search(
                                 [('vendor_id', '=', self.line_ids.move_id.partner_id.id),
@@ -2221,6 +2236,13 @@ class AccountPaymentRegister(models.TransientModel):
                             bill_bucket = self.env['bucket'].search(
                                 [('bucket_type_id', '=', billed_bucket_type.id), ('bucket_status', '=', 'billed')])
                             bill_bucket.bucket_amount -= total_released_amount
+                            if bill_line.bucket_ids.bucket_type_id:
+                                existing_vendor = self.env['vendor.line.released'].sudo().search(
+                                    [("vendor_id", '=', self.partner_id.id),('vendor_line_released_bucket_id','=',bill_line.bucket_ids.id)])
+
+                                if not existing_vendor:
+                                    vendor_bucket_line = self.env['vendor.line.released'].sudo().create(
+                                        {'vendor_line_released_bucket_id': bill_line.bucket_ids.id, 'vendor_id': self.partner_id.id})
                         if not bill_line.bucket_ids.bucket_type_id:
                             vendor = self.env["vendor.line.released.inside.user"].sudo().search(
                                 [('vendor_id', '=', self.line_ids.move_id.partner_id.id),
@@ -2267,6 +2289,14 @@ class AccountPaymentRegister(models.TransientModel):
                             bill_bucket = self.env['bucket'].search(
                                 [('bucket_type_id', '=', billed_bucket_type.id), ('bucket_status', '=', 'billed')])
                             bill_bucket.bucket_amount -= total_released_amount
+                        if bill_line.bucket_ids.bucket_type_id:
+                            existing_vendor = self.env['vendor.line.released'].sudo().search(
+                                [("vendor_id", '=', self.partner_id.id),
+                                 ('vendor_line_released_bucket_id', '=', bill_line.bucket_ids.id)])
+
+                            if not existing_vendor:
+                                vendor_bucket_line = self.env['vendor.line.released'].sudo().create(
+                                    {'vendor_line_released_bucket_id': bill_line.bucket_ids.id, 'vendor_id': self.partner_id.id})
                         if not bill_line.bucket_ids.bucket_type_id:
                             vendor = self.env["vendor.line.released.inside.user"].sudo().search(
                                 [('vendor_id', '=', self.line_ids.move_id.partner_id.id),
@@ -2313,6 +2343,14 @@ class AccountPaymentRegister(models.TransientModel):
                             bill_bucket = self.env['bucket'].search(
                                 [('bucket_type_id', '=', billed_bucket_type.id), ('bucket_status', '=', 'billed')])
                             bill_bucket.bucket_amount -= bill_line.bill_residual_amount
+                        if bill_line.bucket_ids.bucket_type_id:
+                            existing_vendor = self.env['vendor.line.released'].sudo().search(
+                                [("vendor_id", '=', self.partner_id.id),
+                                 ('vendor_line_released_bucket_id', '=', bill_line.bucket_ids.id)])
+
+                            if not existing_vendor:
+                                vendor_bucket_line = self.env['vendor.line.released'].sudo().create(
+                                    {'vendor_line_released_bucket_id': bill_line.bucket_ids.id, 'vendor_id': self.partner_id.id})
                         if not bill_line.bucket_ids.bucket_type_id:
                             vendor = self.env["vendor.line.released.inside.user"].sudo().search(
                                 [('vendor_id', '=', self.line_ids.move_id.partner_id.id),
@@ -2364,13 +2402,29 @@ class AccountPaymentRegister(models.TransientModel):
                             if billed_bucket_type:
                                 bill_bucket = self.env['bucket'].search([('bucket_type_id','=',billed_bucket_type.id),('bucket_status','=','billed')])
                                 bill_bucket.bucket_amount -= bill_line.bill_residual_amount
+                            if bill_line.bucket_ids.bucket_type_id:
+                                existing_vendor = self.env['vendor.line.released'].sudo().search(
+                                    [("vendor_id", '=', self.partner_id.id),('vendor_line_released_bucket_id','=',bill_line.bucket_ids.id)])
+
+                                if not existing_vendor:
+                                    vendor_bucket_line = self.env['vendor.line.released'].sudo().create(
+                                        {'vendor_line_released_bucket_id': bill_line.bucket_ids.id, 'vendor_id': self.partner_id.id})
+
                         else:
                             billed_bucket_type = self.env['bucket.type'].search(
                                 [('id', '=', bill_line.bucket_ids.bucket_type_id.id)])
                             bill_line.bucket_ids.bucket_amount -= bill_line.price_subtotal
+
                             if billed_bucket_type:
                                 bill_bucket = self.env['bucket'].search([('bucket_type_id','=',billed_bucket_type.id),('bucket_status','=','billed')])
                                 bill_bucket.bucket_amount -= bill_line.price_subtotal
+                            if bill_line.bucket_ids.bucket_type_id:
+                                existing_vendor = self.env['vendor.line.released'].sudo().search(
+                                    [("vendor_id", '=', self.partner_id.id),('vendor_line_released_bucket_id','=',bill_line.bucket_ids.id)])
+
+                                if not existing_vendor:
+                                    vendor_bucket_line = self.env['vendor.line.released'].sudo().create(
+                                        {'vendor_line_released_bucket_id': bill_line.bucket_ids.id, 'vendor_id': self.partner_id.id})
                         if bill_line.bucket_ids.bucket_type_id:
                             if not bill_line.is_bill_paid:
                                 bill_line.is_bill_paid = True
@@ -2404,6 +2458,15 @@ class AccountPaymentRegister(models.TransientModel):
                                 bill_bucket = self.env['bucket'].search(
                                     [('bucket_type_id', '=', billed_bucket_type.id), ('bucket_status', '=', 'billed')])
                                 bill_bucket.bucket_amount -= bill_line.bill_residual_amount
+                            if bill_line.bucket_ids.bucket_type_id:
+                                existing_vendor = self.env['vendor.line.released'].sudo().search(
+                                    [("vendor_id", '=', self.partner_id.id),
+                                     ('vendor_line_released_bucket_id', '=', bill_line.bucket_ids.id)])
+
+                                if not existing_vendor:
+                                    vendor_bucket_line = self.env['vendor.line.released'].sudo().create(
+                                        {'vendor_line_released_bucket_id': bill_line.bucket_ids.id,
+                                         'vendor_id': self.partner_id.id})
 
                         else:
                             bill_line.bucket_ids.bucket_amount -= bill_line.price_unit
@@ -2413,6 +2476,15 @@ class AccountPaymentRegister(models.TransientModel):
                                 bill_bucket = self.env['bucket'].search(
                                     [('bucket_type_id', '=', billed_bucket_type.id), ('bucket_status', '=', 'billed')])
                                 bill_bucket.bucket_amount -= bill_line.price_unit
+                            if bill_line.bucket_ids.bucket_type_id:
+                                existing_vendor = self.env['vendor.line.released'].sudo().search(
+                                    [("vendor_id", '=', self.partner_id.id),
+                                     ('vendor_line_released_bucket_id', '=', bill_line.bucket_ids.id)])
+
+                                if not existing_vendor:
+                                    vendor_bucket_line = self.env['vendor.line.released'].sudo().create(
+                                        {'vendor_line_released_bucket_id': bill_line.bucket_ids.id,
+                                         'vendor_id': self.partner_id.id})
                         if bill_line.bucket_ids.bucket_type_id:
                             if not bill_line.is_bill_paid:
                                 bill_line.is_bill_paid = True
@@ -3431,18 +3503,60 @@ class AccountMoveLine(models.Model):
     refund_residual_amount = fields.Float('Refund Due Amount')
     parent_move_type = fields.Selection(related='move_id.move_type', store=True, readonly=True, precompute=True, )
     bucket_ids = fields.Many2one('bucket', string="Buckets",copy=False)
-    bucket_sub_type = fields.Many2one('bucket.type','Sub Bucket',domain="[('sub_buckettype', '=', True)]")
+    bucket_sub_type = fields.Many2one('bucket.type','Sub Bucket',store=True)
+    sub_type = fields.Char('Type',store=True,compute='_compute_sub_bucket',readonly=True)
 
-    @api.onchange('bucket_ids')
-    def _onchange_bucket_ids(self):
-        res = {}
-        if self.bucket_ids:
-            bucketid = self.bucket_ids.bucket_type_id.id
-            self.bucket_sub_type = ''
-            res['domain'] = ({'bucket_sub_type': [('sub_buckettype', '=', bucketid)]})
-        else:
-            res['domain'] = ({'bucket_sub_type': [('sub_buckettype', '=', '')]})
-        return res
+    @api.depends('bucket_ids','bucket_sub_type')
+    def _compute_sub_bucket(self):
+        # res = {}
+        lst = []
+        import json
+        for rec in self:
+            print(rec,"recc")
+            rec.bucket_sub_type = None
+            if rec.bucket_ids:
+                bucketid = self.env['bucket.type'].search([('parent_path', 'like', rec.bucket_ids.bucket_type_id.id),
+                                                           ('id', '!=', rec.bucket_ids.bucket_type_id.id)])
+                rec.sub_type = json.dumps([('id','in',bucketid.ids)])
+                # for val in bucketid:
+                #     print(val,"valsss")
+                #     lst.append(val.id)
+                #     print(lst,"lst")
+                #     # rec.bucket_sub_type = [('id','in',lst)]
+                #     res['domain'] = ({'bucket_sub_type': [('id', 'in', lst)]})
+                # return res
+
+    # @api.onchange('bucket_ids')
+    # def _onchange_bucket_ids(self):
+    #     print(">>>>>>>>>>>>")
+    #     res = {}
+    #     lst = []
+    #     print(self.bucket_ids.id)
+    #     self.bucket_sub_type = None
+    #     if self.bucket_ids:
+    #         bucketid = self.env['bucket.type'].search([('parent_path','like',self.bucket_ids.bucket_type_id.id),('id','!=',self.bucket_ids.bucket_type_id.id)])
+    #         for val in bucketid:
+    #             lst.append(val.id)
+    #             res['domain'] = ({'bucket_sub_type': [('id', 'in', lst)]})
+    #         return res
+
+    # @api.depends('bucket_ids')
+    # def _dep_sub_type(self):
+    #     print(self.bucket_ids.id)
+    #     res = {}
+    #     lst = []
+    #     if self.bucket_ids:
+    #         bucketid = self.env['bucket.type'].search([('parent_path', 'like', self.bucket_ids.bucket_type_id.id),
+    #                                                    ('id', '!=', self.bucket_ids.bucket_type_id.id)])
+    #         for val in bucketid:
+    #             lst.append(val.id)
+    #             res['domain'] = ({'bucket_sub_type': [('id', 'in', lst)]})
+    #         return res
+
+        # for rec in self:
+        #     print(rec.bucket_ids.id)
+        #     print(rec.bucket_sub_type)
+
 
 
     def popup_button(self):

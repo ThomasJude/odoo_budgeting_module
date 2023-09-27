@@ -348,7 +348,7 @@ class ProductBudgetFixed(models.Model):
     def internal_link(self):
         total = 0
         if self.prod_id.product_allocate_budget_line:
-            for lines in self.product_fixed_budget_line:
+            for lines in self.prod_id.product_allocate_budget_line:
                 if lines.amount:
                     total += lines.amount
         if total > self.prod_id.list_price:

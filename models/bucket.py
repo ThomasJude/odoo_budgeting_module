@@ -758,6 +758,7 @@ class VendorLine(models.Model):
                                     'bill_name': record.id,
                                     'vendor_id': vendor_id.id,
                                     'vendor_amount_due': total_amount_paid,
+                                    'vendor_amount_bill': total_amount_paid,
                                     'bill_paid': True,
                                     'bucket_type_id': move_line_product.bucket_ids.bucket_type_id.id,
                                     'bucket_sub_type':move_line_product.bucket_sub_type.id
@@ -783,7 +784,7 @@ class VendorLine(models.Model):
                                 vendor_id = self.vendor_id
                             existing_bill_rec = self.env['vendor.bill.detail'].sudo().search(
                                 [('bill_name', '=', record.id), ('vendor_id', '=', vendor_id.id),
-                                 ('bucket_type_id', '=', self.vendor_line_bucket_id.bucket_type_id.id),
+                                 ('bucket_type_id', '=', move_line_product.bucket_ids.bucket_type_id.id),
                                  ('bucket_sub_type','=',move_line_product.bucket_sub_type.id or None)])
                             total_amount_paid = 0
                             for move_line_product in record.invoice_line_ids:
@@ -797,7 +798,7 @@ class VendorLine(models.Model):
                                     'vendor_id': vendor_id.id,
                                     'vendor_amount_paid': total_amount_paid,
                                     'bill_paid': True,
-                                    'bucket_type_id': self.vendor_line_bucket_id.bucket_type_id.id,
+                                    'bucket_type_id': move_line_product.bucket_ids.bucket_type_id.id,
                                     'bucket_sub_type': move_line_product.bucket_sub_type.id or None
                                 })
                             else:
@@ -1222,6 +1223,7 @@ class VendorLineReleased(models.Model):
                 #                 })
 
                 if record.state == 'posted' and record.payment_state in ("paid", "in_payment"):
+                    print("aa gya paid")
                     if record.invoice_line_ids:
                         visited_move_line_product = set()
                         for move_line_product in record.invoice_line_ids:
@@ -1263,6 +1265,7 @@ class VendorLineReleased(models.Model):
                                 })
 
                 if record.state == 'posted' and record.payment_state == 'partial':
+                    print("aa gya part")
                     if record.invoice_line_ids:
                         visited_move_line_product = set()
                         total_amount_paid = 0
@@ -1306,7 +1309,7 @@ class VendorLineReleased(models.Model):
                                             'vendor_amount_bill': remaining_bill_amount,
                                             'vendor_line_released_id': vendor_line_released_id.id,
                                             'vendor_amount_paid': total_amount_paid,
-                                            'vendor_amount_due': total_amount_paid,
+                                            'vendor_amount_due': total_amount_paid + remaining_bill_amount,
                                             'bill_paid': move_line_product.is_bill_paid,
                                             'bucket_type_id': move_line_product.bucket_ids.bucket_type_id.id,
                                             'bucket_sub_type': move_line_product.bucket_sub_type.id
@@ -1326,7 +1329,7 @@ class VendorLineReleased(models.Model):
                                         vendor_id = self.vendor_id
                                     existing_bill_rec = self.env['vendor.bill.detail'].sudo().search(
                                         [('bill_name', '=', record.id), ('vendor_id', '=', vendor_id.id),
-                                         ('bucket_type_id', '=', self.vendor_line_released_bucket_id.bucket_type_id.id),
+                                         ('bucket_type_id', '=', move_line_product.bucket_ids.bucket_type_id.id),
                                          ('bucket_sub_type','=',move_line_product.bucket_sub_type.id)])
                                          
                                     vendor_line_released_id = self.search([('vendor_id', '=', vendor_id.id)])
@@ -1344,7 +1347,7 @@ class VendorLineReleased(models.Model):
                                             'vendor_amount_paid': total_amount_paid,
                                             'vendor_amount_due': total_amount_paid,
                                             'bill_paid': move_line_product.is_bill_paid,
-                                            'bucket_type_id': self.vendor_line_released_bucket_id.bucket_type_id.id,
+                                            'bucket_type_id': move_line_product.bucket_ids.bucket_type_id.id,
                                             'bucket_sub_type': move_line_product.bucket_sub_type.id
                                         })
                                     else:

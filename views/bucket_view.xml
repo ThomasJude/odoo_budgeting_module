@@ -45,7 +45,7 @@
                                 <field name="vendor_line">
 									<tree string="Vendor Line Invoiced" create="false" edit="false" duplicate="false" delete="false">
 		                                <field name="vendor_id" domain="[('supplier_rank', '>', 0)]" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
-		                                <field name="sub_bucket_type"/>
+		                                <field name="sub_bucket_type" attrs="{'column_invisible' : [('parent.bucket_status', '=', 'invoiced')]}"/>
 										<field name="total_amount_released" readonly="1" invisible="1"/>
 		                                <field name="total_amount_invoiced" readonly="1" invisible="0" sum="Total Amount Invoiced"/>
 		                                <field name="total_amount_billed" readonly="1" invisible="1"/>
