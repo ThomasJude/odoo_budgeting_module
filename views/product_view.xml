@@ -25,7 +25,7 @@
                                 <field name="prod_priority" />
                                 <field name="amount"  attrs="{'readonly': [('product_id', '!=', False)]}" force_save="1" sum='total'/>
                                 
-                            <button name="internal_link" class="btn btn-secondary fa o_external_button fa-arrow-right" type="object" tag="reload"/>
+<!--                            <button name="internal_link" class="btn btn-secondary fa o_external_button fa-arrow-right" type="object" tag="reload"/>-->
                             </tree>
                         </field>
                         <label for="remaining_allocation_temp" string="Remaining Allocation Template"/>

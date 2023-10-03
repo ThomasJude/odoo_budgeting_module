@@ -3506,6 +3506,8 @@ class AccountMoveLine(models.Model):
     bucket_sub_type = fields.Many2one('bucket.type','Sub Bucket',store=True)
     sub_type = fields.Char('Type',store=True,compute='_compute_sub_bucket',readonly=True)
 
+
+
     @api.depends('bucket_ids','bucket_sub_type')
     def _compute_sub_bucket(self):
         # res = {}
@@ -3513,7 +3515,7 @@ class AccountMoveLine(models.Model):
         import json
         for rec in self:
             print(rec,"recc")
-            rec.bucket_sub_type = None
+            # rec.bucket_sub_type = None
             if rec.bucket_ids:
                 bucketid = self.env['bucket.type'].search([('parent_path', 'like', rec.bucket_ids.bucket_type_id.id),
                                                            ('id', '!=', rec.bucket_ids.bucket_type_id.id)])
@@ -3526,19 +3528,19 @@ class AccountMoveLine(models.Model):
                 #     res['domain'] = ({'bucket_sub_type': [('id', 'in', lst)]})
                 # return res
 
-    # @api.onchange('bucket_ids')
-    # def _onchange_bucket_ids(self):
-    #     print(">>>>>>>>>>>>")
-    #     res = {}
-    #     lst = []
-    #     print(self.bucket_ids.id)
-    #     self.bucket_sub_type = None
-    #     if self.bucket_ids:
-    #         bucketid = self.env['bucket.type'].search([('parent_path','like',self.bucket_ids.bucket_type_id.id),('id','!=',self.bucket_ids.bucket_type_id.id)])
-    #         for val in bucketid:
-    #             lst.append(val.id)
-    #             res['domain'] = ({'bucket_sub_type': [('id', 'in', lst)]})
-    #         return res
+    @api.onchange('bucket_ids')
+    def _onchange_bucket_ids(self):
+        print(">>>>>>>>>>>>")
+        res = {}
+        lst = []
+        print(self.bucket_ids.id)
+        self.bucket_sub_type = ''
+        # if self.bucket_ids:
+        #     bucketid = self.env['bucket.type'].search([('parent_path','like',self.bucket_ids.bucket_type_id.id),('id','!=',self.bucket_ids.bucket_type_id.id)])
+        #     for val in bucketid:
+        #         lst.append(val.id)
+        #         res['domain'] = ({'bucket_sub_type': [('id', 'in', lst)]})
+        #     return res
 
     # @api.depends('bucket_ids')
     # def _dep_sub_type(self):
