@@ -26,3 +26,7 @@ access_vendor_line_released_inside_user,vendor.line.released.inside.user,model_v
 access_allocation_template,allocation.template,model_allocation_template,base.group_user,1,1,1,1
 access_allocation_template_line,allocation.template.line,model_allocation_template_line,base.group_user,1,1,1,1
 access_show_vendors,show.vendors,model_show_vendors,base.group_user,1,1,1,1
+
+access_bucket_report,bucket.report,model_bucket_report,base.group_user,1,1,1,1
+access_bucket_view_report,bucket.view.report,model_bucket_view_report,base.group_user,1,1,1,1
+access_suballocate_template_line,suballocate.template.line,model_suballocate_template_line,base.group_user,1,1,1,1

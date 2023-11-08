@@ -57,6 +57,18 @@ class ProductTemplate(models.Model):
                                         'allocate_percent': remaining_allocation.allocate_percent,
                                         'allocation_temp_id':self.remaining_allocation_temp.id
                                     }])
+            if self.remaining_allocation_temp.allocate_sub_bucket:
+                for sub_remaining_allocation in self.remaining_allocation_temp.allocate_sub_bucket:
+                    lst.append([0,0,{
+                        'bucket_type_id':sub_remaining_allocation.bucket_type.id,
+                        'sub_bucket_type':sub_remaining_allocation.sub_bucket_type,
+                        'assignable_status':sub_remaining_allocation.assignable_status,
+                        'prod_allocate_id':self.id,
+                        'prod_remaining_budget_assigned_user_id':sub_remaining_allocation.allocate_user_id.id,
+                        'prod_remaining_budget_vendor_id': sub_remaining_allocation.allocate_user_id.id,
+                        'allocate_percent':sub_remaining_allocation.allocate_percent,
+                        'allocation_temp_id':self.remaining_allocation_temp.id
+                    }])
         self.product_allocate_budget_line = False
         self.write({'product_allocate_budget_line' : lst})
         return 
@@ -302,11 +314,15 @@ class ProductTemplate(models.Model):
     @api.constrains('product_allocate_budget_line')
     def total_percentage(self):
         total = 0
+        sub_total = 0
         if self.product_allocate_budget_line:
             for lines in self.product_allocate_budget_line:
                 if lines.allocate_percent:
                     total += lines.allocate_percent
-            if total!=100:
+                if lines.sub_bucket_type and lines.bucket_type_id:
+                    sub_total += lines.allocate_percent
+                final_total = total - sub_total
+            if final_total!=100:
                 raise UserError(_("Total Percentage should be 100"))
         
 class ProductBudgetFixed(models.Model):
@@ -480,11 +496,13 @@ class ProductBudgetAllocate(models.Model):
                                           ],"Assignable Status",default= "unassigned")
     
     bucket_type_id = fields.Many2one('bucket.type','Bucket Type', domain="[('sub_buckettype', '=', False)]")
+    sub_bucket_type = fields.Many2one('bucket.type', 'Sub Bucket', domain="[('sub_buckettype','!=', False)]")
     is_vendor = fields.Boolean(string='Is Vendor')
     prod_remaining_budget_vendor_id = fields.Many2one('res.partner', string="Vendors Name", copy=False)
-    amount = fields.Float("amount")
+    amount = fields.Float("Amount")
     allocation_temp_id= fields.Many2one('allocation.template', string="Template", copy=False)
     prod_remaining_budget_assigned_user_id = fields.Many2one('res.partner', string="Name", copy=False)
+    sub_total = fields.Float('Sub Amount')
 
     @api.onchange('product_id')
     def fetch_vendors(self):
@@ -502,16 +520,30 @@ class ProductBudgetAllocate(models.Model):
 
     @api.constrains('allocate_percent')
     def _constrains_allocate_percent(self):
+        print('enter perscent')
         for record in self:
             if record.allocate_percent>100:
                 raise UserError(_("Percentage should be smaller than 100"))
             elif record.allocate_percent:
                 total_fixed_reduction=0
+                final_total = 0
                 for fixed_reduction_line in record.prod_allocate_id.product_fixed_budget_line:
                     if fixed_reduction_line.amount:
                         total_fixed_reduction += fixed_reduction_line.amount
                 remaining_percent_allocation_amount = record.prod_allocate_id.list_price - total_fixed_reduction
-                record.amount = remaining_percent_allocation_amount*record.allocate_percent/100
+                if record.sub_bucket_type.id == False:
+                    final_total = remaining_percent_allocation_amount*record.allocate_percent/100
+                    record.amount = final_total
+                    new_vals = self.env['product.budget.allocate'].search(
+                        [('bucket_type_id', '=', record.bucket_type_id.id),
+                         ('prod_allocate_id', '=', record.prod_allocate_id.id), ('sub_bucket_type.id', '!=', False)])
+                    if new_vals:
+                        for rec in new_vals:
+                            rec.amount = final_total * rec.allocate_percent/100
+                            rec.sub_total = final_total * rec.allocate_percent/100
+                    else:
+                        record.sub_total = final_total
+
 
     @api.onchange('bucket_type_id')
     def _onchange_bucket_type_id(self):

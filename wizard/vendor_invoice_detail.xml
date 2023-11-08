@@ -22,7 +22,8 @@
                 <field name="user_invoiced" invisible="1"/>
                 <field name="vendor_invoiced" invisible="1"/>
 
-                <field name="bucket_type_id" invisible="1"/>
+                <field name="bucket_type_id" invisible="0"/>
+                <field name="bucket_sub_type"/>
                 <field name="partial_due_amount" invisible="1"/>
                 <field name="partial_paid_amount" invisible="1"/>
                 <button name="see_payments" type="object" string="Payments" class="btn btn-primary"/>

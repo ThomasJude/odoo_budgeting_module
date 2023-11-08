@@ -29,6 +29,7 @@ Budget Module
         'views/allocation_template_view.xml',
         'views/show_vendors.xml',
         'views/partners_view.xml',
+        'wizard/bucket_reports_view.xml',
     ],
     
     'installable': True,

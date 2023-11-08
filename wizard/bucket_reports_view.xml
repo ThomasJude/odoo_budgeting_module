@@ -1,0 +1,42 @@
+<odoo>
+    <data>
+        <record id="bucket_report_report_form_view" model="ir.ui.view">
+            <field name="name">bucket.report.form</field>
+            <field name="model">bucket.report</field>
+            <field name="arch" type="xml">
+                <form string="Bucket Report">
+                    <group string="Group By">
+                        <field name="type" options="{'horizontal':true}" widget="radio"/>
+                    </group>
+                     <footer>
+                         <button name="print_report" string="Download" type="object" class="oe_highlight" />
+                         <button string="Cancel" class="oe_link" special="cancel" /> 
+                    </footer>
+                </form>
+            </field>
+        </record>
+        <record id="action_bucket_report_report_print" model="ir.actions.act_window">
+            <field name="name">Bucket Report</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">bucket.report</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+       <record id="bucket_report_report_view" model="ir.ui.view">
+			<field name="name">Bucket Report</field>
+			<field name="model">bucket.view.report</field>
+			<field name="arch" type="xml">
+				<form string="Excel Report file" create="false" edit="false" duplicate="false" delete="false">
+                    <group>
+                        <field name="excel_file" readonly="1" filename="file_name" />
+                        <field name="file_name" invisible="1" />
+				    </group>
+				</form>
+			</field>
+		</record>
+
+		<menuitem id="bucket_report_report_view_menu" name="Reports" parent="odoo_budgeting_module.budget_master_menu" sequence="13"/>
+		<menuitem id="bucket_report_report_view_menu_sub" name="Reports" parent="odoo_budgeting_module.bucket_report_report_view_menu" action="action_bucket_report_report_print"  sequence="1"/>
+    </data>
+</odoo>

@@ -36,12 +36,25 @@
 										<field name="product_id" invisible="1" attrs="{'readonly': [('desc', '!=', False)],'required': [('desc', '=', False)]}" options="{'no_edit': True, 'no_create': True}" />
 										<field name="desc" invisible="1" attrs="{'readonly': [('product_id', '!=', False)],'required': [('product_id', '=', False)]}"/>
 		                                <field name="bucket_type" options="{'no_edit': True, 'no_create': True}" required="1"/>
+<!--		                                <field name="sub_bucket_type" options="{'no_edit': True, 'no_create': True}" domain="sub_type"/>-->
+<!--                                        <field name="sub_type" invisible="1"/>-->
 		                                <field name="assignable_status" required="1"/>
 		                                <field name="allocate_user_id" domain="[('supplier_rank', '>', 0)]" attrs="{'readonly': [('assignable_status', 'in', ('unassigned','assignable_at_inv'))],'required':[('assignable_status','=','assigned')]}" options="{'no_edit': True, 'no_create': True}" />
 		                                <field name="allocate_percent" sum="Allocate Percent"/>
                                     </tree>
 		                        </field>
 							</page>
+                             <page string="Sub Bucket Details" name="sub_budget_info" attrs="{'invisible':[('id','=', False)]}">
+                                <field name="allocate_sub_bucket">
+                                    <tree  editable="bottom" delete="false" create="false">
+                                        <field name="bucket_type"/>
+                                        <field name="sub_bucket_type"/>
+                                        <field name="assignable_status"/>
+                                        <field name="allocate_user_id"/>
+                                        <field name="allocate_percent"/>
+                                    </tree>
+                                </field>
+                             </page>
 						</notebook>
                     </sheet>
                 </form>

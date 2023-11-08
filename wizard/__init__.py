@@ -6,3 +6,4 @@ from . import detailed_items
 from . import invoice_bill_wiz
 from . import invoice_visibility_wiz
 from . import user_invoice_visibility_wiz
+from . import bucket_reports

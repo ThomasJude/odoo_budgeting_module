@@ -49,6 +49,7 @@
 								<field name="product_id_budget" invisible="1" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
 								<field name="name" readonly="1" invisible="1"/>
 								<field name="bucket_type_id" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
+								<field name="sub_bucket_type" readonly="1" options="{'no_edit': True, 'no_create': True}"/>
 								<!--<field name="bucket_user" invisible="1"/>-->
 								<field name="is_vendor" invisible="1"/>
 								<field name="check_invoice_posted" invisible="1"/>
