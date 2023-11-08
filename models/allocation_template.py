@@ -64,19 +64,17 @@ class AllocationTemplate(models.Model):
     def total_percentage_val_sub(self):
         if self.allocation_temp_line:
             for lines in self.allocation_temp_line:
-
-                sub_bucket = []
                 if self.allocate_sub_bucket:
+                    sub_bucket = []
                     for sub_bucket_list in self.allocate_sub_bucket:
                         sub_bucket.append(sub_bucket_list.bucket_type.id)
-                if lines.id in sub_bucket:
-                    total = 0
-                    res = self.env['suballocate.template.line'].search([('bucket_type','=',lines.bucket_type.id),('sub_allocated_id','=',self.id)])
-                    for res_total in res:
-                        total += res_total.allocate_percent
-                    print(total,"total")
-                    if total != 100:
-                        raise UserError(_("Sub Bucket Total Percentage should be 100"))
+                    if lines.bucket_type.id in sub_bucket:
+                        total = 0
+                        res = self.env['suballocate.template.line'].search([('bucket_type','=',lines.bucket_type.id),('sub_allocated_id','=',self.id)])
+                        for res_total in res:
+                            total += res_total.allocate_percent
+                        if total != 100:
+                            raise UserError(_("Sub Bucket Total Percentage should be 100"))
 
 
     @api.constrains('allocation_temp_line')
