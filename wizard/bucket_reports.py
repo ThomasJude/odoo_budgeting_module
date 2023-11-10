@@ -1,13 +1,11 @@
 from odoo import fields, api, models, _, tools
 import io
 import xlwt
-from openpyxl import Workbook
 import csv
 from io import BytesIO
 import base64
 from datetime import datetime, timedelta
 from odoo.exceptions import UserError
-from xlsxwriter.workbook import Workbook
 from io import StringIO
 
 
