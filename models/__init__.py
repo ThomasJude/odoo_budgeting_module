@@ -6,3 +6,4 @@ from . import bucket_type
 from . import bucket
 from . import bucket_dashboard
 from . import show_vendors
+from . import year

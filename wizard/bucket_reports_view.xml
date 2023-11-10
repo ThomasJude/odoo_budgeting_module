@@ -7,6 +7,7 @@
                 <form string="Bucket Report">
                     <group string="Group By">
                         <field name="type" options="{'horizontal':true}" widget="radio"/>
+                        <field name="year" options="{'no_edit': True, 'no_create': True}" attrs="{'invisible':[('type','=','yearly')],'required':[('type','!=','yearly')]}"/>
                     </group>
                      <footer>
                          <button name="print_report" string="Download" type="object" class="oe_highlight" />

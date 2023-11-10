@@ -30,6 +30,7 @@ Budget Module
         'views/show_vendors.xml',
         'views/partners_view.xml',
         'wizard/bucket_reports_view.xml',
+        'views/year_view.xml',
     ],
     
     'installable': True,
