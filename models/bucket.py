@@ -828,6 +828,16 @@ class VendorLine(models.Model):
                                 else:
                                     exist_inv_amount = exist_invoice_number.vendor_amount_invoiced + product_remaining_budget_line.amount
                                     # exist_invoice_number.write({'vendor_amount_invoiced': exist_inv_amount,'vendor_inv_amount': exist_inv_amount})
+                            if product_remaining_budget_line.budget_inv_remaining_vendor_id.id == False and product_remaining_budget_line.sub_bucket_type.id == False and product_remaining_budget_line.bucket_type_id.id == self.vendor_line_bucket_id.bucket_type_id.id:
+                                exist_invoice_number = self.env['vendor.invoice.detail'].sudo().search([('invoice_name', '=', invoices.id),('bucket_type_id', '=', product_remaining_budget_line.bucket_type_id.id),
+                                     ('bucket_sub_type', '=', False)])
+                                if not exist_invoice_number:
+                                    create_record = self.env['vendor.invoice.detail'].sudo().create({'vendor_id': False, 'invoice_name': invoices.id,
+                                         'bucket_type_id': product_remaining_budget_line.bucket_type_id.id,'bucket_sub_type': False,
+                                         'vendor_amount_invoiced': product_remaining_budget_line.amount,'vendor_inv_amount': product_remaining_budget_line.amount})
+                                else:
+                                    exist_inv_amount = exist_invoice_number.vendor_amount_invoiced + product_remaining_budget_line.amount
+                                    # exist_invoice_number.write({'vendor_amount_invoiced': exist_inv_amount,'vendor_inv_amount': exist_inv_amount})
 
                             if product_remaining_budget_line.budget_inv_remaining_vendor_id in self.vendor_id and product_remaining_budget_line.bucket_type_id.id == self.vendor_line_bucket_id.bucket_type_id.id and product_remaining_budget_line.sub_bucket_type.id != False:
                                 existing_record = self.env['vendor.invoice.detail'].sudo().search([('invoice_name', '=', invoices.id), ('vendor_id', '=', self.vendor_id.id),('bucket_type_id', '=', product_remaining_budget_line.bucket_type_id.id),('bucket_sub_type', '=', product_remaining_budget_line.sub_bucket_type.id)])
@@ -2528,6 +2538,25 @@ class VendorLineReleased(models.Model):
                                     {'invoice_name': paid_invoices.id,
                                      "bucket_type_id": product_remaining_budget_line.bucket_type_id.id,
                                      'bucket_sub_type':product_remaining_budget_line.sub_bucket_type.id,
+                                     'released': True, 'vendor_amount_released': product_remaining_budget_line.amount,
+                                     'vendor_inv_amount': product_remaining_budget_line.amount,
+                                     'vendor_amount_invoiced': 0.0})
+                            else:
+                                existing_sub_line.write(
+                                        {'vendor_amount_released': product_remaining_budget_line.amount, 'released': True,
+                                         'vendor_amount_invoiced': 0.0,'vendor_inv_amount':product_remaining_budget_line.amount,})
+                        if product_remaining_budget_line.sub_bucket_type.id == False and product_remaining_budget_line.bucket_type_id.id != False and product_remaining_budget_line.assignable_status =='unassigned':
+                            total_amount_rel += product_remaining_budget_line.amount
+                            existing_sub_line = self.env['vendor.invoice.detail'].sudo().search(
+                                [('invoice_name', '=', paid_invoices.id),
+                                 ('bucket_type_id', '=', product_remaining_budget_line.bucket_type_id.id),
+                                 ('bucket_sub_type','=',False)])
+
+                            if not existing_sub_line:
+                                create_record = self.env['vendor.invoice.detail'].sudo().create(
+                                    {'invoice_name': paid_invoices.id,
+                                     "bucket_type_id": product_remaining_budget_line.bucket_type_id.id,
+                                     'bucket_sub_type':False,
                                      'released': True, 'vendor_amount_released': product_remaining_budget_line.amount,
                                      'vendor_inv_amount': product_remaining_budget_line.amount,
                                      'vendor_amount_invoiced': 0.0})
