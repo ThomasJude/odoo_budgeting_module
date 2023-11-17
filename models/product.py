@@ -45,6 +45,7 @@ class ProductTemplate(models.Model):
         if self.remaining_allocation_temp:
             if self.remaining_allocation_temp.allocation_temp_line:
                 for remaining_allocation in self.remaining_allocation_temp.allocation_temp_line:
+                    print(remaining_allocation,"remm")
                     lst.append([0,0,{
                                         'product_id': remaining_allocation.product_id.id,
                                         'name': remaining_allocation.desc,
@@ -55,13 +56,13 @@ class ProductTemplate(models.Model):
                                         'prod_remaining_budget_assigned_user_id': remaining_allocation.allocate_user_id.id,
                                         'prod_remaining_budget_vendor_id': remaining_allocation.allocate_user_id.id,
                                         'allocate_percent': remaining_allocation.allocate_percent,
-                                        'allocation_temp_id':self.remaining_allocation_temp.id
+                                        'allocation_temp_id':self.remaining_allocation_temp.id,
                                     }])
             if self.remaining_allocation_temp.allocate_sub_bucket:
                 for sub_remaining_allocation in self.remaining_allocation_temp.allocate_sub_bucket:
                     lst.append([0,0,{
                         'bucket_type_id':sub_remaining_allocation.bucket_type.id,
-                        'sub_bucket_type':sub_remaining_allocation.sub_bucket_type,
+                        'sub_bucket_type':sub_remaining_allocation.sub_bucket_type.id,
                         'assignable_status':sub_remaining_allocation.assignable_status,
                         'prod_allocate_id':self.id,
                         'prod_remaining_budget_assigned_user_id':sub_remaining_allocation.allocate_user_id.id,
@@ -69,6 +70,7 @@ class ProductTemplate(models.Model):
                         'allocate_percent':sub_remaining_allocation.allocate_percent,
                         'allocation_temp_id':self.remaining_allocation_temp.id
                     }])
+        print(lst,"lst")
         self.product_allocate_budget_line = False
         self.write({'product_allocate_budget_line' : lst})
         return 

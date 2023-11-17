@@ -2961,6 +2961,14 @@ class AccountPaymentRegister(models.TransientModel):
                             self.env['vendor.line.released'].sudo().create(
                                 {'vendor_id':budget_remaining_line.budget_inv_remaining_vendor_id.id,
                                  'vendor_line_released_bucket_id':vendor_released_bucket.id})
+                    elif budget_remaining_line.bucket_type_id.id != False and budget_remaining_line.assignable_status == 'unassigned' and budget_remaining_line.sub_bucket_type.id == False:
+                        existing_invoice_number = self.env['vendor.line.released'].sudo().search(
+                            [('invoice_number', '=', budget_remaining_line.prod_remaining_id.id),
+                             ('vendor_line_released_bucket_id', '=', vendor_released_bucket.id)])
+                        if not existing_invoice_number:
+                            self.env['vendor.line.released'].sudo().create(
+                                {'invoice_number': budget_remaining_line.prod_remaining_id.id,
+                                 'vendor_line_released_bucket_id': vendor_released_bucket.id})
                     elif budget_remaining_line.budget_remaining_user_id:
                         existing_user_rel_line = self.env['user.line.released'].sudo().search(
                             [('user_id', '=', budget_remaining_line.budget_remaining_user_id.id),

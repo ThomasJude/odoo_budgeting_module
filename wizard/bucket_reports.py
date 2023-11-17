@@ -12,7 +12,7 @@ from io import StringIO
 class BucketReport(models.TransientModel):
     _name = 'bucket.report'
 
-    type = fields.Selection([('week','Weekly'),('quarter','Quarterly'),('month','Monthly'),('yearly', 'Yearly')],default='yearly')
+    type = fields.Selection([('weekly','Weekly'),('quarterly','Quarterly'),('monthly','Monthly'),('yearly', 'Yearly')],default='yearly')
     year = fields.Many2one('year','Year')
 
     @api.onchange('type')
@@ -36,7 +36,8 @@ class BucketReport(models.TransientModel):
         # worksheet.row(0).height = 150 * 4
         # worksheet.row(1).height_mismatch = True
         # worksheet.row(1).height = 100 * 4
-        filename = 'Bucket Report' + '.xls'
+        # type = capitalize(self.type)
+        filename = f"{self.type.capitalize()}" +' '+'Budget Report'+ '.xls'
 
         style_value = xlwt.easyxf(
             'font: bold on, name Arial ,colour_index black;')
@@ -121,7 +122,7 @@ class BucketReport(models.TransientModel):
                                         total_bill_bucket_amount += bill_line.price_subtotal
                         full_bucket_inv_amount = total_inv_bucket_amount + total_rel_bucket_amount
                         full_bucket_bill_amount = total_bill_bucket_amount
-                        loss = full_bucket_bill_amount - full_bucket_inv_amount
+                        loss = full_bucket_inv_amount - full_bucket_bill_amount
                         if full_bucket_bill_amount > 0:
                             percent = (loss/full_bucket_bill_amount)
                         else:
@@ -130,10 +131,10 @@ class BucketReport(models.TransientModel):
                         worksheet.write(b, c, rec_bucket.name or '',style_header)
                         worksheet.write(b, c1, full_bucket_bill_amount or 0.0,style_header_cell)
                         worksheet.write(b, c2, full_bucket_inv_amount or 0.0,style_header_cell)
-                        worksheet.write(b, c3, full_bucket_bill_amount-full_bucket_inv_amount or 0.0,style_header_cell)
+                        worksheet.write(b, c3, full_bucket_inv_amount - full_bucket_bill_amount or 0.0,style_header_cell)
                         worksheet.write(b, c4, percent or 0.0,style_header_cell_percent)
                         b += 1
-                        sub_bucket = self.env['bucket.type'].sudo().search([('complete_name', 'like', rec_bucket.bucket_type_id.name),
+                        sub_bucket = self.env['bucket.type'].sudo().search([('complete_name', 'like', rec_bucket.bucket_type_id.name),('parent_path', 'like', rec_bucket.bucket_type_id.id),
                                                            ('id', '!=', rec_bucket.bucket_type_id.id)])
                         for sub_bucket_rec in sub_bucket:
                             sub_total_rel_bucket_amount = 0.0
@@ -150,7 +151,7 @@ class BucketReport(models.TransientModel):
                                     for bill_line in account_bill_rec.invoice_line_ids:
                                         if bill_line.bucket_ids.bucket_type_id.id == rec_bucket.bucket_type_id.id and bill_line.bucket_sub_type.id == sub_bucket_rec.id:
                                             sub_total_bill_bucket_amount += bill_line.price_subtotal
-                            loss = sub_total_bill_bucket_amount - sub_total_rel_bucket_amount
+                            loss = sub_total_rel_bucket_amount - sub_total_bill_bucket_amount
                             if sub_total_bill_bucket_amount > 0:
                                 percent = (loss / sub_total_bill_bucket_amount)
                             else:
@@ -158,7 +159,7 @@ class BucketReport(models.TransientModel):
                             worksheet.write(b, c, sub_bucket_rec.name or '', style_header_i)
                             worksheet.write(b, c1, sub_total_bill_bucket_amount or 0.0, style_header_cell)
                             worksheet.write(b, c2, sub_total_rel_bucket_amount or 0.0, style_header_cell)
-                            worksheet.write(b, c3, sub_total_bill_bucket_amount - sub_total_rel_bucket_amount or 0.0, style_header_cell)
+                            worksheet.write(b, c3, sub_total_rel_bucket_amount - sub_total_bill_bucket_amount  or 0.0, style_header_cell)
                             worksheet.write(b, c4, percent or 0.0, style_header_cell_percent)
                             b += 1
 
@@ -171,7 +172,7 @@ class BucketReport(models.TransientModel):
                     c3 += 5
                     c4 += 5
 
-            if self.type == 'month':
+            if self.type == 'monthly':
                 final_month = []
                 months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
                 for month_line in months:
@@ -209,7 +210,7 @@ class BucketReport(models.TransientModel):
                                         total_bill_bucket_amount += bill_line.price_subtotal
                         full_bucket_inv_amount = total_inv_bucket_amount + total_rel_bucket_amount
                         full_bucket_bill_amount = total_bill_bucket_amount
-                        loss = full_bucket_bill_amount - full_bucket_inv_amount
+                        loss = full_bucket_inv_amount-full_bucket_bill_amount
                         if full_bucket_bill_amount > 0:
                             percent = (loss/full_bucket_bill_amount)
                         else:
@@ -218,10 +219,10 @@ class BucketReport(models.TransientModel):
                         worksheet.write(b, c, rec_bucket.name or '',style_header)
                         worksheet.write(b, c1, full_bucket_bill_amount or 0.0,style_header_cell)
                         worksheet.write(b, c2, full_bucket_inv_amount or 0.0,style_header_cell)
-                        worksheet.write(b, c3, full_bucket_bill_amount-full_bucket_inv_amount or 0.0,style_header_cell)
+                        worksheet.write(b, c3, full_bucket_inv_amount-full_bucket_bill_amount or 0.0,style_header_cell)
                         worksheet.write(b, c4, percent or 0.0,style_header_cell_percent)
                         b += 1
-                        sub_bucket = self.env['bucket.type'].sudo().search([('complete_name', 'like', rec_bucket.bucket_type_id.name),
+                        sub_bucket = self.env['bucket.type'].sudo().search([('complete_name', 'like', rec_bucket.bucket_type_id.name),('parent_path', 'like', rec_bucket.bucket_type_id.id),
                                                            ('id', '!=', rec_bucket.bucket_type_id.id)])
                         for sub_bucket_rec in sub_bucket:
                             sub_total_rel_bucket_amount = 0.0
@@ -238,7 +239,7 @@ class BucketReport(models.TransientModel):
                                     for bill_line in account_bill_rec.invoice_line_ids:
                                         if bill_line.bucket_ids.bucket_type_id.id == rec_bucket.bucket_type_id.id and bill_line.bucket_sub_type.id == sub_bucket_rec.id:
                                             sub_total_bill_bucket_amount += bill_line.price_subtotal
-                            loss = sub_total_bill_bucket_amount - sub_total_rel_bucket_amount
+                            loss = sub_total_rel_bucket_amount - sub_total_bill_bucket_amount
                             if sub_total_bill_bucket_amount > 0:
                                 percent = (loss / sub_total_bill_bucket_amount)
                             else:
@@ -246,7 +247,7 @@ class BucketReport(models.TransientModel):
                             worksheet.write(b, c, sub_bucket_rec.name or '', style_header_i)
                             worksheet.write(b, c1, sub_total_bill_bucket_amount or 0.0, style_header_cell)
                             worksheet.write(b, c2, sub_total_rel_bucket_amount or 0.0, style_header_cell)
-                            worksheet.write(b, c3, sub_total_bill_bucket_amount - sub_total_rel_bucket_amount or 0.0, style_header_cell)
+                            worksheet.write(b, c3, sub_total_rel_bucket_amount - sub_total_bill_bucket_amount  or 0.0, style_header_cell)
                             worksheet.write(b, c4, percent or 0.0, style_header_cell_percent)
                             b += 1
 
@@ -259,7 +260,7 @@ class BucketReport(models.TransientModel):
                     c3 += 5
                     c4 += 5
 
-            if self.type == 'quarter':
+            if self.type == 'quarterly':
                 quarters = ['1', '2', '3', '4']
 
                 for quarter_rec in quarters:
@@ -306,7 +307,7 @@ class BucketReport(models.TransientModel):
                                         total_bill_bucket_amount += bill_line.price_subtotal
                         full_bucket_inv_amount = total_inv_bucket_amount + total_rel_bucket_amount
                         full_bucket_bill_amount = total_bill_bucket_amount
-                        loss = full_bucket_bill_amount - full_bucket_inv_amount
+                        loss = full_bucket_inv_amount - full_bucket_bill_amount
                         if full_bucket_bill_amount > 0:
                             percent = (loss/full_bucket_bill_amount)
                         else:
@@ -315,10 +316,10 @@ class BucketReport(models.TransientModel):
                         worksheet.write(b, c, rec_bucket.name or '',style_header)
                         worksheet.write(b, c1, full_bucket_bill_amount or 0.0,style_header_cell)
                         worksheet.write(b, c2, full_bucket_inv_amount or 0.0,style_header_cell)
-                        worksheet.write(b, c3, full_bucket_bill_amount-full_bucket_inv_amount or 0.0,style_header_cell)
+                        worksheet.write(b, c3, full_bucket_inv_amount - full_bucket_bill_amount or 0.0,style_header_cell)
                         worksheet.write(b, c4, percent or 0.0,style_header_cell_percent)
                         b += 1
-                        sub_bucket = self.env['bucket.type'].sudo().search([('complete_name', 'like', rec_bucket.bucket_type_id.name),
+                        sub_bucket = self.env['bucket.type'].sudo().search([('complete_name', 'like', rec_bucket.bucket_type_id.name),('parent_path', 'like', rec_bucket.bucket_type_id.id),
                                                            ('id', '!=', rec_bucket.bucket_type_id.id)])
                         for sub_bucket_rec in sub_bucket:
                             sub_total_rel_bucket_amount = 0.0
@@ -335,7 +336,7 @@ class BucketReport(models.TransientModel):
                                     for bill_line in account_bill_rec.invoice_line_ids:
                                         if bill_line.bucket_ids.bucket_type_id.id == rec_bucket.bucket_type_id.id and bill_line.bucket_sub_type.id == sub_bucket_rec.id:
                                             sub_total_bill_bucket_amount += bill_line.price_subtotal
-                            loss = sub_total_bill_bucket_amount - sub_total_rel_bucket_amount
+                            loss = sub_total_rel_bucket_amount - sub_total_bill_bucket_amount
                             if sub_total_bill_bucket_amount > 0:
                                 percent = (loss / sub_total_bill_bucket_amount)
                             else:
@@ -343,7 +344,7 @@ class BucketReport(models.TransientModel):
                             worksheet.write(b, c, sub_bucket_rec.name or '', style_header_i)
                             worksheet.write(b, c1, sub_total_bill_bucket_amount or 0.0, style_header_cell)
                             worksheet.write(b, c2, sub_total_rel_bucket_amount or 0.0, style_header_cell)
-                            worksheet.write(b, c3, sub_total_bill_bucket_amount - sub_total_rel_bucket_amount or 0.0, style_header_cell)
+                            worksheet.write(b, c3, sub_total_rel_bucket_amount - sub_total_bill_bucket_amount  or 0.0, style_header_cell)
                             worksheet.write(b, c4, percent or 0.0, style_header_cell_percent)
                             b += 1
                     b = 1
@@ -355,7 +356,7 @@ class BucketReport(models.TransientModel):
                     c3 += 5
                     c4 += 5
 
-            if self.type == 'week':
+            if self.type == 'weekly':
                 weeks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
                          30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51]
 
@@ -400,7 +401,7 @@ class BucketReport(models.TransientModel):
                                         total_bill_bucket_amount += bill_line.price_subtotal
                         full_bucket_inv_amount = total_inv_bucket_amount + total_rel_bucket_amount
                         full_bucket_bill_amount = total_bill_bucket_amount
-                        loss = full_bucket_bill_amount - full_bucket_inv_amount
+                        loss = full_bucket_inv_amount - full_bucket_bill_amount
                         if full_bucket_bill_amount > 0:
                             percent = (loss/full_bucket_bill_amount)
                         else:
@@ -409,10 +410,10 @@ class BucketReport(models.TransientModel):
                         worksheet.write(b, c, rec_bucket.name or '',style_header)
                         worksheet.write(b, c1, full_bucket_bill_amount or 0.0,style_header_cell)
                         worksheet.write(b, c2, full_bucket_inv_amount or 0.0,style_header_cell)
-                        worksheet.write(b, c3, full_bucket_bill_amount-full_bucket_inv_amount or 0.0,style_header_cell)
+                        worksheet.write(b, c3, full_bucket_inv_amount - full_bucket_bill_amount or 0.0,style_header_cell)
                         worksheet.write(b, c4, percent or 0.0,style_header_cell_percent)
                         b += 1
-                        sub_bucket = self.env['bucket.type'].sudo().search([('complete_name', 'like', rec_bucket.bucket_type_id.name),
+                        sub_bucket = self.env['bucket.type'].sudo().search([('complete_name', 'like', rec_bucket.bucket_type_id.name),('parent_path', 'like', rec_bucket.bucket_type_id.id),
                                                            ('id', '!=', rec_bucket.bucket_type_id.id)])
                         for sub_bucket_rec in sub_bucket:
                             sub_total_rel_bucket_amount = 0.0
@@ -429,7 +430,7 @@ class BucketReport(models.TransientModel):
                                     for bill_line in account_bill_rec.invoice_line_ids:
                                         if bill_line.bucket_ids.bucket_type_id.id == rec_bucket.bucket_type_id.id and bill_line.bucket_sub_type.id == sub_bucket_rec.id:
                                             sub_total_bill_bucket_amount += bill_line.price_subtotal
-                            loss = sub_total_bill_bucket_amount - sub_total_rel_bucket_amount
+                            loss = sub_total_rel_bucket_amount - sub_total_bill_bucket_amount
                             if sub_total_bill_bucket_amount > 0:
                                 percent = (loss / sub_total_bill_bucket_amount)
                             else:
@@ -437,7 +438,7 @@ class BucketReport(models.TransientModel):
                             worksheet.write(b, c, sub_bucket_rec.name or '', style_header_i)
                             worksheet.write(b, c1, sub_total_bill_bucket_amount or 0.0, style_header_cell)
                             worksheet.write(b, c2, sub_total_rel_bucket_amount or 0.0, style_header_cell)
-                            worksheet.write(b, c3, sub_total_bill_bucket_amount - sub_total_rel_bucket_amount or 0.0, style_header_cell)
+                            worksheet.write(b, c3, sub_total_rel_bucket_amount - sub_total_bill_bucket_amount  or 0.0, style_header_cell)
                             worksheet.write(b, c4, percent or 0.0, style_header_cell_percent)
                             b += 1
 

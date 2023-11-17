@@ -33,7 +33,7 @@
                         <separator string="Remaining % Allocation"/>
                         
                         <field name="product_allocate_budget_line" widget="section_and_note_one2many" mode="tree" readonly="1" force_save="1">
-						<tree string="Allocate Budget" editable="bottom">
+						<tree string="Allocate Budget" editable="bottom" no_open="1">
                                 <field name="product_id" invisible="1" attrs="{'readonly': [('name', '!=', False)],}" options="{'no_edit': True, 'no_create': True}"/>
                                 <field name="name" invisible="1" attrs="{'readonly': [('product_id', '!=', False)],}"/>
                                 <field name="bucket_type_id" options="{'no_edit': True, 'no_create': True}" required="1"/>

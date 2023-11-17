@@ -5,10 +5,16 @@ from odoo.exceptions import UserError, ValidationError
 class AllocationTemplate(models.Model):
     _name = "allocation.template"
     
-    name = fields.Char(string='Name')
-    allocation_temp_line = fields.One2many('allocation.template.line', 'allocation_temp_id', 'Allocation Template')
-    is_default_temp= fields.Boolean(string='Default Template',default=False)
+    name = fields.Char(string='Name',copy=True)
+    allocation_temp_line = fields.One2many('allocation.template.line', 'allocation_temp_id', 'Allocation Template',copy=True)
+    is_default_temp= fields.Boolean(string='Default Template',default=False,copy=True)
     allocate_sub_bucket = fields.One2many('suballocate.template.line','sub_allocated_id','Sub Bucket Template')
+
+    @api.constrains('name')
+    def _check_name_duplicacy(self):
+        allocatetemplate = self.env['allocation.template'].search([('name', '=', self.name), ('id', '!=', self.id)])
+        if allocatetemplate:
+            self.name = allocatetemplate.name + '(copy)'
 
     @api.constrains('allocation_temp_line')
     def _constrains_allocation_temp(self):
