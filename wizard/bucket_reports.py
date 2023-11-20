@@ -123,8 +123,8 @@ class BucketReport(models.TransientModel):
                         full_bucket_inv_amount = total_inv_bucket_amount + total_rel_bucket_amount
                         full_bucket_bill_amount = total_bill_bucket_amount
                         loss = full_bucket_inv_amount - full_bucket_bill_amount
-                        if full_bucket_bill_amount > 0:
-                            percent = (loss/full_bucket_bill_amount)
+                        if full_bucket_inv_amount > 0:
+                            percent = (loss/full_bucket_inv_amount)
                         else:
                             percent = 0.0
 
@@ -152,8 +152,8 @@ class BucketReport(models.TransientModel):
                                         if bill_line.bucket_ids.bucket_type_id.id == rec_bucket.bucket_type_id.id and bill_line.bucket_sub_type.id == sub_bucket_rec.id:
                                             sub_total_bill_bucket_amount += bill_line.price_subtotal
                             loss = sub_total_rel_bucket_amount - sub_total_bill_bucket_amount
-                            if sub_total_bill_bucket_amount > 0:
-                                percent = (loss / sub_total_bill_bucket_amount)
+                            if sub_total_rel_bucket_amount > 0:
+                                percent = (loss / sub_total_rel_bucket_amount)
                             else:
                                 percent = 0.0
                             worksheet.write(b, c, sub_bucket_rec.name or '', style_header_i)
@@ -211,8 +211,8 @@ class BucketReport(models.TransientModel):
                         full_bucket_inv_amount = total_inv_bucket_amount + total_rel_bucket_amount
                         full_bucket_bill_amount = total_bill_bucket_amount
                         loss = full_bucket_inv_amount-full_bucket_bill_amount
-                        if full_bucket_bill_amount > 0:
-                            percent = (loss/full_bucket_bill_amount)
+                        if full_bucket_inv_amount > 0:
+                            percent = (loss/full_bucket_inv_amount)
                         else:
                             percent = 0.0
 
@@ -240,8 +240,8 @@ class BucketReport(models.TransientModel):
                                         if bill_line.bucket_ids.bucket_type_id.id == rec_bucket.bucket_type_id.id and bill_line.bucket_sub_type.id == sub_bucket_rec.id:
                                             sub_total_bill_bucket_amount += bill_line.price_subtotal
                             loss = sub_total_rel_bucket_amount - sub_total_bill_bucket_amount
-                            if sub_total_bill_bucket_amount > 0:
-                                percent = (loss / sub_total_bill_bucket_amount)
+                            if sub_total_rel_bucket_amount > 0:
+                                percent = (loss / sub_total_rel_bucket_amount)
                             else:
                                 percent = 0.0
                             worksheet.write(b, c, sub_bucket_rec.name or '', style_header_i)
@@ -308,8 +308,8 @@ class BucketReport(models.TransientModel):
                         full_bucket_inv_amount = total_inv_bucket_amount + total_rel_bucket_amount
                         full_bucket_bill_amount = total_bill_bucket_amount
                         loss = full_bucket_inv_amount - full_bucket_bill_amount
-                        if full_bucket_bill_amount > 0:
-                            percent = (loss/full_bucket_bill_amount)
+                        if full_bucket_inv_amount > 0:
+                            percent = (loss/full_bucket_inv_amount)
                         else:
                             percent = 0.0
 
@@ -337,8 +337,8 @@ class BucketReport(models.TransientModel):
                                         if bill_line.bucket_ids.bucket_type_id.id == rec_bucket.bucket_type_id.id and bill_line.bucket_sub_type.id == sub_bucket_rec.id:
                                             sub_total_bill_bucket_amount += bill_line.price_subtotal
                             loss = sub_total_rel_bucket_amount - sub_total_bill_bucket_amount
-                            if sub_total_bill_bucket_amount > 0:
-                                percent = (loss / sub_total_bill_bucket_amount)
+                            if sub_total_rel_bucket_amount > 0:
+                                percent = (loss / sub_total_rel_bucket_amount)
                             else:
                                 percent = 0.0
                             worksheet.write(b, c, sub_bucket_rec.name or '', style_header_i)
@@ -402,8 +402,8 @@ class BucketReport(models.TransientModel):
                         full_bucket_inv_amount = total_inv_bucket_amount + total_rel_bucket_amount
                         full_bucket_bill_amount = total_bill_bucket_amount
                         loss = full_bucket_inv_amount - full_bucket_bill_amount
-                        if full_bucket_bill_amount > 0:
-                            percent = (loss/full_bucket_bill_amount)
+                        if full_bucket_inv_amount > 0:
+                            percent = (loss/full_bucket_inv_amount)
                         else:
                             percent = 0.0
 
@@ -431,8 +431,8 @@ class BucketReport(models.TransientModel):
                                         if bill_line.bucket_ids.bucket_type_id.id == rec_bucket.bucket_type_id.id and bill_line.bucket_sub_type.id == sub_bucket_rec.id:
                                             sub_total_bill_bucket_amount += bill_line.price_subtotal
                             loss = sub_total_rel_bucket_amount - sub_total_bill_bucket_amount
-                            if sub_total_bill_bucket_amount > 0:
-                                percent = (loss / sub_total_bill_bucket_amount)
+                            if sub_total_rel_bucket_amount > 0:
+                                percent = (loss / sub_total_rel_bucket_amount)
                             else:
                                 percent = 0.0
                             worksheet.write(b, c, sub_bucket_rec.name or '', style_header_i)
