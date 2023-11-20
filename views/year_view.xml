@@ -17,10 +17,10 @@
             <field name="view_mode">tree</field>
         </record>
 
-        <menuitem name="Configuration" id="budget_master_config" parent="budget_master_menu" sequence="14"/>
-
-		<menuitem name="Year" id="year_menu" parent="budget_master_config"
-     		action="action_year_form"/>
+<!--        <menuitem name="Configuration" id="budget_master_config" parent="budget_master_menu" sequence="14"/>-->
+<!---->
+<!--		<menuitem name="Year" id="year_menu" parent="budget_master_config"-->
+<!--     		action="action_year_form"/>-->
 
     </data>
 </odoo>
