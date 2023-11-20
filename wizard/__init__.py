@@ -7,3 +7,4 @@ from . import invoice_bill_wiz
 from . import invoice_visibility_wiz
 from . import user_invoice_visibility_wiz
 from . import bucket_reports
+from . import message_wizard

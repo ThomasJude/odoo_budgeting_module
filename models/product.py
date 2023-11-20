@@ -504,7 +504,28 @@ class ProductBudgetAllocate(models.Model):
     amount = fields.Float("Amount")
     allocation_temp_id= fields.Many2one('allocation.template', string="Template", copy=False)
     prod_remaining_budget_assigned_user_id = fields.Many2one('res.partner', string="Name", copy=False)
-    sub_total = fields.Float('Sub Amount')
+    sub_total = fields.Float('Amount')
+
+    def parent_amount(self):
+        bucket_amount = 0
+        detail= ''
+        for bucket in self.prod_allocate_id.product_allocate_budget_line:
+            if bucket.bucket_type_id.id == self.bucket_type_id.id and bucket.sub_bucket_type.id == False:
+                bucket_amount = bucket.amount
+                print(bucket_amount,"bbb")
+                detail = 'Bucket -' + f"{self.bucket_type_id.name}" +','+ 'Amount:' f"{bucket_amount}"
+
+
+        message_id = self.env['message.wizard'].create({'message': detail})
+        return {
+            'name': _('Parent Bucket Details'),
+            'type': 'ir.actions.act_window',
+            'view_mode': 'form',
+            'res_model': 'message.wizard',
+            # pass the id
+            'res_id': message_id.id,
+            'target': 'new'
+        }
 
     @api.onchange('product_id')
     def fetch_vendors(self):

@@ -31,3 +31,4 @@ access_year,year,model_year,base.group_user,1,1,1,1
 access_bucket_report,bucket.report,model_bucket_report,base.group_user,1,1,1,1
 access_bucket_view_report,bucket.view.report,model_bucket_view_report,base.group_user,1,1,1,1
 access_suballocate_template_line,suballocate.template.line,model_suballocate_template_line,base.group_user,1,1,1,1
+access_message_wizard,message.wizard,model_message_wizard,base.group_user,1,1,1,1

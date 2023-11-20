@@ -14,11 +14,12 @@ class BucketReport(models.TransientModel):
 
     type = fields.Selection([('weekly','Weekly'),('quarterly','Quarterly'),('monthly','Monthly'),('yearly', 'Yearly')],default='yearly')
     year = fields.Many2one('year','Year')
+    final_year = fields.Date('Year')
 
     @api.onchange('type')
     def onchange_year(self):
         if self.type:
-            self.year = ''
+            self.final_year = ''
 
     def print_report(self):
         string = 'Bucket Report'
@@ -173,10 +174,11 @@ class BucketReport(models.TransientModel):
                     c4 += 5
 
             if self.type == 'monthly':
+                print(self.final_year.strftime('%Y'),"finalyearr")
                 final_month = []
                 months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
                 for month_line in months:
-                    month_rec = month_line +'-'+ str(self.year.name)
+                    month_rec = month_line +'-'+ str(self.final_year.strftime('%Y'))
                     final_month.append(month_rec)
 
                 for final_month_rec in final_month:
@@ -267,12 +269,12 @@ class BucketReport(models.TransientModel):
                     months = (int(quarter_rec) - 1) * 3 + 1
                     month = int(quarter_rec) * 3
                     print(month,"month")
-                    end_quarter = 31 if month in [1, 3, 5, 7, 8, 10,12] else 30 if month != 2 else 29 if int(self.year.name) % 4 == 0 and (
-                                int(self.year.name) % 100 != 0 or int(self.year.name) % 400 == 0) else 28
+                    end_quarter = 31 if month in [1, 3, 5, 7, 8, 10,12] else 30 if month != 2 else 29 if int(self.final_year.strftime('%Y')) % 4 == 0 and (
+                                int(self.final_year.strftime('%Y')) % 100 != 0 or int(self.final_year.strftime('%Y')) % 400 == 0) else 28
 
-                    final_start = datetime(int(self.year.name),months,1).strftime('%m-%Y')
-                    final_end = datetime(int(self.year.name),month,end_quarter).strftime('%m-%Y')
-                    quarter_header = str(self.year.name) +'Q'+ quarter_rec
+                    final_start = datetime(int(self.final_year.strftime('%Y')),months,1).strftime('%m-%Y')
+                    final_end = datetime(int(self.final_year.strftime('%Y')),month,end_quarter).strftime('%m-%Y')
+                    quarter_header = str(self.final_year.strftime('%Y')) +'Q'+ quarter_rec
                     worksheet.write_merge(0, 0, a1, a2, f"{quarter_header}", style_header_add)
                     worksheet.write(b, c, 'Bucket', style_header_add_left)
                     worksheet.write(b, c1, 'Actual', style_header_add)
@@ -361,13 +363,13 @@ class BucketReport(models.TransientModel):
                          30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51]
 
                 for week_rec in weeks:
-                    base_date = datetime(int(self.year.name), 1, 4)
+                    base_date = datetime(int(self.final_year.strftime('%Y')), 1, 4)
                     offset = timedelta(days=(week_rec - 1) * 7)
                     first_date = base_date - timedelta(days=base_date.weekday()) + offset
                     last_date = first_date + timedelta(days=6)
                     final_start = first_date.strftime('%Y,%m,%d')
                     final_end = last_date.strftime('%Y,%m,%d')
-                    final_header = str(self.year.name) + 'W'+ str(week_rec)
+                    final_header = str(self.final_year.strftime('%Y')) + 'W'+ str(week_rec)
                     worksheet.write_merge(0, 0, a1, a2, f"{final_header}", style_header_add)
                     worksheet.write(b, c, 'Bucket', style_header_add_left)
                     worksheet.write(b, c1, 'Actual', style_header_add)

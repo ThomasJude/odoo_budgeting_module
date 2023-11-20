@@ -31,6 +31,7 @@ Budget Module
         'views/partners_view.xml',
         'wizard/bucket_reports_view.xml',
         'views/year_view.xml',
+        'wizard/message_wizard_view.xml',
     ],
     
     'installable': True,
